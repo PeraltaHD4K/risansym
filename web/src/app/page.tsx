@@ -33,7 +33,7 @@ export default function Home() {
               <p>Métricas de Simulación:</p>
               <ul style={{ paddingLeft: '16px', marginTop: '8px' }}>
                 <li>Eventos: {traceData.trace.length}</li>
-                <li>Nodos Totales: {traceData.metadata.parameters.total_nodes}</li>
+                <li>Nodos Totales: {String(traceData.metadata.parameters.total_nodes || 'N/A')}</li>
               </ul>
             </div>
           ) : (

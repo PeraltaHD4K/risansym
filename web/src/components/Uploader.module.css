@@ -1,0 +1,51 @@
+.uploadBox {
+  border: 2px dashed var(--panel-border);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.2);
+  width: 100%;
+}
+
+.uploadBox:hover, .dragging {
+  border-color: var(--accent-color);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.errorBox {
+  border-color: var(--danger-color);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.successBox {
+  border-color: var(--success-color);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  color: var(--accent-color);
+  margin-bottom: 16px;
+}
+
+.iconError {
+  width: 48px;
+  height: 48px;
+  color: var(--danger-color);
+  margin-bottom: 16px;
+}
+
+.iconSuccess {
+  width: 48px;
+  height: 48px;
+  color: var(--success-color);
+  margin-bottom: 16px;
+}
+
+.description {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}

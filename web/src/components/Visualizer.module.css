@@ -1,8 +1,15 @@
+.visualizerWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
 .scrollContainer {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: auto; /* Permite scroll horizontal y vertical si es muy grande */
+  overflow: auto;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
 }
@@ -42,9 +49,9 @@
   text-anchor: middle;
 }
 
-.messageGroup:hover line {
+.messageGroup:hover path:not([stroke="transparent"]) {
   stroke-width: 4 !important;
-  filter: brightness(1.2);
+  filter: brightness(1.2) drop-shadow(0 0 2px currentColor);
 }
 
 .playhead {

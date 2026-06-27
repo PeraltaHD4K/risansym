@@ -68,7 +68,7 @@ export default function Visualizer() {
           payload: t.payload
         };
       }).filter(Boolean);
-  }, [traceData, nodes]);
+  }, [traceData, nodes, zoomScale]);
 
   if (!traceData) return null;
 
@@ -79,171 +79,205 @@ export default function Visualizer() {
   const currentPlayheadX = PADDING_X + currentClock * TIME_SCALE;
 
   return (
-    <div className={styles.scrollContainer}>
-      <svg width={totalWidth} height={totalHeight} className={styles.svgLayer}>
-        <defs>
-          {/* Marcadores para las flechas de los mensajes (Solo colores únicos) */}
-          {Array.from(new Set(messages.map((m: any) => m.color))).map(color => (
-            <marker
-              key={`arrow-${color}`}
-              id={`arrow-${(color as string).replace('#', '')}`}
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
-              orient="auto"
-              markerUnits="strokeWidth"
-            >
-              <path d="M0,0 L0,6 L9,3 z" fill={color as string} />
-            </marker>
+    <div className={styles.visualizerWrapper}>
+      <div className={styles.scrollContainer}>
+        <svg width={totalWidth} height={totalHeight} className={styles.svgLayer}>
+          <defs>
+            {/* Marcadores para las flechas de los mensajes (Solo colores únicos) */}
+            {Array.from(new Set(messages.map((m: any) => m.color))).map(color => (
+              <marker
+                key={`arrow-${color}`}
+                id={`arrow-${(color as string).replace('#', '')}`}
+                markerWidth="10"
+                markerHeight="10"
+                refX="9"
+                refY="3"
+                orient="auto"
+                markerUnits="strokeWidth"
+              >
+                <path d="M0,0 L0,6 L9,3 z" fill={color as string} />
+              </marker>
+            ))}
+          </defs>
+
+          {/* Líneas horizontales de vida de cada Nodo */}
+          {nodes.map(node => (
+            <g key={`lifeline-${node.id}`}>
+              <text x={10} y={node.y + 5} className={styles.nodeLabel}>N{node.id}</text>
+              <line 
+                x1={PADDING_X} y1={node.y} 
+                x2={totalWidth - 50} y2={node.y} 
+                className={styles.lifeline} 
+                strokeDasharray="4,4"
+              />
+            </g>
           ))}
-        </defs>
 
-        {/* Líneas horizontales de vida de cada Nodo */}
-        {nodes.map(node => (
-          <g key={`lifeline-${node.id}`}>
-            <text x={10} y={node.y + 5} className={styles.nodeLabel}>N{node.id}</text>
-            <line 
-              x1={PADDING_X} y1={node.y} 
-              x2={totalWidth - 50} y2={node.y} 
-              className={styles.lifeline} 
-              strokeDasharray="4,4"
-            />
-          </g>
-        ))}
+          {/* Eje de Tiempo (Ticks abajo) */}
+          <line 
+            x1={PADDING_X} y1={totalHeight - 20} 
+            x2={totalWidth - 50} y2={totalHeight - 20} 
+            className={styles.timeAxis} 
+          />
+          {Array.from({ length: Math.ceil(maxTime) + 1 }).map((_, i) => (
+            <g key={`tick-${i}`}>
+              <line 
+                x1={PADDING_X + i * TIME_SCALE} y1={totalHeight - 25} 
+                x2={PADDING_X + i * TIME_SCALE} y2={totalHeight - 15} 
+                stroke="var(--text-secondary)" 
+              />
+              <text 
+                x={PADDING_X + i * TIME_SCALE} y={totalHeight - 5} 
+                className={styles.timeTick}
+              >
+                {i}s
+              </text>
+            </g>
+          ))}
 
-        {/* Eje de Tiempo (Ticks abajo) */}
-        <line 
-          x1={PADDING_X} y1={totalHeight - 20} 
-          x2={totalWidth - 50} y2={totalHeight - 20} 
-          className={styles.timeAxis} 
-        />
-        {Array.from({ length: Math.ceil(maxTime) + 1 }).map((_, i) => (
-          <g key={`tick-${i}`}>
-            <line 
-              x1={PADDING_X + i * TIME_SCALE} y1={totalHeight - 25} 
-              x2={PADDING_X + i * TIME_SCALE} y2={totalHeight - 15} 
-              stroke="var(--text-secondary)" 
-            />
-            <text 
-              x={PADDING_X + i * TIME_SCALE} y={totalHeight - 5} 
-              className={styles.timeTick}
-            >
-              {i}s
-            </text>
-          </g>
-        ))}
+          {/* Puntos Discretos de Eventos Agrupados (Event Dots) */}
+          {(() => {
+            // 1. Agrupar eventos por Nodo y por Reloj
+            const groups = new Map<string, any[]>();
+            traceData.trace.forEach(evt => {
+              if (evt.clock > currentClock) return;
+              const ownerId = evt.action === 'RECEIVE' ? (evt as any).target : evt.source;
+              const key = `${ownerId}-${evt.clock}`;
+              if (!groups.has(key)) groups.set(key, []);
+              groups.get(key)!.push(evt);
+            });
 
-        {/* Puntos Discretos de Eventos Agrupados (Event Dots) */}
-        {(() => {
-          // 1. Agrupar eventos por Nodo y por Reloj
-          const groups = new Map<string, any[]>();
-          traceData.trace.forEach(evt => {
-            if (evt.clock > currentClock) return;
-            const ownerId = evt.action === 'RECEIVE' ? (evt as any).target : evt.source;
-            const key = `${ownerId}-${evt.clock}`;
-            if (!groups.has(key)) groups.set(key, []);
-            groups.get(key)!.push(evt);
-          });
+            // 2. Renderizar un solo punto por grupo
+            return Array.from(groups.entries()).map(([key, evts], index) => {
+              const [ownerIdStr, clockStr] = key.split('-');
+              const ownerId = parseInt(ownerIdStr, 10);
+              const clock = parseFloat(clockStr);
+              const node = nodes.find(n => n.id === ownerId);
+              
+              if (!node) return null;
 
-          // 2. Renderizar un solo punto por grupo
-          return Array.from(groups.entries()).map(([key, evts], index) => {
-            const [ownerIdStr, clockStr] = key.split('-');
-            const ownerId = parseInt(ownerIdStr, 10);
-            const clock = parseFloat(clockStr);
-            const node = nodes.find(n => n.id === ownerId);
-            
-            if (!node) return null;
+              const x = PADDING_X + clock * TIME_SCALE;
+              const y = node.y;
 
-            const x = PADDING_X + clock * TIME_SCALE;
-            const y = node.y;
+              let DotShape;
+              if (evts.length > 1) {
+                DotShape = (
+                  <g>
+                    <circle cx={x} cy={y} r="8" fill="#ffffff" stroke="var(--accent-color)" strokeWidth="2" />
+                    <text x={x} y={y + 3} fontSize="9" fontWeight="bold" fill="#000" textAnchor="middle">
+                      {evts.length}
+                    </text>
+                  </g>
+                );
+              } else {
+                const evt = evts[0];
+                if (evt.action === 'TRANSMIT') {
+                  DotShape = <circle cx={x} cy={y} r="5" fill="#3b82f6" />;
+                } else if (evt.action === 'RECEIVE') {
+                  DotShape = <rect x={x - 5} y={y - 5} width="10" height="10" fill="#10b981" rx="2" />;
+                } else {
+                  DotShape = <polygon points={`${x},${y-6} ${x+6},${y} ${x},${y+6} ${x-6},${y}`} fill="#f59e0b" />;
+                }
+              }
 
-            let DotShape;
-            if (evts.length > 1) {
-              // Múltiples eventos: Dibujamos un círculo blanco con un indicador de cantidad
-              DotShape = (
-                <g>
-                  <circle cx={x} cy={y} r="8" fill="#ffffff" stroke="var(--accent-color)" strokeWidth="2" />
-                  <text x={x} y={y + 3} fontSize="9" fontWeight="bold" fill="#000" textAnchor="middle">
-                    {evts.length}
-                  </text>
+              return (
+                <g 
+                  key={`dotGroup-${index}`} 
+                  className={styles.eventDot}
+                  onClick={() => setSelectedEvent(evts)}
+                >
+                  {DotShape}
                 </g>
               );
+            });
+          })()}
+
+          {/* Flechas de Mensajes (Trazadas con Curvas Bezier para evitar solapamiento) */}
+          {messages.map((msg: any) => {
+            const isFuture = msg.clock > currentClock;
+            const isPending = msg.clock <= currentClock && msg.eventTime > currentClock;
+            const isPast = msg.eventTime <= currentClock;
+
+            if (isFuture) return null;
+
+            // Punto de control para la curva. Hacemos que se abombe ligeramente hacia arriba
+            // o abajo en función de la distancia vertical, evitando que flechas colineales se solapen.
+            const dy = msg.endY - msg.startY;
+            const cx = (msg.startX + msg.endX) / 2;
+            const cy = (msg.startY + msg.endY) / 2 - (dy * 0.15); 
+
+            let pathD = '';
+            let endX = msg.endX;
+            let endY = msg.endY;
+
+            if (isPending) {
+              // Animación de la curva usando el algoritmo de De Casteljau
+              const t = (currentClock - msg.clock) / (msg.eventTime - msg.clock);
+              const safeT = Math.max(0, Math.min(1, t));
+              const invT = 1 - safeT;
+              
+              endX = invT * invT * msg.startX + 2 * invT * safeT * cx + safeT * safeT * msg.endX;
+              endY = invT * invT * msg.startY + 2 * invT * safeT * cy + safeT * safeT * msg.endY;
+              
+              const newCx = msg.startX + safeT * (cx - msg.startX);
+              const newCy = msg.startY + safeT * (cy - msg.startY);
+
+              pathD = `M ${msg.startX},${msg.startY} Q ${newCx},${newCy} ${endX},${endY}`;
             } else {
-              // Evento único: Comportamiento normal
-              const evt = evts[0];
-              if (evt.action === 'TRANSMIT') {
-                DotShape = <circle cx={x} cy={y} r="5" fill="#3b82f6" />;
-              } else if (evt.action === 'RECEIVE') {
-                DotShape = <rect x={x - 5} y={y - 5} width="10" height="10" fill="#10b981" rx="2" />;
-              } else {
-                DotShape = <polygon points={`${x},${y-6} ${x+6},${y} ${x},${y+6} ${x-6},${y}`} fill="#f59e0b" />;
-              }
+              pathD = `M ${msg.startX},${msg.startY} Q ${cx},${cy} ${msg.endX},${msg.endY}`;
             }
 
             return (
               <g 
-                key={`dotGroup-${index}`} 
-                className={styles.eventDot}
-                onClick={() => setSelectedEvent(evts)}
+                key={msg.id} 
+                className={styles.messageGroup}
+                onClick={() => setSelectedEvent([msg.originalEvent])}
+                style={{ cursor: 'pointer', opacity: isPast ? 1 : 0.8 }}
               >
-                {DotShape}
+                {/* Hitbox invisible y gruesa para que sea fácil hacer hover/click */}
+                <path
+                  d={pathD}
+                  stroke="transparent"
+                  strokeWidth={15}
+                  fill="none"
+                />
+                {/* Línea visible de la flecha */}
+                <path
+                  d={pathD}
+                  stroke={msg.color}
+                  strokeWidth={isPending ? 3 : 2}
+                  fill="none"
+                  markerEnd={isPending ? '' : `url(#arrow-${msg.color.replace('#', '')})`}
+                  className={isPending ? styles.animatedLine : ''}
+                />
+                {!isPending && (
+                  <text 
+                    x={cx} 
+                    y={cy - 5} 
+                    className={styles.messageLabel}
+                    fill={msg.color}
+                  >
+                    {msg.name}
+                  </text>
+                )}
               </g>
             );
-          });
-        })()}
+          })}
 
-        {/* Flechas de Mensajes */}
-        {messages.map((msg: any) => {
-          const isFuture = msg.clock > currentClock;
-          const isPending = msg.clock <= currentClock && msg.eventTime > currentClock;
-          const isPast = msg.eventTime <= currentClock;
+          {/* Playhead (Línea de tiempo actual vertical) */}
+          <line 
+            x1={currentPlayheadX} y1={20} 
+            x2={currentPlayheadX} y2={totalHeight - 20} 
+            className={styles.playhead} 
+          />
+          <polygon 
+            points={`${currentPlayheadX - 6},20 ${currentPlayheadX + 6},20 ${currentPlayheadX},28`} 
+            fill="#ef4444" 
+          />
+        </svg>
+      </div>
 
-          if (isFuture) return null;
-
-          return (
-            <g 
-              key={msg.id} 
-              className={styles.messageGroup}
-              onClick={() => setSelectedEvent([msg.originalEvent])}
-              style={{ cursor: 'pointer', opacity: isPast ? 1 : 0.8 }}
-            >
-              <line
-                x1={msg.startX} y1={msg.startY}
-                x2={isPending ? currentPlayheadX : msg.endX} 
-                y2={isPending ? msg.startY + (msg.endY - msg.startY) * ((currentClock - msg.clock) / (msg.eventTime - msg.clock)) : msg.endY}
-                stroke={msg.color}
-                strokeWidth={isPending ? 3 : 2}
-                markerEnd={isPending ? '' : `url(#arrow-${msg.color.replace('#', '')})`}
-                className={isPending ? styles.animatedLine : ''}
-              />
-              {!isPending && (
-                <text 
-                  x={(msg.startX + msg.endX) / 2} 
-                  y={(msg.startY + msg.endY) / 2 - 5} 
-                  className={styles.messageLabel}
-                  fill={msg.color}
-                >
-                  {msg.name}
-                </text>
-              )}
-            </g>
-          );
-        })}
-
-        {/* Playhead (Línea de tiempo actual vertical) */}
-        <line 
-          x1={currentPlayheadX} y1={20} 
-          x2={currentPlayheadX} y2={totalHeight - 20} 
-          className={styles.playhead} 
-        />
-        <polygon 
-          points={`${currentPlayheadX - 6},20 ${currentPlayheadX + 6},20 ${currentPlayheadX},28`} 
-          fill="#ef4444" 
-        />
-      </svg>
-
-      {/* Panel de Detalles */}
+      {/* Panel de Detalles FUERA del scrollContainer para que siempre esté visible en la esquina */}
       {selectedEvent && (
         <div className={`glass-panel ${styles.detailsPanel}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>

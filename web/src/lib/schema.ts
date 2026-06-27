@@ -7,7 +7,8 @@ const TransmitEventSchema = z.object({
   source: z.number(),
   target: z.number(),
   name: z.string(),
-  payload: z.any()
+  payload: z.any(),
+  node_state: z.any().nullable().optional()
 });
 
 const ReceiveEventSchema = z.object({
@@ -16,7 +17,8 @@ const ReceiveEventSchema = z.object({
   source: z.number(),
   target: z.number(),
   name: z.string(),
-  payload: z.any()
+  payload: z.any(),
+  node_state: z.any().nullable().optional()
 });
 
 const AppLogEventSchema = z.object({

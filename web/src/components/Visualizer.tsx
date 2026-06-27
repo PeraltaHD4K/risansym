@@ -132,43 +132,64 @@ export default function Visualizer() {
           </g>
         ))}
 
-        {/* Puntos Discretos de Eventos (Event Dots para inspeccionar el Payload genéricamente) */}
-        {traceData.trace.map((evt, index) => {
-          // El nodo que ejecuta la acción (en RECEIVE suele ser el source en nuestro esquema, o target, depende, 
-          // usaremos 'source' como el dueño del evento por defecto)
-          const ownerId = evt.action === 'RECEIVE' ? evt.target : evt.source;
-          const node = nodes.find(n => n.id === ownerId);
-          
-          if (!node) return null;
-          if (evt.clock > currentClock) return null; // Solo renderizar hasta el reloj actual
+        {/* Puntos Discretos de Eventos Agrupados (Event Dots) */}
+        {(() => {
+          // 1. Agrupar eventos por Nodo y por Reloj
+          const groups = new Map<string, any[]>();
+          traceData.trace.forEach(evt => {
+            if (evt.clock > currentClock) return;
+            const ownerId = evt.action === 'RECEIVE' ? (evt as any).target : evt.source;
+            const key = `${ownerId}-${evt.clock}`;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key)!.push(evt);
+          });
 
-          const x = PADDING_X + evt.clock * TIME_SCALE;
-          const y = node.y;
+          // 2. Renderizar un solo punto por grupo
+          return Array.from(groups.entries()).map(([key, evts], index) => {
+            const [ownerIdStr, clockStr] = key.split('-');
+            const ownerId = parseInt(ownerIdStr, 10);
+            const clock = parseFloat(clockStr);
+            const node = nodes.find(n => n.id === ownerId);
+            
+            if (!node) return null;
 
-          let DotShape;
-          let dotColor = '#94a3b8'; // default
-          
-          if (evt.action === 'TRANSMIT') {
-            dotColor = '#3b82f6'; // Azul
-            DotShape = <circle cx={x} cy={y} r="5" fill={dotColor} />;
-          } else if (evt.action === 'RECEIVE') {
-            dotColor = '#10b981'; // Verde
-            DotShape = <rect x={x - 5} y={y - 5} width="10" height="10" fill={dotColor} rx="2" />;
-          } else {
-            dotColor = '#f59e0b'; // Amarillo (APP_LOG)
-            DotShape = <polygon points={`${x},${y-6} ${x+6},${y} ${x},${y+6} ${x-6},${y}`} fill={dotColor} />;
-          }
+            const x = PADDING_X + clock * TIME_SCALE;
+            const y = node.y;
 
-          return (
-            <g 
-              key={`dot-${index}-${evt.clock}`} 
-              className={styles.eventDot}
-              onClick={() => setSelectedEvent(evt)}
-            >
-              {DotShape}
-            </g>
-          );
-        })}
+            let DotShape;
+            if (evts.length > 1) {
+              // Múltiples eventos: Dibujamos un círculo blanco con un indicador de cantidad
+              DotShape = (
+                <g>
+                  <circle cx={x} cy={y} r="8" fill="#ffffff" stroke="var(--accent-color)" strokeWidth="2" />
+                  <text x={x} y={y + 3} fontSize="9" fontWeight="bold" fill="#000" textAnchor="middle">
+                    {evts.length}
+                  </text>
+                </g>
+              );
+            } else {
+              // Evento único: Comportamiento normal
+              const evt = evts[0];
+              if (evt.action === 'TRANSMIT') {
+                DotShape = <circle cx={x} cy={y} r="5" fill="#3b82f6" />;
+              } else if (evt.action === 'RECEIVE') {
+                DotShape = <rect x={x - 5} y={y - 5} width="10" height="10" fill="#10b981" rx="2" />;
+              } else {
+                DotShape = <polygon points={`${x},${y-6} ${x+6},${y} ${x},${y+6} ${x-6},${y}`} fill="#f59e0b" />;
+              }
+            }
+
+            return (
+              <g 
+                key={`dotGroup-${index}`} 
+                className={styles.eventDot}
+                onClick={() => setSelectedEvent(evts)}
+              >
+                {DotShape}
+              </g>
+            );
+          });
+        })()}
 
         {/* Flechas de Mensajes */}
         {messages.map((msg: any) => {
@@ -182,7 +203,7 @@ export default function Visualizer() {
             <g 
               key={msg.id} 
               className={styles.messageGroup}
-              onClick={() => setSelectedEvent(msg.originalEvent)}
+              onClick={() => setSelectedEvent([msg.originalEvent])}
               style={{ cursor: 'pointer', opacity: isPast ? 1 : 0.8 }}
             >
               <line
@@ -224,12 +245,31 @@ export default function Visualizer() {
       {selectedEvent && (
         <div className={`glass-panel ${styles.detailsPanel}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h4 style={{ margin: 0, color: 'var(--accent-color)' }}>Detalles del Evento</h4>
+            <h4 style={{ margin: 0, color: 'var(--accent-color)' }}>
+              {Array.isArray(selectedEvent) && selectedEvent.length > 1 
+                ? `Múltiples Eventos (${selectedEvent.length})` 
+                : 'Detalles del Evento'}
+            </h4>
             <button onClick={() => setSelectedEvent(null)} className={styles.closeBtn}>×</button>
           </div>
-          <pre className={styles.jsonDump}>
-            {JSON.stringify(selectedEvent, null, 2)}
-          </pre>
+          <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+            {Array.isArray(selectedEvent) ? (
+              selectedEvent.map((ev, i) => (
+                <div key={i} style={{ marginBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 12 }}>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                    #{i + 1} - {ev.action} {ev.name ? `(${ev.name})` : ''}
+                  </span>
+                  <pre className={styles.jsonDump} style={{ marginTop: '8px' }}>
+                    {JSON.stringify(ev, null, 2)}
+                  </pre>
+                </div>
+              ))
+            ) : (
+              <pre className={styles.jsonDump}>
+                {JSON.stringify(selectedEvent, null, 2)}
+              </pre>
+            )}
+          </div>
         </div>
       )}
     </div>

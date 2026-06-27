@@ -36,10 +36,10 @@ export const TraceMetadataSchema = z.object({
   schema_version: z.literal('1.0'),
   algorithm: z.string(),
   topology: z.string(),
-  tag: z.string().nullable(),
+  tag: z.string().nullable().optional(),
   execution_date: z.string(),
-  parameters: z.record(z.any()),
-  metrics: z.record(z.any())
+  parameters: z.record(z.string(), z.any()),
+  metrics: z.record(z.string(), z.any())
 });
 
 export const TraceOutputSchema = z.object({

@@ -23,7 +23,7 @@ export default function PlaybackControls() {
   useEffect(() => {
     if (isPlaying && currentClock < maxTime) {
       timerRef.current = setInterval(() => {
-        setCurrentClock(prev => {
+        setCurrentClock((prev: number) => {
           const next = prev + (0.5 * playbackSpeed);
           if (next >= maxTime) {
             setIsPlaying(false);

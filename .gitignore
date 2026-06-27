@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build and Distribution
+dist/
+build/
+*.egg-info/
+
+# Next.js / Web
+node_modules/
+.next/
+out/
+build/
+
+# macOS
+.DS_Store

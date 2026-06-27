@@ -1,20 +1,20 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction } from 'react';
 import { TraceOutput } from './schema';
 
 interface SimulationContextType {
   traceData: TraceOutput | null;
-  setTraceData: (data: TraceOutput | null) => void;
+  setTraceData: Dispatch<SetStateAction<TraceOutput | null>>;
   currentClock: number;
-  setCurrentClock: (time: number) => void;
+  setCurrentClock: Dispatch<SetStateAction<number>>;
   isPlaying: boolean;
-  setIsPlaying: (playing: boolean) => void;
+  setIsPlaying: Dispatch<SetStateAction<boolean>>;
   playbackSpeed: number;
-  setPlaybackSpeed: (speed: number) => void;
+  setPlaybackSpeed: Dispatch<SetStateAction<number>>;
   maxTime: number;
   zoomScale: number;
-  setZoomScale: (scale: number) => void;
+  setZoomScale: Dispatch<SetStateAction<number>>;
 }
 
 const SimulationContext = createContext<SimulationContextType | null>(null);

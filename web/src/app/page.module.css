@@ -44,6 +44,8 @@
   flex-direction: column;
   gap: 16px;
   min-height: 400px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .emptyState {

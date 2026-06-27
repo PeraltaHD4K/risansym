@@ -2,6 +2,7 @@ import heapq
 from typing import TYPE_CHECKING
 
 from risansym.event import Event
+from risansym.schemas import TransmitEvent, ReceiveEvent, AppLogEvent
 
 if TYPE_CHECKING:
     from risansym.trace import TraceCollector
@@ -25,15 +26,15 @@ class Simulator:
                 print(f"[t={self.clock:.1f}] Nodo {event.source} TRANSMITE '{event.name}' -> Nodo {event.target} (llegará en t={event.time:.1f})")
             
             if self._collector:
-                self._collector.record({
-                    "action": "TRANSMIT",
-                    "clock": self.clock,
-                    "event_time": event.time,
-                    "source": event.source,
-                    "target": event.target,
-                    "name": event.name,
-                    "payload": event.payload
-                })
+                self._collector.record(TransmitEvent(
+                    action="TRANSMIT",
+                    clock=self.clock,
+                    event_time=event.time,
+                    source=event.source,
+                    target=event.target,
+                    name=event.name,
+                    payload=event.payload
+                ))
 
     def pop_event(self) -> Event:
         """Extrae el evento más próximo y avanza el reloj global."""
@@ -43,14 +44,14 @@ class Simulator:
             print(f"[t={self.clock:.1f}] Nodo {event.target} RECIBE '{event.name}' <- Nodo {event.source}")
             
         if self._collector:
-            self._collector.record({
-                "action": "RECEIVE",
-                "clock": self.clock,
-                "source": event.source,
-                "target": event.target,
-                "name": event.name,
-                "payload": event.payload
-            })
+            self._collector.record(ReceiveEvent(
+                action="RECEIVE",
+                clock=self.clock,
+                source=event.source,
+                target=event.target,
+                name=event.name,
+                payload=event.payload
+            ))
         return event
 
     def log_app_event(self, source: int, message: str) -> None:
@@ -59,12 +60,12 @@ class Simulator:
             print(f"[t={self.clock:.1f}] APP Nodo {source}: {message}")
             
         if self._collector:
-            self._collector.record({
-                "action": "APP_LOG",
-                "clock": self.clock,
-                "source": source,
-                "message": message
-            })
+            self._collector.record(AppLogEvent(
+                action="APP_LOG",
+                clock=self.clock,
+                source=source,
+                message=message
+            ))
 
     @property
     def is_on(self) -> bool:

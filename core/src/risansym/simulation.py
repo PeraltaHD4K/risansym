@@ -8,6 +8,7 @@ from risansym.event import Event
 from risansym.model import Model
 from risansym.process import Process
 from risansym.simulator import Simulator
+from risansym.schemas import TraceMetadata
 
 
 class Simulation:
@@ -79,18 +80,19 @@ class Simulation:
         total_edges = sum(len(neighbors) for neighbors in self.graph)
         total_nodes = len(self.table) - 1
         
-        metadata = {
-            "algorithm": self.algo_name,
-            "topology": grafo_name,
-            "tag": self.trace_tag,
-            "execution_date": timestamp,
-            "parameters": {
+        metadata = TraceMetadata(
+            schema_version="1.0",
+            algorithm=self.algo_name,
+            topology=grafo_name,
+            tag=self.trace_tag,
+            execution_date=timestamp,
+            parameters={
                 "max_time": self.engine.maxtime,
                 "total_nodes": total_nodes,
                 "total_edges": total_edges
             },
-            "metrics": self.execution_metrics
-        }
+            metrics=self.execution_metrics
+        )
         
         if self.collector:
             self.collector.dump(trace_path, metadata)

@@ -55,12 +55,11 @@
 
 .eventDot {
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: filter 0.2s;
 }
 
 .eventDot:hover {
-  filter: brightness(1.5);
-  transform: scale(1.5);
+  filter: brightness(1.5) drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
 }
 
 .detailsPanel {

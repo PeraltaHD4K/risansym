@@ -1,13 +1,14 @@
 import json
 from pathlib import Path
+from risansym.schemas import TraceEvent, TraceMetadata, TraceOutput
 
 class TraceCollector:
-    """Responsable de acumular y persistir la traza de eventos simulados."""
+    """Responsable de acumular y persistir la traza de eventos simulados usando Pydantic."""
     
     def __init__(self) -> None:
-        self._trace: list[dict] = []
+        self._trace: list[TraceEvent] = []
 
-    def record(self, entry: dict) -> None:
+    def record(self, entry: TraceEvent) -> None:
         """Añade un evento estructurado a la traza en memoria."""
         self._trace.append(entry)
         
@@ -15,12 +16,13 @@ class TraceCollector:
         """Retorna el número de eventos registrados."""
         return len(self._trace)
 
-    def dump(self, filepath: Path, metadata: dict) -> None:
-        """Persiste la traza y metadatos en un archivo JSON."""
+    def dump(self, filepath: Path, metadata: TraceMetadata) -> None:
+        """Persiste la traza validada matemáticamente en un archivo JSON."""
         filepath.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Validar y armar el objeto final
+        output = TraceOutput(metadata=metadata, trace=self._trace)
+        
+        # Guardar en disco
         with filepath.open('w', encoding='utf-8') as f:
-            output = {
-                "metadata": metadata,
-                "trace": self._trace
-            }
-            json.dump(output, f, indent=2, ensure_ascii=False)
+            f.write(output.model_dump_json(indent=2))

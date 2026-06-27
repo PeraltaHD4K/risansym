@@ -132,15 +132,50 @@ export default function Visualizer() {
           </g>
         ))}
 
+        {/* Puntos Discretos de Eventos (Event Dots para inspeccionar el Payload genéricamente) */}
+        {traceData.trace.map((evt, index) => {
+          // El nodo que ejecuta la acción (en RECEIVE suele ser el source en nuestro esquema, o target, depende, 
+          // usaremos 'source' como el dueño del evento por defecto)
+          const ownerId = evt.action === 'RECEIVE' ? evt.target : evt.source;
+          const node = nodes.find(n => n.id === ownerId);
+          
+          if (!node) return null;
+          if (evt.clock > currentClock) return null; // Solo renderizar hasta el reloj actual
+
+          const x = PADDING_X + evt.clock * TIME_SCALE;
+          const y = node.y;
+
+          let DotShape;
+          let dotColor = '#94a3b8'; // default
+          
+          if (evt.action === 'TRANSMIT') {
+            dotColor = '#3b82f6'; // Azul
+            DotShape = <circle cx={x} cy={y} r="5" fill={dotColor} />;
+          } else if (evt.action === 'RECEIVE') {
+            dotColor = '#10b981'; // Verde
+            DotShape = <rect x={x - 5} y={y - 5} width="10" height="10" fill={dotColor} rx="2" />;
+          } else {
+            dotColor = '#f59e0b'; // Amarillo (APP_LOG)
+            DotShape = <polygon points={`${x},${y-6} ${x+6},${y} ${x},${y+6} ${x-6},${y}`} fill={dotColor} />;
+          }
+
+          return (
+            <g 
+              key={`dot-${index}-${evt.clock}`} 
+              className={styles.eventDot}
+              onClick={() => setSelectedEvent(evt)}
+            >
+              {DotShape}
+            </g>
+          );
+        })}
+
         {/* Flechas de Mensajes */}
         {messages.map((msg: any) => {
-          // Si el mensaje ocurre totalmente después del reloj actual, lo atenuamos o lo ocultamos
-          // Esto ayuda a ver "discretamente" qué ha pasado hasta el momento.
           const isFuture = msg.clock > currentClock;
           const isPending = msg.clock <= currentClock && msg.eventTime > currentClock;
           const isPast = msg.eventTime <= currentClock;
 
-          // Hacemos que las flechas futuras sean invisibles y las pasadas/presentes brillen.
           if (isFuture) return null;
 
           return (
@@ -159,7 +194,6 @@ export default function Visualizer() {
                 markerEnd={isPending ? '' : `url(#arrow-${msg.color.replace('#', '')})`}
                 className={isPending ? styles.animatedLine : ''}
               />
-              {/* Etiqueta del mensaje en el medio de la flecha */}
               {!isPending && (
                 <text 
                   x={(msg.startX + msg.endX) / 2} 

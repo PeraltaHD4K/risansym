@@ -1,17 +1,18 @@
 'use client'
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSimulation } from '@/lib/SimulationContext';
 import styles from './Visualizer.module.css';
 
+const NODE_HEIGHT = 100;
+const TIME_SCALE = 80; // píxeles por cada unidad de tiempo (segundo)
+const PADDING_X = 60;
+const PADDING_Y = 60;
+
 export default function Visualizer() {
-  const { traceData, currentClock } = useSimulation();
+  const { traceData, currentClock, maxTime } = useSimulation();
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
 
-  const CANVAS_SIZE = 600;
-  const RADIUS = 220;
-  const CENTER = CANVAS_SIZE / 2;
-
-  // 1. Extraer nodos únicos
   const nodes = useMemo(() => {
     if (!traceData) return [];
     const nodeSet = new Set<number>();
@@ -20,92 +21,183 @@ export default function Visualizer() {
       if ('target' in event) nodeSet.add(event.target);
     });
     
-    // Ordenar nodos y asignar coordenadas circulares
-    const sorted = Array.from(nodeSet).sort((a, b) => a - b);
-    return sorted.map((id, index) => {
-      const angle = (index / sorted.length) * 2 * Math.PI - Math.PI / 2; // Empezar arriba
-      return {
+    return Array.from(nodeSet)
+      .sort((a, b) => a - b)
+      .map((id, index) => ({
         id,
-        x: CENTER + RADIUS * Math.cos(angle),
-        y: CENTER + RADIUS * Math.sin(angle),
-      };
-    });
+        y: PADDING_Y + index * NODE_HEIGHT
+      }));
   }, [traceData]);
 
-  // 2. Extraer mensajes en tránsito
-  const activeMessages = useMemo(() => {
+  const messages = useMemo(() => {
     if (!traceData) return [];
     
-    // Un mensaje está activo si fue transmitido antes o igual al reloj actual,
-    // y su tiempo de llegada (event_time) es estrictamente mayor al reloj actual.
-    // (O si acaba de llegar, para mostrar el impacto).
-    const transmits = traceData.trace.filter(e => e.action === 'TRANSMIT' && e.clock <= currentClock && e.event_time >= currentClock);
-    
-    return transmits.map((t, index) => {
-      const srcNode = nodes.find(n => n.id === t.source);
-      const dstNode = nodes.find(n => n.id === (t as any).target);
-      
-      if (!srcNode || !dstNode) return null;
-      
-      const totalDuration = (t as any).event_time - t.clock;
-      const progress = totalDuration > 0 ? (currentClock - t.clock) / totalDuration : 1;
-      
-      const x = srcNode.x + (dstNode.x - srcNode.x) * progress;
-      const y = srcNode.y + (dstNode.y - srcNode.y) * progress;
-      
-      return {
-        id: `${index}-${t.source}-${(t as any).target}-${t.clock}-${t.name}`,
-        name: t.name,
-        x,
-        y,
-        progress
-      };
-    }).filter(Boolean);
-  }, [traceData, currentClock, nodes]);
+    // Asignar colores fijos a tipos de mensajes comunes para distinguirlos
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899'];
+    const typeColorMap = new Map<string, string>();
+    let colorIndex = 0;
+
+    return traceData.trace
+      .filter(e => e.action === 'TRANSMIT')
+      .map((t, index) => {
+        const srcNode = nodes.find(n => n.id === t.source);
+        const dstNode = nodes.find(n => n.id === (t as any).target);
+        if (!srcNode || !dstNode) return null;
+
+        if (!typeColorMap.has(t.name)) {
+          typeColorMap.set(t.name, colors[colorIndex % colors.length]);
+          colorIndex++;
+        }
+
+        const startX = PADDING_X + t.clock * TIME_SCALE;
+        const endX = PADDING_X + (t as any).event_time * TIME_SCALE;
+
+        return {
+          originalEvent: t,
+          id: `${index}-${t.source}-${(t as any).target}-${t.clock}-${t.name}`,
+          name: t.name,
+          color: typeColorMap.get(t.name),
+          startX,
+          startY: srcNode.y,
+          endX,
+          endY: dstNode.y,
+          clock: t.clock,
+          eventTime: (t as any).event_time,
+          payload: t.payload
+        };
+      }).filter(Boolean);
+  }, [traceData, nodes]);
 
   if (!traceData) return null;
 
-  return (
-    <div className={styles.canvasContainer}>
-      <svg width={CANVAS_SIZE} height={CANVAS_SIZE} className={styles.svgLayer}>
-        {/* Enlaces base tenues (Topología completa supuesta) */}
-        {nodes.map(n1 => 
-          nodes.map(n2 => {
-            if (n1.id >= n2.id) return null;
-            return (
-              <line 
-                key={`link-${n1.id}-${n2.id}`}
-                x1={n1.x} y1={n1.y} 
-                x2={n2.x} y2={n2.y} 
-                stroke="rgba(255, 255, 255, 0.03)" 
-                strokeWidth="1"
-              />
-            );
-          })
-        )}
+  const totalHeight = nodes.length > 0 ? PADDING_Y * 2 + (nodes.length - 1) * NODE_HEIGHT : 400;
+  // Añadimos un poco de margen al final del X para que se vea cómodo
+  const totalWidth = Math.max(800, PADDING_X * 2 + maxTime * TIME_SCALE + 200);
 
-        {/* Mensajes en tránsito (Partículas) */}
-        {activeMessages.map((msg: any) => (
-          <g key={msg.id} transform={`translate(${msg.x}, ${msg.y})`}>
-            <circle r="6" fill="var(--accent-color)" className={styles.particleGlow} />
-            <circle r="4" fill="#fff" />
-            <text y="-12" textAnchor="middle" fill="var(--accent-color)" fontSize="12" fontWeight="bold">
-              {msg.name}
+  const currentPlayheadX = PADDING_X + currentClock * TIME_SCALE;
+
+  return (
+    <div className={styles.scrollContainer}>
+      <svg width={totalWidth} height={totalHeight} className={styles.svgLayer}>
+        <defs>
+          {/* Marcadores para las flechas de los mensajes (Solo colores únicos) */}
+          {Array.from(new Set(messages.map((m: any) => m.color))).map(color => (
+            <marker
+              key={`arrow-${color}`}
+              id={`arrow-${(color as string).replace('#', '')}`}
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path d="M0,0 L0,6 L9,3 z" fill={color as string} />
+            </marker>
+          ))}
+        </defs>
+
+        {/* Líneas horizontales de vida de cada Nodo */}
+        {nodes.map(node => (
+          <g key={`lifeline-${node.id}`}>
+            <text x={10} y={node.y + 5} className={styles.nodeLabel}>N{node.id}</text>
+            <line 
+              x1={PADDING_X} y1={node.y} 
+              x2={totalWidth - 50} y2={node.y} 
+              className={styles.lifeline} 
+              strokeDasharray="4,4"
+            />
+          </g>
+        ))}
+
+        {/* Eje de Tiempo (Ticks abajo) */}
+        <line 
+          x1={PADDING_X} y1={totalHeight - 20} 
+          x2={totalWidth - 50} y2={totalHeight - 20} 
+          className={styles.timeAxis} 
+        />
+        {Array.from({ length: Math.ceil(maxTime) + 1 }).map((_, i) => (
+          <g key={`tick-${i}`}>
+            <line 
+              x1={PADDING_X + i * TIME_SCALE} y1={totalHeight - 25} 
+              x2={PADDING_X + i * TIME_SCALE} y2={totalHeight - 15} 
+              stroke="var(--text-secondary)" 
+            />
+            <text 
+              x={PADDING_X + i * TIME_SCALE} y={totalHeight - 5} 
+              className={styles.timeTick}
+            >
+              {i}s
             </text>
           </g>
         ))}
+
+        {/* Flechas de Mensajes */}
+        {messages.map((msg: any) => {
+          // Si el mensaje ocurre totalmente después del reloj actual, lo atenuamos o lo ocultamos
+          // Esto ayuda a ver "discretamente" qué ha pasado hasta el momento.
+          const isFuture = msg.clock > currentClock;
+          const isPending = msg.clock <= currentClock && msg.eventTime > currentClock;
+          const isPast = msg.eventTime <= currentClock;
+
+          // Hacemos que las flechas futuras sean invisibles y las pasadas/presentes brillen.
+          if (isFuture) return null;
+
+          return (
+            <g 
+              key={msg.id} 
+              className={styles.messageGroup}
+              onClick={() => setSelectedEvent(msg.originalEvent)}
+              style={{ cursor: 'pointer', opacity: isPast ? 1 : 0.8 }}
+            >
+              <line
+                x1={msg.startX} y1={msg.startY}
+                x2={isPending ? currentPlayheadX : msg.endX} 
+                y2={isPending ? msg.startY + (msg.endY - msg.startY) * ((currentClock - msg.clock) / (msg.eventTime - msg.clock)) : msg.endY}
+                stroke={msg.color}
+                strokeWidth={isPending ? 3 : 2}
+                markerEnd={isPending ? '' : `url(#arrow-${msg.color.replace('#', '')})`}
+                className={isPending ? styles.animatedLine : ''}
+              />
+              {/* Etiqueta del mensaje en el medio de la flecha */}
+              {!isPending && (
+                <text 
+                  x={(msg.startX + msg.endX) / 2} 
+                  y={(msg.startY + msg.endY) / 2 - 5} 
+                  className={styles.messageLabel}
+                  fill={msg.color}
+                >
+                  {msg.name}
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Playhead (Línea de tiempo actual vertical) */}
+        <line 
+          x1={currentPlayheadX} y1={20} 
+          x2={currentPlayheadX} y2={totalHeight - 20} 
+          className={styles.playhead} 
+        />
+        <polygon 
+          points={`${currentPlayheadX - 6},20 ${currentPlayheadX + 6},20 ${currentPlayheadX},28`} 
+          fill="#ef4444" 
+        />
       </svg>
 
-      {/* Nodos HTML para mejor renderizado CSS */}
-      {nodes.map(node => (
-        <div 
-          key={node.id} 
-          className={styles.node}
-          style={{ left: node.x, top: node.y }}
-        >
-          <span className={styles.nodeId}>N{node.id}</span>
+      {/* Panel de Detalles */}
+      {selectedEvent && (
+        <div className={`glass-panel ${styles.detailsPanel}`}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h4 style={{ margin: 0, color: 'var(--accent-color)' }}>Detalles del Evento</h4>
+            <button onClick={() => setSelectedEvent(null)} className={styles.closeBtn}>×</button>
+          </div>
+          <pre className={styles.jsonDump}>
+            {JSON.stringify(selectedEvent, null, 2)}
+          </pre>
         </div>
-      ))}
+      )}
     </div>
   );
 }

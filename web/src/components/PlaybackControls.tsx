@@ -1,6 +1,6 @@
 'use client'
 
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut } from 'lucide-react';
 import { useSimulation } from '@/lib/SimulationContext';
 import styles from './PlaybackControls.module.css';
 import { useEffect, useRef } from 'react';
@@ -13,14 +13,15 @@ export default function PlaybackControls() {
     isPlaying, 
     setIsPlaying, 
     playbackSpeed,
-    maxTime 
+    maxTime,
+    zoomScale,
+    setZoomScale
   } = useSimulation();
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isPlaying && currentClock < maxTime) {
-      // Avanzar el reloj basado en la velocidad (ej. 1 paso por 100ms)
       timerRef.current = setInterval(() => {
         setCurrentClock(prev => {
           const next = prev + (0.5 * playbackSpeed);
@@ -75,6 +76,16 @@ export default function PlaybackControls() {
           className={styles.slider}
         />
         <span className={styles.timeLabel}>{maxTime.toFixed(1)}s</span>
+      </div>
+
+      <div className={styles.zoomGroup}>
+        <button className={styles.zoomBtn} onClick={() => setZoomScale(Math.max(0.5, zoomScale - 0.5))}>
+          <ZoomOut size={18} />
+        </button>
+        <span className={styles.zoomLabel}>{Math.round(zoomScale * 100)}%</span>
+        <button className={styles.zoomBtn} onClick={() => setZoomScale(Math.min(10, zoomScale + 0.5))}>
+          <ZoomIn size={18} />
+        </button>
       </div>
     </div>
   );

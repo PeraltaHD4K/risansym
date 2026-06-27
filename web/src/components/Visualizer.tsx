@@ -5,13 +5,15 @@ import { useSimulation } from '@/lib/SimulationContext';
 import styles from './Visualizer.module.css';
 
 const NODE_HEIGHT = 100;
-const TIME_SCALE = 80; // píxeles por cada unidad de tiempo (segundo)
+const BASE_TIME_SCALE = 80;
 const PADDING_X = 60;
 const PADDING_Y = 60;
 
 export default function Visualizer() {
-  const { traceData, currentClock, maxTime } = useSimulation();
+  const { traceData, currentClock, maxTime, zoomScale } = useSimulation();
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+
+  const TIME_SCALE = BASE_TIME_SCALE * zoomScale;
 
   const nodes = useMemo(() => {
     if (!traceData) return [];

@@ -26,8 +26,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [zoomScale, setZoomScale] = useState<number>(1);
 
-  // Derivamos el tiempo máximo del archivo si existe
-  const maxTime = traceData?.metadata?.parameters?.max_time ?? 0;
+  // Derivamos el tiempo máximo del archivo si existe (Forzando casteo numérico)
+  const maxTime = Number(traceData?.metadata?.parameters?.max_time ?? 0);
 
   return (
     <SimulationContext.Provider

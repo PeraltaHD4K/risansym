@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "risansym"
+version = "0.1.0"
+description = "A Discrete Event Simulator for Distributed Systems"
+readme = "README.md"
+authors = [
+    { name = "Diego Peralta Huerta", email = "tucorreo@ejemplo.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/tu-usuario/risansym"
+Repository = "https://github.com/tu-usuario/risansym.git"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/risansym"]

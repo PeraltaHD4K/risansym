@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const TransmitEventSchema = z.object({
+export const TransmitEventSchema = z.object({
   action: z.literal('TRANSMIT'),
   clock: z.number(),
   event_time: z.number(),
@@ -11,7 +11,7 @@ const TransmitEventSchema = z.object({
   node_state: z.any().nullable().optional()
 });
 
-const ReceiveEventSchema = z.object({
+export const ReceiveEventSchema = z.object({
   action: z.literal('RECEIVE'),
   clock: z.number(),
   source: z.number(),
@@ -21,7 +21,7 @@ const ReceiveEventSchema = z.object({
   node_state: z.any().nullable().optional()
 });
 
-const AppLogEventSchema = z.object({
+export const AppLogEventSchema = z.object({
   action: z.literal('APP_LOG'),
   clock: z.number(),
   source: z.number(),
@@ -50,6 +50,42 @@ export const TraceOutputSchema = z.object({
 });
 
 // Inferir tipos de TypeScript a partir de Zod
+export type TransmitEvent = z.infer<typeof TransmitEventSchema>;
+export type ReceiveEvent = z.infer<typeof ReceiveEventSchema>;
+export type AppLogEvent = z.infer<typeof AppLogEventSchema>;
 export type TraceEvent = z.infer<typeof TraceEventSchema>;
 export type TraceMetadata = z.infer<typeof TraceMetadataSchema>;
 export type TraceOutput = z.infer<typeof TraceOutputSchema>;
+
+// Type guards for discriminated union members
+export function isTransmitEvent(event: TraceEvent): event is TransmitEvent {
+  return event.action === 'TRANSMIT';
+}
+
+export function isReceiveEvent(event: TraceEvent): event is ReceiveEvent {
+  return event.action === 'RECEIVE';
+}
+
+export function isAppLogEvent(event: TraceEvent): event is AppLogEvent {
+  return event.action === 'APP_LOG';
+}
+
+// Utility types for the Visualizer
+export interface ComputedMessage {
+  originalEvent: TransmitEvent;
+  id: string;
+  name: string;
+  color: string;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  clock: number;
+  eventTime: number;
+  payload: unknown;
+}
+
+export interface NodePosition {
+  id: number;
+  y: number;
+}

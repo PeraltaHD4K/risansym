@@ -35,6 +35,10 @@ class Model(ABC):
         if self.process:
             self.process.log(message)
 
+    def get_state(self) -> dict:
+        """Retorna una copia del estado interno relevante del nodo. (Puede ser sobreescrito por la subclase)."""
+        return {}
+
     @abstractmethod
     def init(self) -> None:
         """Inicialización del estado local (implementado por la subclase)."""

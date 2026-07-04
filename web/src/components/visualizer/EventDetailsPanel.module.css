@@ -1,0 +1,62 @@
+.detailsPanel {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 350px;
+  max-height: 400px;
+  padding: 16px;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  color: var(--accent-color);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.closeBtn:hover {
+  color: var(--danger-color);
+}
+
+.scrollBody {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.eventEntry {
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+.eventLabel {
+  color: var(--text-primary);
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.jsonDump {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}

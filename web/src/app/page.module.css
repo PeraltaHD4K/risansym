@@ -48,30 +48,64 @@
   overflow: hidden;
 }
 
+.inspectorContent {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.accentValue {
+  color: var(--accent-color);
+}
+
+.primaryValue {
+  color: var(--text-primary);
+}
+
+.metricsList {
+  padding-left: 16px;
+  margin-top: 8px;
+}
+
+.docButton {
+  margin-top: auto;
+  justify-content: center;
+}
+
+.visualizerLayout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
 .emptyState {
   color: var(--text-secondary);
   text-align: center;
   font-size: 1.1rem;
 }
 
-.uploadBox {
-  border: 2px dashed var(--panel-border);
-  border-radius: 12px;
-  padding: 40px;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  background: rgba(0, 0, 0, 0.2);
+@media (max-width: 900px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    order: 2;
+  }
+  
+  .mainArea {
+    order: 1;
+  }
 }
 
-.uploadBox:hover {
-  border-color: var(--accent-color);
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.icon {
-  width: 48px;
-  height: 48px;
-  color: var(--accent-color);
-  margin-bottom: 16px;
+@media (max-width: 600px) {
+  .title {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
 }

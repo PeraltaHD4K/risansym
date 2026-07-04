@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { UploadCloud, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useSimulation } from '@/lib/SimulationContext';
+import { useTrace } from '@/lib/TraceContext';
+import { usePlayback } from '@/lib/PlaybackContext';
 import { TraceOutputSchema } from '@/lib/schema';
 import styles from './Uploader.module.css';
 
 export default function Uploader() {
-  const { setTraceData, setCurrentClock, setIsPlaying } = useSimulation();
+  const { setTraceData } = useTrace();
+  const { setCurrentClock, setIsPlaying } = usePlayback();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -29,9 +31,10 @@ export default function Uploader() {
         setCurrentClock(0);
         setIsPlaying(false);
         setSuccess(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Zod Validation Error:", err);
-        setError("El archivo no cumple con el esquema V1.0 (Zod Validation Failed).");
+        const message = err instanceof Error ? err.message : "Error desconocido";
+        setError(`El archivo no cumple con el esquema V1.0: ${message}`);
         setTraceData(null);
       }
     };
@@ -70,7 +73,7 @@ export default function Uploader() {
         <UploadCloud className={styles.icon} />
       )}
       
-      <h3 style={{ marginBottom: '8px' }}>
+      <h3 className={styles.uploadTitle}>
         {error ? "Error de Validación" : success ? "Traza Cargada" : "Sube tu archivo traza.json"}
       </h3>
       

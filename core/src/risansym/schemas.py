@@ -9,6 +9,7 @@ class TransmitEvent(BaseModel):
     target: int
     name: str
     payload: Any
+    node_state: dict[str, Any] | None = None
 
 class ReceiveEvent(BaseModel):
     action: Literal["RECEIVE"] = "RECEIVE"
@@ -17,6 +18,7 @@ class ReceiveEvent(BaseModel):
     target: int
     name: str
     payload: Any
+    node_state: dict[str, Any] | None = None
 
 class AppLogEvent(BaseModel):
     action: Literal["APP_LOG"] = "APP_LOG"

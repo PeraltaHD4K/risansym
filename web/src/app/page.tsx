@@ -5,10 +5,10 @@ import styles from './page.module.css';
 import Uploader from '@/components/Uploader';
 import PlaybackControls from '@/components/PlaybackControls';
 import Visualizer from '@/components/Visualizer';
-import { useSimulation } from '@/lib/SimulationContext';
+import { useTrace } from '@/lib/TraceContext';
 
 export default function Home() {
-  const { traceData, currentClock } = useSimulation();
+  const { traceData } = useTrace();
 
   return (
     <main className={styles.container}>
@@ -26,26 +26,32 @@ export default function Home() {
         <aside className={`glass-panel ${styles.sidebar}`}>
           <h3>Inspector de Traza</h3>
           {traceData ? (
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              <p>Algoritmo: <strong style={{ color: 'var(--accent-color)' }}>{traceData.metadata.algorithm}</strong></p>
-              <p>Topología: <strong style={{ color: 'var(--text-primary)' }}>{traceData.metadata.topology}</strong></p>
+            <div className={styles.inspectorContent}>
+              <p>Algoritmo: <strong className={styles.accentValue}>{traceData.metadata.algorithm}</strong></p>
+              <p>Topología: <strong className={styles.primaryValue}>{traceData.metadata.topology}</strong></p>
               <br/>
               <p>Métricas de Simulación:</p>
-              <ul style={{ paddingLeft: '16px', marginTop: '8px' }}>
+              <ul className={styles.metricsList}>
                 <li>Eventos: {traceData.trace.length}</li>
                 <li>Nodos Totales: {String(traceData.metadata.parameters.total_nodes || 'N/A')}</li>
               </ul>
             </div>
           ) : (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            <p className={styles.inspectorContent}>
               Carga un archivo de simulación para habilitar los controles de tiempo y métricas.
             </p>
           )}
           
-          <button className="premium-button" style={{ marginTop: 'auto', justifyContent: 'center' }}>
+          <a 
+            href="https://github.com/diegoperalta/risansym" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className={`premium-button ${styles.docButton}`}
+            style={{ textDecoration: 'none' }}
+          >
             <Activity size={18} />
             Documentación
-          </button>
+          </a>
         </aside>
 
         {/* Área Principal (Lienzo / Drag & Drop) */}
@@ -53,7 +59,7 @@ export default function Home() {
           {!traceData ? (
             <Uploader />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', minWidth: 0, minHeight: 0 }}>
+            <div className={styles.visualizerLayout}>
               <Visualizer />
               <PlaybackControls />
             </div>

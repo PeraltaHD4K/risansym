@@ -1,0 +1,58 @@
+import { useMemo } from 'react';
+import type { TraceOutput, NodePosition, ComputedMessage } from '@/lib/schema';
+import { isTransmitEvent } from '@/lib/schema';
+import { PADDING_X, MESSAGE_COLORS, BASE_TIME_SCALE } from '../constants';
+
+/**
+ * Computes arrow geometries from trace data for message visualization.
+ * Filters TRANSMIT events, assigns colors by message name, and computes SVG coordinates.
+ */
+export function useMessageArrows(
+  traceData: TraceOutput | null,
+  nodes: NodePosition[],
+  zoomScale: number
+): ComputedMessage[] {
+  return useMemo(() => {
+    if (!traceData) return [];
+
+    const timeScale = BASE_TIME_SCALE * zoomScale;
+
+    // Asignar colores fijos a tipos de mensajes comunes para distinguirlos
+    const typeColorMap = new Map<string, string>();
+    let colorIndex = 0;
+
+    const results: ComputedMessage[] = [];
+
+    traceData.trace.forEach((event, index) => {
+      if (!isTransmitEvent(event)) return;
+
+      const srcNode = nodes.find(n => n.id === event.source);
+      const dstNode = nodes.find(n => n.id === event.target);
+      if (!srcNode || !dstNode) return;
+
+      if (!typeColorMap.has(event.name)) {
+        typeColorMap.set(event.name, MESSAGE_COLORS[colorIndex % MESSAGE_COLORS.length]);
+        colorIndex++;
+      }
+
+      const startX = PADDING_X + event.clock * timeScale;
+      const endX = PADDING_X + event.event_time * timeScale;
+
+      results.push({
+        originalEvent: event,
+        id: `${index}-${event.source}-${event.target}-${event.clock}-${event.name}`,
+        name: event.name,
+        color: typeColorMap.get(event.name)!,
+        startX,
+        startY: srcNode.y,
+        endX,
+        endY: dstNode.y,
+        clock: event.clock,
+        eventTime: event.event_time,
+        payload: event.payload,
+      });
+    });
+
+    return results;
+  }, [traceData, nodes, zoomScale]);
+}

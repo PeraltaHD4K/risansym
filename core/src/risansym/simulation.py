@@ -49,6 +49,7 @@ class Simulation:
 
     def _execute(self) -> None:
         """Bucle principal: extrae y enruta eventos hasta agotar la agenda."""
+        from risansym.schemas import ReceiveEvent
         start_real_time = time.perf_counter()
         
         while self.engine.is_on:
@@ -56,6 +57,20 @@ class Simulation:
             if process := self.table[event.target]:  # walrus operator
                 process.set_time(event.time)
                 process.receive(event)
+                
+                # Después de que el nodo procesó el evento, tomamos una "foto" (snapshot) de su estado interno
+                state = process.model.get_state() if process.model else {}
+                
+                if self.collector:
+                    self.collector.record(ReceiveEvent(
+                        action="RECEIVE",
+                        clock=event.time,
+                        source=event.source,
+                        target=event.target,
+                        name=event.name,
+                        payload=event.payload,
+                        node_state=state
+                    ))
                 
         end_real_time = time.perf_counter()
         

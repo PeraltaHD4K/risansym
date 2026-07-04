@@ -18,7 +18,7 @@ class Simulator:
         self.debug: bool = debug
         self._collector = collector
 
-    def insert_event(self, event: Event) -> None:
+    def insert_event(self, event: Event, node_state: dict | None = None) -> None:
         """Inserta un evento en el heap si está dentro del horizonte temporal."""
         if event.time <= self.maxtime:
             heapq.heappush(self._agenda, event)
@@ -33,7 +33,8 @@ class Simulator:
                     source=event.source,
                     target=event.target,
                     name=event.name,
-                    payload=event.payload
+                    payload=event.payload,
+                    node_state=node_state
                 ))
 
     def pop_event(self) -> Event:
@@ -43,15 +44,8 @@ class Simulator:
         if self.debug:
             print(f"[t={self.clock:.1f}] Nodo {event.target} RECIBE '{event.name}' <- Nodo {event.source}")
             
-        if self._collector:
-            self._collector.record(ReceiveEvent(
-                action="RECEIVE",
-                clock=self.clock,
-                source=event.source,
-                target=event.target,
-                name=event.name,
-                payload=event.payload
-            ))
+        # Nota: La grabación en el TraceCollector de ReceiveEvent ahora se hace desde
+        # Simulation._execute() para poder capturar el estado del nodo DESPUÉS de procesarlo.
         return event
 
     def log_app_event(self, source: int, message: str) -> None:

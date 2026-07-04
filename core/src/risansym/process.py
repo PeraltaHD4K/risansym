@@ -24,7 +24,8 @@ class Process:
             self.model.set_time(time)
 
     def transmit(self, event: Event) -> None:
-        self.engine.insert_event(event)
+        state = self.model.get_state() if self.model else {}
+        self.engine.insert_event(event, node_state=state)
 
     def receive(self, event: Event) -> None:
         if self.model:

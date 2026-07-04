@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import { SimulationProvider } from "@/lib/SimulationContext";
+import { TraceProvider } from "@/lib/TraceContext";
+import { PlaybackProvider } from "@/lib/PlaybackContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -26,9 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${outfit.variable}`}>
-        <SimulationProvider>
-          {children}
-        </SimulationProvider>
+        <TraceProvider>
+          <PlaybackProvider>
+            {children}
+          </PlaybackProvider>
+        </TraceProvider>
       </body>
     </html>
   );

@@ -1,13 +1,14 @@
 'use client'
 
 import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut } from 'lucide-react';
-import { useSimulation } from '@/lib/SimulationContext';
+import { useTrace } from '@/lib/TraceContext';
+import { usePlayback } from '@/lib/PlaybackContext';
 import styles from './PlaybackControls.module.css';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 export default function PlaybackControls() {
+  const { traceData } = useTrace();
   const { 
-    traceData, 
     currentClock, 
     setCurrentClock, 
     isPlaying, 
@@ -16,29 +17,52 @@ export default function PlaybackControls() {
     maxTime,
     zoomScale,
     setZoomScale
-  } = useSimulation();
+  } = usePlayback();
   
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastTimestampRef = useRef<number | null>(null);
+
+  const animate = useCallback((timestamp: number) => {
+    if (lastTimestampRef.current === null) {
+      lastTimestampRef.current = timestamp;
+      rafRef.current = requestAnimationFrame(animate);
+      return;
+    }
+
+    const deltaSeconds = (timestamp - lastTimestampRef.current) / 1000;
+    lastTimestampRef.current = timestamp;
+
+    setCurrentClock((prev: number) => {
+      const next = prev + deltaSeconds * playbackSpeed;
+      if (next >= maxTime) {
+        setIsPlaying(false);
+        return maxTime;
+      }
+      return next;
+    });
+
+    rafRef.current = requestAnimationFrame(animate);
+  }, [playbackSpeed, maxTime, setCurrentClock, setIsPlaying]);
 
   useEffect(() => {
-    if (isPlaying && currentClock < maxTime) {
-      timerRef.current = setInterval(() => {
-        setCurrentClock((prev: number) => {
-          const next = prev + (0.5 * playbackSpeed);
-          if (next >= maxTime) {
-            setIsPlaying(false);
-            return maxTime;
-          }
-          return next;
-        });
-      }, 100);
+    if (isPlaying) {
+      lastTimestampRef.current = null;
+      rafRef.current = requestAnimationFrame(animate);
     } else {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      lastTimestampRef.current = null;
     }
+
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
     };
-  }, [isPlaying, currentClock, maxTime, playbackSpeed, setCurrentClock, setIsPlaying]);
+  }, [isPlaying, animate]);
 
   if (!traceData) return null;
 
@@ -53,7 +77,7 @@ export default function PlaybackControls() {
           className={styles.playBtn} 
           onClick={() => setIsPlaying(!isPlaying)}
         >
-          {isPlaying ? <Pause size={24} /> : <Play size={24} style={{ marginLeft: '4px' }} />}
+          {isPlaying ? <Pause size={24} /> : <Play size={24} className={styles.playIcon} />}
         </button>
         
         <button className={styles.controlBtn} onClick={() => setCurrentClock(maxTime)}>

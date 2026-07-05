@@ -21,3 +21,8 @@ Repository = "https://github.com/PeraltaHD4K/risansym.git"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/risansym"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

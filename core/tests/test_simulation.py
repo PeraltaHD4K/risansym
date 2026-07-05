@@ -23,7 +23,7 @@ def temp_topology(tmp_path):
     return topo_file
 
 def test_basic_simulation(temp_topology):
-    sim = Simulation(filename=temp_topology, maxtime=10.0, algo_name="PingPong", debug=False, trace=False)
+    sim = Simulation.from_file(filename=temp_topology, maxtime=10.0, algo_name="PingPong", debug=False, trace=False)
     
     # Assign models
     sim.set_model(DummyModel(), node_id=1)

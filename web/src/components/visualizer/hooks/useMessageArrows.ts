@@ -17,7 +17,7 @@ export function useMessageArrows(
 
     const timeScale = BASE_TIME_SCALE * zoomScale;
 
-    // Asignar colores fijos a tipos de mensajes comunes para distinguirlos
+    // Assign fixed colors to common message types to distinguish them
     const typeColorMap = new Map<string, string>();
     let colorIndex = 0;
 

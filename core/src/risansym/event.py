@@ -18,3 +18,6 @@ class Event:
     target: int = field(compare=False)
     source: int = field(compare=False)
     payload: JsonPayload = field(default_factory=dict, compare=False)
+
+    def __repr__(self) -> str:
+        return f"Event(t={self.time}, '{self.name}' {self.source}→{self.target})"

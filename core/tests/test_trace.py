@@ -43,7 +43,7 @@ def two_node_sim(tmp_path):
     topo.write_text("2\n1\n")
     trace_path = tmp_path / "output.json"
 
-    sim = Simulation(
+    sim = Simulation.from_file(
         filename=topo,
         maxtime=20.0,
         algo_name="EchoTest",

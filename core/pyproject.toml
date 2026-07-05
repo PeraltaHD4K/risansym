@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "risansym"
-version = "0.1.0"
-description = "A Discrete Event Simulator for Distributed Systems"
+version = "0.2.0"
+description = "A powerful, Python-based discrete event simulator for distributed systems."
 readme = "README.md"
 authors = [
     { name = "Diego Peralta Huerta", email = "PeraltaHD4K@users.noreply.github.com" }

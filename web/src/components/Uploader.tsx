@@ -24,7 +24,7 @@ export default function Uploader() {
         const text = e.target?.result as string;
         const rawJson = JSON.parse(text);
         
-        // Zod validation (Contrato de Datos)
+        // Zod validation (Data Contract)
         const parsedData = TraceOutputSchema.parse(rawJson);
         
         setTraceData(parsedData);

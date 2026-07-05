@@ -21,7 +21,7 @@ class Process:
     def set_model(self, model: Model) -> None:
         """Bind a model to this process without triggering initialization."""
         self.model = model
-        self.model.set_process(self, self.neighbors, self.id)
+        self.model.set_sink(self, self.neighbors, self.id)
 
     def set_time(self, time: float) -> None:
         """Forward the simulation clock to the bound model."""

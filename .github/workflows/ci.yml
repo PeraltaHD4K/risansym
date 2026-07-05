@@ -20,6 +20,10 @@ jobs:
       - name: Instalar dependencias del core
         run: uv sync
         working-directory: ./core
+        
+      - name: Ejecutar tests
+        run: uv run pytest
+        working-directory: ./core
 
   build-web:
     name: Compilar Dashboard (Next.js)

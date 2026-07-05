@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { TraceOutput, NodePosition } from '@/lib/schema';
+import { isTransmitEvent, isReceiveEvent } from '@/lib/schema';
 import { PADDING_Y, NODE_HEIGHT } from '../constants';
 
 /**
@@ -13,8 +14,8 @@ export function useNodePositions(traceData: TraceOutput | null): NodePosition[] 
     const nodeSet = new Set<number>();
     traceData.trace.forEach(event => {
       nodeSet.add(event.source);
-      if ('target' in event) {
-        nodeSet.add(event.target as number);
+      if (isTransmitEvent(event) || isReceiveEvent(event)) {
+        nodeSet.add(event.target);
       }
     });
 

@@ -26,7 +26,12 @@ from risansym.schemas import (
     TraceOutput,
 )
 
-__version__ = "0.1.0"
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("risansym")
+except PackageNotFoundError:
+    __version__ = "0.0.0-dev"
 
 __all__ = [
     "Simulation",

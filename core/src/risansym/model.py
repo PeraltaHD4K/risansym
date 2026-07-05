@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, TYPE_CHECKING
+from typing import Any, Protocol
 
 from risansym.event import Event
 
-if TYPE_CHECKING:
-    from risansym.process import Process
+
+class MessageSink(Protocol):
+    """Protocol defining what a Model needs from its host environment."""
+
+    def transmit(self, event: Event) -> None: ...
+    def log(self, message: str) -> None: ...
 
 
 class Model(ABC):
@@ -17,14 +21,14 @@ class Model(ABC):
 
     Attributes:
         clock: Current simulation time as seen by this node.
-        process: Back-reference to the hosting ``Process`` (set during binding).
+        sink: Back-reference to the hosting environment (set during binding).
         neighbors: List of adjacent node IDs in the topology graph.
         id: Unique identifier of the node this model is bound to.
     """
 
     def __init__(self) -> None:
         self.clock: float = 0.0
-        self.process: Process | None = None
+        self.sink: MessageSink | None = None
         self.neighbors: list[int] = []
         self.id: int = 0
 
@@ -36,9 +40,9 @@ class Model(ABC):
         """Advance the node's local clock (called by the framework)."""
         self.clock = time
 
-    def set_process(self, process: Process, neighbors: list[int], node_id: int) -> None:
-        """Bind this model to its host process and topology context (called by the framework)."""
-        self.process = process
+    def set_sink(self, sink: MessageSink, neighbors: list[int], node_id: int) -> None:
+        """Bind this model to its host environment and topology context (called by the framework)."""
+        self.sink = sink
         self.neighbors = neighbors
         self.id = node_id
 
@@ -48,8 +52,8 @@ class Model(ABC):
 
     def transmit(self, event: Event) -> None:
         """Schedule a message transmission to another node."""
-        if self.process:
-            self.process.transmit(event)
+        if self.sink:
+            self.sink.transmit(event)
 
     def log(self, message: str) -> None:
         """Record an application-level log event in the trace.
@@ -57,8 +61,8 @@ class Model(ABC):
         Use this instead of ``print()`` so that log entries appear in the
         trace output and are visible in the web visualizer.
         """
-        if self.process:
-            self.process.log(message)
+        if self.sink:
+            self.sink.log(message)
 
     def get_state(self) -> dict[str, Any]:
         """Return a snapshot of the node's internal state.

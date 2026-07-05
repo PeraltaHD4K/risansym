@@ -69,6 +69,8 @@
 .docButton {
   margin-top: auto;
   justify-content: center;
+  font-size: 0.9rem;
+  text-decoration: none;
 }
 
 .visualizerLayout {

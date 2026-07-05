@@ -24,17 +24,14 @@ export function useEventGroups(
   nodes: NodePosition[],
   zoomScale: number
 ): EventGroup[] {
-  return useMemo(() => {
+  // 1. Static computation: group all events. Only depends on traceData and nodes.
+  const allGroups = useMemo(() => {
     if (!traceData) return [];
 
     const timeScale = BASE_TIME_SCALE * zoomScale;
-
-    // Group using a nested Map: nodeId -> clock -> events (W6 fix: no string key parsing)
     const groupMap = new Map<number, Map<number, TraceEvent[]>>();
 
     traceData.trace.forEach(evt => {
-      if (evt.clock > currentClock) return;
-
       const ownerId = isReceiveEvent(evt) ? evt.target : evt.source;
       const clock = evt.clock;
 
@@ -53,9 +50,7 @@ export function useEventGroups(
       events.push(evt);
     });
 
-    // Flatten into EventGroup[]
     const result: EventGroup[] = [];
-
     groupMap.forEach((clockMap, ownerId) => {
       const node = nodes.find(n => n.id === ownerId);
       if (!node) return;
@@ -73,5 +68,10 @@ export function useEventGroups(
     });
 
     return result;
-  }, [traceData, currentClock, nodes, zoomScale]);
+  }, [traceData, nodes, zoomScale]);
+
+  // 2. Dynamic filtering: filter groups by currentClock. Linear scan over grouped events.
+  return useMemo(() => {
+    return allGroups.filter(g => g.clock <= currentClock);
+  }, [allGroups, currentClock]);
 }

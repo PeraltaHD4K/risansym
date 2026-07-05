@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import time
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -15,11 +16,12 @@ from risansym.schemas import TraceMetadata, ReceiveEvent
 class Simulation:
     """Global orchestrator for the computational graph and simulation cycle.
 
-    Loads a topology from file, creates processes, binds algorithm models,
-    and drives the event loop until completion.
+    Creates processes, binds algorithm models, and drives the event loop until completion.
+    
+    Use the `from_file` classmethod to instantiate directly from a topology file.
 
     Args:
-        filename: Path to the adjacency-list topology file.
+        graph: The adjacency-list representing the topology graph.
         maxtime: Maximum simulation time horizon.
         algo_name: Human-readable algorithm identifier for trace metadata.
         debug: If ``True``, print event-by-event debug output to stdout.
@@ -31,7 +33,7 @@ class Simulation:
 
     def __init__(
         self,
-        filename: str | Path,
+        graph: list[list[int]] | str | Path,
         maxtime: float,
         algo_name: str = "UnknownAlgo",
         debug: bool = True,
@@ -41,15 +43,28 @@ class Simulation:
     ) -> None:
         from risansym.trace import TraceCollector
 
-        self.filename = Path(filename)
         self.algo_name = algo_name
         self.trace = trace
         self.trace_dir = trace_dir
         self.trace_tag = trace_tag
+        self._topology_name = "unknown_topology"
+        self._initialized = False
 
         self.collector = TraceCollector() if trace else None
         self.engine = Simulator(maxtime, debug=debug, collector=self.collector)
-        self.graph = self._load_adjacency_matrix(self.filename)
+        
+        # Backwards compatibility: Duck typing the constructor
+        if isinstance(graph, (str, Path)):
+            warnings.warn(
+                "Passing a filename directly to Simulation() is deprecated "
+                "and will be removed in v1.0. Use Simulation.from_file() instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.graph = self._load_adjacency_matrix(graph)
+            self._topology_name = Path(graph).stem
+        else:
+            self.graph = graph
 
         self.execution_metrics: dict[str, Any] = {}
 
@@ -59,7 +74,33 @@ class Simulation:
             for i, row in enumerate(self.graph, start=1)
         ]
 
-    def _load_adjacency_matrix(self, filename: str | Path) -> list[list[int]]:
+    @classmethod
+    def from_file(
+        cls,
+        filename: str | Path,
+        maxtime: float,
+        algo_name: str = "UnknownAlgo",
+        debug: bool = True,
+        trace: bool | str | Path = False,
+        trace_dir: str = "traces",
+        trace_tag: str | None = None,
+    ) -> Simulation:
+        """Factory method to instantiate a Simulation from a topology file."""
+        graph = cls._load_adjacency_matrix(filename)
+        instance = cls(
+            graph=graph,
+            maxtime=maxtime,
+            algo_name=algo_name,
+            debug=debug,
+            trace=trace,
+            trace_dir=trace_dir,
+            trace_tag=trace_tag,
+        )
+        instance._topology_name = Path(filename).stem
+        return instance
+
+    @staticmethod
+    def _load_adjacency_matrix(filename: str | Path) -> list[list[int]]:
         """Build the topology G=(V,E) from file, with format validation.
 
         Raises:
@@ -114,6 +155,7 @@ class Simulation:
         Call this **after** all models have been assigned via :meth:`set_model`
         to ensure the full topology is available when ``Model.init()`` runs.
         """
+        self._initialized = True
         for process in self.table:
             if process and process.model:
                 process.model.init()
@@ -156,7 +198,7 @@ class Simulation:
 
     def _save_trace(self) -> None:
         """Serialize and persist the trace with metadata."""
-        graph_name = self.filename.stem
+        graph_name = self._topology_name
         tag = f"_{self.trace_tag}" if self.trace_tag else ""
         timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
 
@@ -188,6 +230,15 @@ class Simulation:
 
     def run(self) -> None:
         """Entry point: execute the simulation and optionally save the trace."""
+        if not self._initialized:
+            warnings.warn(
+                "Calling run() without calling initialize_all() is deprecated. "
+                "Models were auto-initialized, but you must do this explicitly in v1.0.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.initialize_all()
+
         self._execute()
         if self.trace:
             self._save_trace()

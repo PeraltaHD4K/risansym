@@ -17,7 +17,7 @@ export default function MessageArrows({ messages, currentClock, onSelectEvent }:
   return (
     <>
       <defs>
-        {/* Marcadores para las flechas de los mensajes (Solo colores únicos) */}
+        {/* Message arrow markers (Unique colors only) */}
         {uniqueColors.map(color => (
           <marker
             key={`arrow-${color}`}
@@ -34,7 +34,7 @@ export default function MessageArrows({ messages, currentClock, onSelectEvent }:
         ))}
       </defs>
 
-      {/* Flechas de Mensajes (Trazadas con Curvas Bezier para evitar solapamiento) */}
+      {/* Message Arrows (Drawn with Bezier Curves to avoid overlapping) */}
       {messages.map(msg => {
         const isFuture = msg.clock > currentClock;
         const isPending = msg.clock <= currentClock && msg.eventTime > currentClock;
@@ -42,8 +42,8 @@ export default function MessageArrows({ messages, currentClock, onSelectEvent }:
 
         if (isFuture) return null;
 
-        // Punto de control para la curva. Hacemos que se abombe ligeramente hacia arriba
-        // o abajo en función de la distancia vertical, evitando que flechas colineales se solapen.
+        // Control point for the curve. We make it bulge slightly up
+        // or down based on vertical distance, preventing collinear arrows from overlapping.
         const dy = msg.endY - msg.startY;
         const cx = (msg.startX + msg.endX) / 2;
         const cy = (msg.startY + msg.endY) / 2 - (dy * 0.15);
@@ -53,7 +53,7 @@ export default function MessageArrows({ messages, currentClock, onSelectEvent }:
         let endY = msg.endY;
 
         if (isPending) {
-          // Animación de la curva usando el algoritmo de De Casteljau
+          // Curve animation using De Casteljau's algorithm
           const t = (currentClock - msg.clock) / (msg.eventTime - msg.clock);
           const safeT = Math.max(0, Math.min(1, t));
           const invT = 1 - safeT;
@@ -76,14 +76,14 @@ export default function MessageArrows({ messages, currentClock, onSelectEvent }:
             onClick={() => onSelectEvent([msg.originalEvent])}
             style={{ cursor: 'pointer', opacity: isPast ? 1 : 0.8 }}
           >
-            {/* Hitbox invisible y gruesa para que sea fácil hacer hover/click */}
+            {/* Thick invisible hitbox for easier hover/click */}
             <path
               d={pathD}
               stroke="transparent"
               strokeWidth={15}
               fill="none"
             />
-            {/* Línea visible de la flecha */}
+            {/* Visible arrow line */}
             <path
               d={pathD}
               stroke={msg.color}

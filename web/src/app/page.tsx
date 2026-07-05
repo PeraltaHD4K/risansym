@@ -43,11 +43,10 @@ export default function Home() {
           )}
           
           <a 
-            href="https://github.com/diegoperalta/risansym" 
+            href="https://github.com/PeraltaHD4K/risansym" 
             target="_blank" 
             rel="noopener noreferrer" 
             className={`premium-button ${styles.docButton}`}
-            style={{ textDecoration: 'none' }}
           >
             <Activity size={18} />
             Documentación

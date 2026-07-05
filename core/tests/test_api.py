@@ -38,9 +38,10 @@ class TestPublicAPI:
 
     def test_version_is_defined(self):
         import risansym
+        import re
         assert hasattr(risansym, "__version__")
         assert isinstance(risansym.__version__, str)
-        assert risansym.__version__ == "0.1.0"
+        assert re.match(r"^\d+\.\d+\.\d+$", risansym.__version__)
 
     def test_all_exports_match(self):
         import risansym

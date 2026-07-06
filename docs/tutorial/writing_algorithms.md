@@ -14,50 +14,62 @@ Your custom algorithm must implement two core lifecycle methods:
 Let's build a simple algorithm where Node 1 sends a "PING" to Node 2, and Node 2 replies with a "PONG".
 
 ```python
+import sys
+import random
 from risansym import Model, Event, Simulation
 
-class PingPong(Model):
-    def init(self):
-        # We start the protocol if we are node 1
-        if self.id == 1:
-            # We assume node 2 is our neighbor
-            target = self.neighbors[0]
-            # Send the PING event to arrive at time = clock + 1.0
-            self.transmit(Event(
-                time=self.clock + 1.0, 
-                name="PING", 
-                target=target, 
-                source=self.id
-            ))
-            self.log(f"Started ping to node {target}")
+class AlgorithmPingPong(Model):
+    
+    def init(self) -> None:
+        # We assume the first neighbor in the list is our successor
+        self.sucesor = self.neighbors[0]
+        self.contador = 0
+        self.log(f"Inicializado. Mi vecino es el Nodo {self.sucesor}")
 
-    def receive(self, event: Event):
-        self.log(f"Received {event.name} from node {event.source}")
+    def receive(self, event: Event) -> None:
+        retraso = float(random.randint(1, 3))
         
-        # If we receive PING, reply with PONG
-        if event.name == "PING":
-            self.transmit(Event(
-                time=self.clock + 1.0,
-                name="PONG",
-                target=event.source,
-                source=self.id
-            ))
-```
+        match event.name:
+            case "INICIA":
+                self.log("Recibe INICIA. ¡Saque inicial!")
+                self.transmit(Event(time=self.clock + retraso, name="PING", target=self.sucesor, source=self.id))
+                
+            case "PING":
+                self.contador += 1
+                self.log(f"Recibe PING #{self.contador}. Devolviendo PONG...")
+                self.transmit(Event(time=self.clock + retraso, name="PONG", target=self.sucesor, source=self.id))
+                
+            case "PONG":
+                self.contador += 1
+                self.log(f"Recibe PONG #{self.contador}. Devolviendo PING...")
+                self.transmit(Event(time=self.clock + retraso, name="PING", target=self.sucesor, source=self.id))
 
-## Attaching the Algorithm
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        raise SystemExit("Error: Proporcione el archivo de red (ej. g0.txt)")
 
-Once you define your class, you bind instances of it to the simulation nodes:
+    # Simulación acotada a 15.0 unidades de tiempo para que no sea infinita
+    experiment = Simulation.from_file(
+        filename=sys.argv[1], 
+        maxtime=15.0, 
+        algo_name="AlgorithmPingPong", 
+        debug=True, 
+        trace=True
+    )  
 
-```python
-# Assuming graph.txt has at least 2 nodes
-sim = Simulation.from_file("graph.txt", maxtime=10.0, debug=True)
+    # Cargar los modelos en los procesos
+    for i in range(1, len(experiment.graph) + 1):
+        experiment.set_model(AlgorithmPingPong(), i)
 
-# Bind a fresh instance of PingPong to every node in the graph
-for i in range(1, len(sim.graph) + 1):
-    sim.set_model(PingPong(), i)
+    # Iniciar explícitamente los modelos (Requerido en >=v0.4.0)
+    experiment.initialize_all()
 
-sim.initialize_all()
-sim.run()
+    # Inyectar el evento semilla en el Nodo 1
+    experiment.init(Event(time=0.0, name="INICIA", target=1, source=1))
+
+    print("=== Iniciando Prueba Ping Pong ===")
+    experiment.run()
+    print("=== Fin de la Simulación ===")
 ```
 
 ## State Snapshots

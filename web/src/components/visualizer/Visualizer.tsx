@@ -41,6 +41,7 @@ export default function Visualizer() {
     <div className={styles.visualizerWrapper}>
       <div className={styles.scrollContainer}>
         <svg
+          id="visualizer-svg"
           className={styles.svgLayer}
           width={totalWidth}
           height={totalHeight}

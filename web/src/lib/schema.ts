@@ -7,8 +7,8 @@ export const TransmitEventSchema = z.object({
   source: z.number(),
   target: z.number(),
   name: z.string(),
-  payload: z.any(),
-  node_state: z.any().nullable().optional()
+  payload: z.unknown(),
+  node_state: z.unknown().nullable().optional()
 });
 
 export const ReceiveEventSchema = z.object({
@@ -17,8 +17,8 @@ export const ReceiveEventSchema = z.object({
   source: z.number(),
   target: z.number(),
   name: z.string(),
-  payload: z.any(),
-  node_state: z.any().nullable().optional()
+  payload: z.unknown(),
+  node_state: z.unknown().nullable().optional()
 });
 
 export const AppLogEventSchema = z.object({
@@ -40,8 +40,8 @@ export const TraceMetadataSchema = z.object({
   topology: z.string(),
   tag: z.string().nullable().optional(),
   execution_date: z.string(),
-  parameters: z.record(z.string(), z.any()),
-  metrics: z.record(z.string(), z.any())
+  parameters: z.record(z.string(), z.unknown()),
+  metrics: z.record(z.string(), z.unknown())
 });
 
 export const TraceOutputSchema = z.object({

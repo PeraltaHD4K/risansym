@@ -3,6 +3,7 @@ site_description: A powerful, Python-based discrete event simulator for distribu
 site_author: PeraltaHD4K
 repo_url: https://github.com/PeraltaHD4K/risansym
 repo_name: PeraltaHD4K/risansym
+site_url: https://PeraltaHD4K.github.io/risansym/docs/
 
 theme:
   name: material

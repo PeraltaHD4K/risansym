@@ -36,6 +36,20 @@ jobs:
       - name: Build with Next.js
         working-directory: ./web
         run: npm run build
+      - name: Install uv for Docs
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Set up Python for Docs
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "core/pyproject.toml"
+      - name: Install Docs dependencies
+        working-directory: ./core
+        run: uv sync --group docs
+      - name: Build MkDocs
+        working-directory: ./core
+        run: uv run mkdocs build -d ../web/out/docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

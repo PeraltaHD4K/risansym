@@ -1,0 +1,58 @@
+site_name: Risansym Documentation
+site_description: A powerful, Python-based discrete event simulator for distributed systems.
+site_author: PeraltaHD4K
+repo_url: https://github.com/PeraltaHD4K/risansym
+repo_name: PeraltaHD4K/risansym
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [core/src]
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_source: true
+
+nav:
+  - Home: index.md
+  - Tutorial:
+      - Getting Started: tutorial/getting_started.md
+      - Writing Algorithms: tutorial/writing_algorithms.md
+      - Using the Visualizer: tutorial/using_visualizer.md
+  - API Reference:
+      - Simulation: api/simulation.md
+      - Model: api/model.md
+      - Event: api/event.md
+      - Process: api/process.md
+      - Schemas: api/schemas.md
+  - Architecture: architecture.md

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypeAlias
 
 
 # Type alias for JSON-serializable payloads exchanged between processes.
-JsonPayload = dict[str, Any]
+JsonPayload: TypeAlias = dict[str, Any]
 
 
-@dataclass(order=True, slots=True)
+@dataclass(order=True, slots=True, frozen=True)
 class Event:
     """Encapsulates the information exchanged between active processes in the simulation."""
 

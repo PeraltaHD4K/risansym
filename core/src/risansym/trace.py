@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 from risansym.schemas import TraceEvent, TraceMetadata, TraceOutput
 
@@ -7,6 +9,9 @@ class TraceCollector:
 
     def __init__(self) -> None:
         self._trace: list[TraceEvent] = []
+
+    def __repr__(self) -> str:
+        return f"<TraceCollector(events={len(self._trace)})>"
 
     def record(self, entry: TraceEvent) -> None:
         """Append a structured event to the in-memory trace."""

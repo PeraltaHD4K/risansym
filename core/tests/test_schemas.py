@@ -1,7 +1,6 @@
 """Tests for the Pydantic schema models."""
 
 import json
-import pytest
 from risansym.schemas import (
     TransmitEvent,
     ReceiveEvent,

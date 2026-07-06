@@ -74,6 +74,10 @@ class Simulation:
             for i, row in enumerate(self.graph, start=1)
         ]
 
+    def __repr__(self) -> str:
+        nodes = len(self.table) - 1
+        return f"<Simulation(algo='{self.algo_name}', topology='{self._topology_name}', nodes={nodes})>"
+
     @classmethod
     def from_file(
         cls,

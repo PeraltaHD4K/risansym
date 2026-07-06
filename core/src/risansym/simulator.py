@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import heapq
+import logging
 from typing import Any, TYPE_CHECKING
 
 from risansym.event import Event
@@ -8,6 +9,8 @@ from risansym.schemas import TransmitEvent, AppLogEvent
 
 if TYPE_CHECKING:
     from risansym.trace import TraceCollector
+
+logger = logging.getLogger(__name__)
 
 
 class Simulator:
@@ -24,12 +27,15 @@ class Simulator:
         self.debug: bool = debug
         self._collector = collector
 
+    def __repr__(self) -> str:
+        return f"<Simulator(clock={self.clock}, agenda_size={len(self._agenda)})>"
+
     def insert_event(self, event: Event, node_state: dict[str, Any] | None = None) -> None:
         """Push an event onto the heap if it falls within the time horizon."""
         if event.time <= self.maxtime:
             heapq.heappush(self._agenda, event)
             if self.debug:
-                print(f"[t={self.clock:.1f}] Node {event.source} TRANSMITS '{event.name}' -> Node {event.target} (arrives at t={event.time:.1f})")
+                logger.debug("[t=%.1f] Node %d TRANSMITS '%s' -> Node %d (arrives at t=%.1f)", self.clock, event.source, event.name, event.target, event.time)
 
             if self._collector:
                 self._collector.record(TransmitEvent(
@@ -48,7 +54,7 @@ class Simulator:
         event = heapq.heappop(self._agenda)
         self.clock = event.time
         if self.debug:
-            print(f"[t={self.clock:.1f}] Node {event.target} RECEIVES '{event.name}' <- Node {event.source}")
+            logger.debug("[t=%.1f] Node %d RECEIVES '%s' <- Node %d", self.clock, event.target, event.name, event.source)
 
         # Note: ReceiveEvent recording is done in Simulation._execute()
         # to capture the node state AFTER processing the event.
@@ -57,7 +63,7 @@ class Simulator:
     def log_app_event(self, source: int, message: str) -> None:
         """Record an application-level log event in the trace."""
         if self.debug:
-            print(f"[t={self.clock:.1f}] APP Node {source}: {message}")
+            logger.info("[t=%.1f] APP Node %d: %s", self.clock, source, message)
 
         if self._collector:
             self._collector.record(AppLogEvent(

@@ -32,6 +32,9 @@ class Model(ABC):
         self.neighbors: list[int] = []
         self.id: int = 0
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}(id={self.id}, clock={self.clock})>"
+
     # ------------------------------------------------------------------
     # Internal setters — called by the framework, not by user algorithms
     # ------------------------------------------------------------------
@@ -52,8 +55,12 @@ class Model(ABC):
 
     def transmit(self, event: Event) -> None:
         """Schedule a message transmission to another node."""
-        if self.sink:
-            self.sink.transmit(event)
+        if self.sink is None:
+            raise RuntimeError(
+                f"Model(id={self.id}) cannot transmit: not bound to a Process. "
+                "Ensure Simulation.initialize_all() has been called."
+            )
+        self.sink.transmit(event)
 
     def log(self, message: str) -> None:
         """Record an application-level log event in the trace.
@@ -61,8 +68,12 @@ class Model(ABC):
         Use this instead of ``print()`` so that log entries appear in the
         trace output and are visible in the web visualizer.
         """
-        if self.sink:
-            self.sink.log(message)
+        if self.sink is None:
+            raise RuntimeError(
+                f"Model(id={self.id}) cannot log: not bound to a Process. "
+                "Ensure Simulation.initialize_all() has been called."
+            )
+        self.sink.log(message)
 
     def get_state(self) -> dict[str, Any]:
         """Return a snapshot of the node's internal state.

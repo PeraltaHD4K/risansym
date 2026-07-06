@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "risansym"
-version = "0.3.0"
+version = "0.4.0"
 description = "A powerful, Python-based discrete event simulator for distributed systems."
 readme = "README.md"
 authors = [

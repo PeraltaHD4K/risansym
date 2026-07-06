@@ -45,7 +45,6 @@ class TestTopologyValidation:
 
     def test_set_model_invalid_node_raises(self, make_topo):
         from risansym.model import Model
-        from risansym.event import Event
 
         class Dummy(Model):
             def init(self): pass

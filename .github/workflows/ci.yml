@@ -21,6 +21,14 @@ jobs:
         run: uv sync
         working-directory: ./core
         
+      - name: Formato y Linting (Ruff)
+        run: uv run ruff check .
+        working-directory: ./core
+
+      - name: Type Checking (Mypy)
+        run: uv run mypy .
+        working-directory: ./core
+
       - name: Ejecutar tests
         run: uv run pytest
         working-directory: ./core

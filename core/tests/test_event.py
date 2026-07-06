@@ -1,6 +1,5 @@
 """Tests for the Event dataclass."""
 
-import pytest
 from risansym.event import Event, JsonPayload
 
 

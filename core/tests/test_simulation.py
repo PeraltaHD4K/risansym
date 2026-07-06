@@ -1,5 +1,4 @@
 import pytest
-from pathlib import Path
 from risansym.simulation import Simulation
 from risansym.model import Model
 from risansym.event import Event

@@ -1,6 +1,5 @@
 """Tests for the public API exposed via __init__.py."""
 
-import pytest
 
 
 class TestPublicAPI:
@@ -27,8 +26,7 @@ class TestPublicAPI:
         assert Simulator is not None
 
     def test_import_schema_types(self):
-        from risansym import TraceEvent, TransmitEvent, ReceiveEvent, AppLogEvent
-        from risansym import TraceMetadata, TraceOutput
+        from risansym import TraceEvent, TransmitEvent
         assert TraceEvent is not None
         assert TransmitEvent is not None
 

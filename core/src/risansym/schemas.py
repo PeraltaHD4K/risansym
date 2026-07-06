@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Any, Literal, Union
+from typing import Any, Literal, Union, Annotated
 
 
 class TransmitEvent(BaseModel):
@@ -37,7 +37,10 @@ class AppLogEvent(BaseModel):
 
 
 # Union of all valid trace event types
-TraceEvent = Union[TransmitEvent, ReceiveEvent, AppLogEvent]
+TraceEvent = Annotated[
+    Union[TransmitEvent, ReceiveEvent, AppLogEvent],
+    Field(discriminator="action")
+]
 
 
 class TraceMetadata(BaseModel):

@@ -18,6 +18,9 @@ class Process:
         self.id = node_id
         self.model: Model | None = None
 
+    def __repr__(self) -> str:
+        return f"<Process(id={self.id}, neighbors={self.neighbors})>"
+
     def set_model(self, model: Model) -> None:
         """Bind a model to this process without triggering initialization."""
         self.model = model

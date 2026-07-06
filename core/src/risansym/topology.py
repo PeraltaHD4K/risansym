@@ -1,0 +1,39 @@
+from pathlib import Path
+
+def load_adjacency_matrix(filename: str | Path) -> list[list[int]]:
+    """Build the topology G=(V,E) from file, with format validation.
+
+    Raises:
+        FileNotFoundError: If the topology file does not exist.
+        ValueError: If the file contains non-integer tokens or
+            references nodes outside the valid range.
+    """
+    path = Path(filename)
+    if not path.exists():
+        raise FileNotFoundError(f"Topology file '{path}' does not exist.")
+
+    graph: list[list[int]] = []
+    line_idx = 0
+    try:
+        for line_idx, line in enumerate(path.read_text().splitlines()):
+            if not line.strip():
+                continue
+            neighbors = [int(node) for node in line.split()]
+            graph.append(neighbors)
+    except ValueError as e:
+        raise ValueError(
+            f"Syntax error in topology file (line {line_idx + 1}): "
+            f"all node identifiers must be integers. ({e})"
+        ) from e
+
+    # Validate that references do not point to out-of-range nodes
+    num_nodes = len(graph)
+    for i, neighbors in enumerate(graph, start=1):
+        for neighbor in neighbors:
+            if neighbor < 1 or neighbor > num_nodes:
+                raise ValueError(
+                    f"Node {i} references node {neighbor}, which is outside "
+                    f"the valid range (1 to {num_nodes})."
+                )
+
+    return graph

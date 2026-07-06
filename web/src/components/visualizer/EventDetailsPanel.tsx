@@ -20,7 +20,9 @@ export default function EventDetailsPanel({ selectedEvents, onClose }: EventDeta
     <div className={`glass-panel ${styles.detailsPanel}`}>
       <div className={styles.header}>
         <h4 className={styles.title}>{title}</h4>
-        <button onClick={onClose} className={styles.closeBtn}>×</button>
+        <button onClick={onClose} className={styles.closeBtn} aria-label="Cerrar detalles">
+          <span aria-hidden="true">×</span>
+        </button>
       </div>
       <div className={styles.scrollBody}>
         {selectedEvents.map((ev, i) => (

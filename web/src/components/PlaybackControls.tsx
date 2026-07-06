@@ -22,7 +22,7 @@ export default function PlaybackControls() {
   const rafRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
 
-  const animate = useCallback((timestamp: number) => {
+  const animate = useCallback(function animate(timestamp: number) {
     if (lastTimestampRef.current === null) {
       lastTimestampRef.current = timestamp;
       rafRef.current = requestAnimationFrame(animate);
@@ -119,19 +119,20 @@ export default function PlaybackControls() {
   return (
     <div className={`glass-panel ${styles.controlsContainer}`}>
       <div className={styles.buttonsGroup}>
-        <button className={styles.controlBtn} onClick={() => setCurrentClock(0)}>
-          <SkipBack size={20} />
+        <button className={styles.controlBtn} onClick={() => setCurrentClock(0)} aria-label="Rewind to start">
+          <SkipBack size={20} aria-hidden="true" />
         </button>
         
         <button 
           className={styles.playBtn} 
           onClick={() => setIsPlaying(!isPlaying)}
+          aria-label={isPlaying ? "Pause playback" : "Start playback"}
         >
-          {isPlaying ? <Pause size={24} /> : <Play size={24} className={styles.playIcon} />}
+          {isPlaying ? <Pause size={24} aria-hidden="true" /> : <Play size={24} className={styles.playIcon} aria-hidden="true" />}
         </button>
         
-        <button className={styles.controlBtn} onClick={() => setCurrentClock(maxTime)}>
-          <SkipForward size={20} />
+        <button className={styles.controlBtn} onClick={() => setCurrentClock(maxTime)} aria-label="Skip to end">
+          <SkipForward size={20} aria-hidden="true" />
         </button>
       </div>
 
@@ -148,21 +149,22 @@ export default function PlaybackControls() {
             setCurrentClock(parseFloat(e.target.value));
           }}
           className={styles.slider}
+          aria-label="Playback timeline"
         />
         <span className={styles.timeLabel}>{maxTime.toFixed(1)}s</span>
       </div>
 
       <div className={styles.zoomGroup}>
-        <button className={styles.zoomBtn} onClick={() => setZoomScale(Math.max(0.5, zoomScale - 0.5))} title="Zoom Out">
-          <ZoomOut size={18} />
+        <button className={styles.zoomBtn} onClick={() => setZoomScale(Math.max(0.5, zoomScale - 0.5))} title="Zoom Out" aria-label="Zoom Out">
+          <ZoomOut size={18} aria-hidden="true" />
         </button>
-        <span className={styles.zoomLabel}>{Math.round(zoomScale * 100)}%</span>
-        <button className={styles.zoomBtn} onClick={() => setZoomScale(Math.min(10, zoomScale + 0.5))} title="Zoom In">
-          <ZoomIn size={18} />
+        <span className={styles.zoomLabel} aria-hidden="true">{Math.round(zoomScale * 100)}%</span>
+        <button className={styles.zoomBtn} onClick={() => setZoomScale(Math.min(10, zoomScale + 0.5))} title="Zoom In" aria-label="Zoom In">
+          <ZoomIn size={18} aria-hidden="true" />
         </button>
-        <div style={{ width: '1px', height: '20px', background: 'var(--panel-border)', margin: '0 8px' }} />
-        <button className={styles.zoomBtn} onClick={handleDownloadSVG} title="Descargar Diagrama (SVG)">
-          <Download size={18} />
+        <div style={{ width: '1px', height: '20px', background: 'var(--panel-border)', margin: '0 8px' }} aria-hidden="true" />
+        <button className={styles.zoomBtn} onClick={handleDownloadSVG} title="Descargar Diagrama (SVG)" aria-label="Descargar Diagrama SVG">
+          <Download size={18} aria-hidden="true" />
         </button>
       </div>
     </div>

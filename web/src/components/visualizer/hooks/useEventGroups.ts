@@ -51,8 +51,10 @@ export function useEventGroups(
     });
 
     const result: EventGroup[] = [];
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    
     groupMap.forEach((clockMap, ownerId) => {
-      const node = nodes.find(n => n.id === ownerId);
+      const node = nodeMap.get(ownerId);
       if (!node) return;
 
       clockMap.forEach((events, clock) => {

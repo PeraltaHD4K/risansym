@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { NodePosition } from '@/lib/schema';
 import styles from './Visualizer.module.css';
 import { PADDING_X } from './constants';
@@ -8,7 +9,7 @@ interface LifelineLayerProps {
 }
 
 /** Renders horizontal dashed lines for each node (lifelines). */
-export default function LifelineLayer({ nodes, totalWidth }: LifelineLayerProps) {
+const LifelineLayer = memo(function LifelineLayer({ nodes, totalWidth }: LifelineLayerProps) {
   return (
     <>
       {nodes.map(node => (
@@ -24,4 +25,6 @@ export default function LifelineLayer({ nodes, totalWidth }: LifelineLayerProps)
       ))}
     </>
   );
-}
+});
+
+export default LifelineLayer;

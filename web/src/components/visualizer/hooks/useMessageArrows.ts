@@ -22,12 +22,13 @@ export function useMessageArrows(
     let colorIndex = 0;
 
     const results: ComputedMessage[] = [];
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
 
     traceData.trace.forEach((event, index) => {
       if (!isTransmitEvent(event)) return;
 
-      const srcNode = nodes.find(n => n.id === event.source);
-      const dstNode = nodes.find(n => n.id === event.target);
+      const srcNode = nodeMap.get(event.source);
+      const dstNode = nodeMap.get(event.target);
       if (!srcNode || !dstNode) return;
 
       if (!typeColorMap.has(event.name)) {

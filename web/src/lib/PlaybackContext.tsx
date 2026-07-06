@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, type ReactNode, type Dispatch, type SetStateAction } from 'react';
+import { createContext, useContext, useState, useMemo, type ReactNode, type Dispatch, type SetStateAction } from 'react';
 import { useTrace } from './TraceContext';
 
 interface PlaybackContextType {
@@ -24,23 +24,22 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [zoomScale, setZoomScale] = useState<number>(1);
 
-  // Derive max time from file if it exists (forcing numeric cast)
   const maxTime = Number(traceData?.metadata?.parameters?.max_time ?? 0);
 
+  const value = useMemo(() => ({
+    currentClock,
+    setCurrentClock,
+    isPlaying,
+    setIsPlaying,
+    playbackSpeed,
+    setPlaybackSpeed,
+    maxTime,
+    zoomScale,
+    setZoomScale,
+  }), [currentClock, isPlaying, playbackSpeed, maxTime, zoomScale]);
+
   return (
-    <PlaybackContext.Provider
-      value={{
-        currentClock,
-        setCurrentClock,
-        isPlaying,
-        setIsPlaying,
-        playbackSpeed,
-        setPlaybackSpeed,
-        maxTime,
-        zoomScale,
-        setZoomScale,
-      }}
-    >
+    <PlaybackContext.Provider value={value}>
       {children}
     </PlaybackContext.Provider>
   );

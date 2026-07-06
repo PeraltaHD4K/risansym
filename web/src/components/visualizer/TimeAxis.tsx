@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import styles from './Visualizer.module.css';
 import { PADDING_X } from './constants';
 
@@ -8,8 +9,7 @@ interface TimeAxisProps {
   totalWidth: number;
 }
 
-/** Renders the bottom time axis with tick marks and labels. */
-export default function TimeAxis({ maxTime, timeScale, totalHeight, totalWidth }: TimeAxisProps) {
+const TimeAxis = memo(function TimeAxis({ maxTime, timeScale, totalHeight, totalWidth }: TimeAxisProps) {
   return (
     <>
       {/* Eje de Tiempo (Ticks abajo) */}
@@ -35,4 +35,6 @@ export default function TimeAxis({ maxTime, timeScale, totalHeight, totalWidth }
       ))}
     </>
   );
-}
+});
+
+export default TimeAxis;

@@ -48,8 +48,7 @@ jobs:
         working-directory: ./core
         run: uv sync --group docs
       - name: Build MkDocs
-        working-directory: ./core
-        run: uv run mkdocs build -d ../web/out/docs
+        run: uv run --project core mkdocs build -d web/out/docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

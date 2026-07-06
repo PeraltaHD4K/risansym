@@ -11,6 +11,7 @@ from risansym.model import Model
 from risansym.process import Process
 from risansym.simulator import Simulator
 from risansym.schemas import TraceMetadata, ReceiveEvent
+from risansym.topology import load_adjacency_matrix
 
 
 class Simulation:
@@ -61,7 +62,7 @@ class Simulation:
                 DeprecationWarning,
                 stacklevel=2,
             )
-            self.graph = self._load_adjacency_matrix(graph)
+            self.graph = load_adjacency_matrix(graph)
             self._topology_name = Path(graph).stem
         else:
             self.graph = graph
@@ -90,7 +91,7 @@ class Simulation:
         trace_tag: str | None = None,
     ) -> Simulation:
         """Factory method to instantiate a Simulation from a topology file."""
-        graph = cls._load_adjacency_matrix(filename)
+        graph = load_adjacency_matrix(filename)
         instance = cls(
             graph=graph,
             maxtime=maxtime,
@@ -103,44 +104,7 @@ class Simulation:
         instance._topology_name = Path(filename).stem
         return instance
 
-    @staticmethod
-    def _load_adjacency_matrix(filename: str | Path) -> list[list[int]]:
-        """Build the topology G=(V,E) from file, with format validation.
 
-        Raises:
-            FileNotFoundError: If the topology file does not exist.
-            ValueError: If the file contains non-integer tokens or
-                references nodes outside the valid range.
-        """
-        path = Path(filename)
-        if not path.exists():
-            raise FileNotFoundError(f"Topology file '{path}' does not exist.")
-
-        graph: list[list[int]] = []
-        line_idx = 0
-        try:
-            for line_idx, line in enumerate(path.read_text().splitlines()):
-                if not line.strip():
-                    continue
-                neighbors = [int(node) for node in line.split()]
-                graph.append(neighbors)
-        except ValueError as e:
-            raise ValueError(
-                f"Syntax error in topology file (line {line_idx + 1}): "
-                f"all node identifiers must be integers. ({e})"
-            ) from e
-
-        # Validate that references do not point to out-of-range nodes
-        num_nodes = len(graph)
-        for i, neighbors in enumerate(graph, start=1):
-            for neighbor in neighbors:
-                if neighbor < 1 or neighbor > num_nodes:
-                    raise ValueError(
-                        f"Node {i} references node {neighbor}, which is outside "
-                        f"the valid range (1 to {num_nodes})."
-                    )
-
-        return graph
 
     def set_model(self, model: Model, node_id: int) -> None:
         """Bind an algorithm model to a specific node.

@@ -25,6 +25,7 @@ from risansym.schemas import (
     TraceMetadata,
     TraceOutput,
 )
+from risansym.topology import load_adjacency_matrix
 
 from importlib.metadata import version, PackageNotFoundError
 
@@ -46,4 +47,5 @@ __all__ = [
     "AppLogEvent",
     "TraceMetadata",
     "TraceOutput",
+    "load_adjacency_matrix",
 ]

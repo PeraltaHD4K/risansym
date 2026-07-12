@@ -33,7 +33,13 @@ class Process:
 
     def transmit(self, event: Event) -> None:
         """Delegate event insertion to the engine, attaching the node's current state."""
-        state = self.model.get_state() if self.model else {}
+        state = self.model.get_state() if self.model else None
+        if state is None:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Process %d transmitted an event without a bound model.", self.id
+            )
+            state = {}
         self.engine.insert_event(event, node_state=state)
 
     def receive(self, event: Event) -> None:

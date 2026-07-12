@@ -13,13 +13,13 @@ def test_process_binding():
     sim = Simulator(10.0)
     process = Process([2, 3], sim, 1)
     
-    assert repr(process) == "<Process(id=1, neighbors=[2, 3])>"
+    assert repr(process) == "<Process(node_id=1, neighbors=[2, 3])>"
     
     model = DummyModel()
     process.set_model(model)
     
     assert process.model is model
-    assert model.id == 1
+    assert model.node_id == 1
     assert model.neighbors == [2, 3]
 
 def test_process_receive():

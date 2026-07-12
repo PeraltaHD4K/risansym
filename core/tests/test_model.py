@@ -21,12 +21,14 @@ def test_model_unbound_log():
 
 def test_model_repr():
     model = DummyModel()
-    assert repr(model) == "<DummyModel(id=0, clock=0.0)>"
-    
-    # Mocking binding
+    assert repr(model) == "<DummyModel(node_id=0, clock=0.0)>"
+
+def test_model_repr_bound():
+    """__repr__ should show updated node_id when bound."""
     class MockSink:
         def transmit(self, event): pass
         def log(self, message): pass
         
+    model = DummyModel()
     model.set_sink(MockSink(), [2, 3], 1)
-    assert repr(model) == "<DummyModel(id=1, clock=0.0)>"
+    assert repr(model) == "<DummyModel(node_id=1, clock=0.0)>"

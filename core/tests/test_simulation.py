@@ -5,14 +5,14 @@ from risansym.event import Event
 
 class DummyModel(Model):
     def init(self):
-        self.transmit(Event(time=self.clock + 1.0, source=self.id, target=self.neighbors[0], name="PING", payload={}))
+        self.transmit(Event(time=self.clock + 1.0, source=self.node_id, target=self.neighbors[0], name="PING", payload={}))
         
     def receive(self, event):
         if event.name == "PING" and self.clock < 5.0:
             self.log(f"Received PING from {event.source}")
-            self.transmit(Event(time=self.clock + 1.0, source=self.id, target=event.source, name="PONG", payload={}))
+            self.transmit(Event(time=self.clock + 1.0, source=self.node_id, target=event.source, name="PONG", payload={}))
         elif event.name == "PONG" and self.clock < 5.0:
-            self.transmit(Event(time=self.clock + 1.0, source=self.id, target=event.source, name="PING", payload={}))
+            self.transmit(Event(time=self.clock + 1.0, source=self.node_id, target=event.source, name="PING", payload={}))
 
 @pytest.fixture
 def temp_topology(tmp_path):
@@ -22,7 +22,7 @@ def temp_topology(tmp_path):
     return topo_file
 
 def test_basic_simulation(temp_topology):
-    sim = Simulation.from_file(filename=temp_topology, maxtime=10.0, algo_name="PingPong", debug=False, trace=False)
+    sim = Simulation.from_file(filename=temp_topology, maxtime=10.0, algo_name="PingPong", debug=False, trace_enabled=False)
     
     # Assign models
     sim.set_model(DummyModel(), node_id=1)

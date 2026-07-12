@@ -14,7 +14,7 @@ class EchoModel(Model):
     def init(self):
         self.transmit(Event(
             time=self.clock + 1.0,
-            source=self.id,
+            source=self.node_id,
             target=self.neighbors[0],
             name="ECHO",
             payload={"step": 0}
@@ -25,7 +25,7 @@ class EchoModel(Model):
         if step < 2:
             self.transmit(Event(
                 time=self.clock + 1.0,
-                source=self.id,
+                source=self.node_id,
                 target=event.source,
                 name="ECHO",
                 payload={"step": step + 1}
@@ -47,7 +47,8 @@ def two_node_sim(tmp_path):
         maxtime=20.0,
         algo_name="EchoTest",
         debug=False,
-        trace=str(trace_path),
+        trace_enabled=True,
+        trace_path=str(trace_path),
     )
     sim.set_model(EchoModel(), node_id=1)
     sim.set_model(EchoModel(), node_id=2)

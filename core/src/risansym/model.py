@@ -23,17 +23,17 @@ class Model(ABC):
         clock: Current simulation time as seen by this node.
         sink: Back-reference to the hosting environment (set during binding).
         neighbors: List of adjacent node IDs in the topology graph.
-        id: Unique identifier of the node this model is bound to.
+        node_id: Unique identifier of the node this model is bound to.
     """
 
     def __init__(self) -> None:
         self.clock: float = 0.0
         self.sink: MessageSink | None = None
         self.neighbors: list[int] = []
-        self.id: int = 0
+        self.node_id: int = 0
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}(id={self.id}, clock={self.clock})>"
+        return f"<{self.__class__.__name__}(node_id={self.node_id}, clock={self.clock})>"
 
     # ------------------------------------------------------------------
     # Internal setters — called by the framework, not by user algorithms
@@ -47,7 +47,7 @@ class Model(ABC):
         """Bind this model to its host environment and topology context (called by the framework)."""
         self.sink = sink
         self.neighbors = neighbors
-        self.id = node_id
+        self.node_id = node_id
 
     # ------------------------------------------------------------------
     # Public API for user algorithms
@@ -57,7 +57,7 @@ class Model(ABC):
         """Schedule a message transmission to another node."""
         if self.sink is None:
             raise RuntimeError(
-                f"Model(id={self.id}) cannot transmit: not bound to a Process. "
+                f"Model(node_id={self.node_id}) cannot transmit: not bound to a Process. "
                 "Ensure Simulation.initialize_all() has been called."
             )
         self.sink.transmit(event)
@@ -70,7 +70,7 @@ class Model(ABC):
         """
         if self.sink is None:
             raise RuntimeError(
-                f"Model(id={self.id}) cannot log: not bound to a Process. "
+                f"Model(node_id={self.node_id}) cannot log: not bound to a Process. "
                 "Ensure Simulation.initialize_all() has been called."
             )
         self.sink.log(message)

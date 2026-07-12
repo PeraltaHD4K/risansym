@@ -31,17 +31,17 @@ class AlgorithmPingPong(Model):
         match event.name:
             case "START":
                 self.log("Received START. Initiating sequence!")
-                self.transmit(Event(time=self.clock + delay, name="PING", target=self.successor, source=self.id))
+                self.transmit(Event(time=self.clock + delay, name="PING", target=self.successor, source=self.node_id))
                 
             case "PING":
                 self.counter += 1
                 self.log(f"Received PING #{self.counter}. Returning PONG...")
-                self.transmit(Event(time=self.clock + delay, name="PONG", target=self.successor, source=self.id))
+                self.transmit(Event(time=self.clock + delay, name="PONG", target=self.successor, source=self.node_id))
                 
             case "PONG":
                 self.counter += 1
                 self.log(f"Received PONG #{self.counter}. Returning PING...")
-                self.transmit(Event(time=self.clock + delay, name="PING", target=self.successor, source=self.id))
+                self.transmit(Event(time=self.clock + delay, name="PING", target=self.successor, source=self.node_id))
 ```
 
 ## Attaching the Algorithm

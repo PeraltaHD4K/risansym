@@ -1,0 +1,30 @@
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  gap: 1rem;
+}
+
+.icon {
+  color: var(--error-color, #ef4444);
+  margin-bottom: 1rem;
+}
+
+.errorDetails {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--error-color, #ef4444);
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1rem 0;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}

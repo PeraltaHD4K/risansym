@@ -35,6 +35,28 @@ class Model(ABC):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}(node_id={self.node_id}, clock={self.clock})>"
 
+    @property
+    def id(self) -> int:
+        import warnings
+        warnings.warn(
+            "Accessing 'Model.id' is deprecated and will be removed in v1.0. "
+            "Use 'Model.node_id' instead to avoid shadowing the built-in id().",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.node_id
+
+    @id.setter
+    def id(self, value: int) -> None:
+        import warnings
+        warnings.warn(
+            "Setting 'Model.id' is deprecated and will be removed in v1.0. "
+            "Use 'Model.node_id' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.node_id = value
+
     # ------------------------------------------------------------------
     # Internal setters — called by the framework, not by user algorithms
     # ------------------------------------------------------------------

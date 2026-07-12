@@ -26,8 +26,9 @@ class Simulation:
         maxtime: Maximum simulation time horizon.
         algo_name: Human-readable algorithm identifier for trace metadata.
         debug: If ``True``, print event-by-event debug output to stdout.
-        trace: Controls trace output — ``False`` disables tracing, ``True``
-            auto-generates a file path, or a ``str``/``Path`` sets the output path.
+        trace_enabled: Controls trace output — ``False`` disables tracing, ``True``
+            auto-generates a file path unless ``trace_path`` is set.
+        trace_path: Optional explicit output path for the trace file.
         trace_dir: Base directory for auto-generated trace files.
         trace_tag: Optional tag appended to the auto-generated filename.
     """
@@ -38,20 +39,22 @@ class Simulation:
         maxtime: float,
         algo_name: str = "UnknownAlgo",
         debug: bool = True,
-        trace: bool | str | Path = False,
+        trace_enabled: bool = False,
+        trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
     ) -> None:
         from risansym.trace import TraceCollector
 
         self.algo_name = algo_name
-        self.trace = trace
+        self.trace_enabled = trace_enabled
+        self.trace_path = trace_path
         self.trace_dir = trace_dir
         self.trace_tag = trace_tag
         self._topology_name = "unknown_topology"
         self._initialized = False
 
-        self.collector = TraceCollector() if trace else None
+        self.collector = TraceCollector() if trace_enabled else None
         self.engine = Simulator(maxtime, debug=debug, collector=self.collector)
         
         # Backwards compatibility: Duck typing the constructor
@@ -86,7 +89,8 @@ class Simulation:
         maxtime: float,
         algo_name: str = "UnknownAlgo",
         debug: bool = True,
-        trace: bool | str | Path = False,
+        trace_enabled: bool = False,
+        trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
     ) -> Simulation:
@@ -97,7 +101,8 @@ class Simulation:
             maxtime=maxtime,
             algo_name=algo_name,
             debug=debug,
-            trace=trace,
+            trace_enabled=trace_enabled,
+            trace_path=trace_path,
             trace_dir=trace_dir,
             trace_tag=trace_tag,
         )
@@ -177,8 +182,8 @@ class Simulation:
         tag = f"_{self.trace_tag}" if self.trace_tag else ""
         timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
 
-        if isinstance(self.trace, (str, Path)) and not isinstance(self.trace, bool):
-            trace_path = Path(self.trace)
+        if self.trace_path:
+            trace_path = Path(self.trace_path)
         else:
             file_name = f"{self.algo_name}_{graph_name}{tag}_{timestamp}.json"
             trace_path = Path(self.trace_dir) / self.algo_name / file_name
@@ -228,5 +233,5 @@ class Simulation:
             )
 
         self._execute()
-        if self.trace:
+        if self.trace_enabled:
             self._save_trace()

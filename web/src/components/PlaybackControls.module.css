@@ -92,6 +92,21 @@
   transform: scale(1.3);
 }
 
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-color);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent-glow);
+  transition: transform 0.1s;
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.3);
+}
+
 .zoomGroup {
   display: flex;
   align-items: center;

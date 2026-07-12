@@ -15,16 +15,16 @@ class Process:
     def __init__(self, neighbors: list[int], engine: Simulator, node_id: int) -> None:
         self.neighbors = neighbors
         self.engine = engine
-        self.id = node_id
+        self.node_id = node_id
         self.model: Model | None = None
 
     def __repr__(self) -> str:
-        return f"<Process(id={self.id}, neighbors={self.neighbors})>"
+        return f"<Process(node_id={self.node_id}, neighbors={self.neighbors})>"
 
     def set_model(self, model: Model) -> None:
         """Bind a model to this process without triggering initialization."""
         self.model = model
-        self.model.set_sink(self, self.neighbors, self.id)
+        self.model.set_sink(self, self.neighbors, self.node_id)
 
     def set_time(self, time: float) -> None:
         """Forward the simulation clock to the bound model."""
@@ -37,7 +37,7 @@ class Process:
         if state is None:
             import logging
             logging.getLogger(__name__).warning(
-                "Process %d transmitted an event without a bound model.", self.id
+                "Process %d transmitted an event without a bound model.", self.node_id
             )
             state = {}
         self.engine.insert_event(event, node_state=state)
@@ -49,4 +49,4 @@ class Process:
 
     def log(self, message: str) -> None:
         """Record an application-level log event via the engine."""
-        self.engine.log_app_event(self.id, message)
+        self.engine.log_app_event(self.node_id, message)

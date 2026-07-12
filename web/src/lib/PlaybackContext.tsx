@@ -24,7 +24,15 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [zoomScale, setZoomScale] = useState<number>(1);
 
-  const maxTime = Number(traceData?.metadata?.parameters?.max_time ?? 0);
+  const maxTime = useMemo(() => {
+    const fromParams = Number(traceData?.metadata?.parameters?.max_time ?? 0);
+    if (fromParams > 0) return fromParams;
+    // Fallback: derive from trace events when metadata doesn't include max_time
+    if (!traceData?.trace?.length) return 0;
+    return Math.max(...traceData.trace.map(e =>
+      'event_time' in e ? Number(e.event_time ?? e.clock) : e.clock
+    ));
+  }, [traceData]);
 
   const value = useMemo(() => ({
     currentClock,

@@ -138,6 +138,13 @@ class Simulation:
 
         while self.engine.is_on:
             event = self.engine.pop_event()
+
+            if event.target < 0 or event.target >= len(self.table):
+                raise ValueError(
+                    f"Event targets node {event.target}, but only nodes "
+                    f"1-{len(self.table) - 1} exist in the topology."
+                )
+
             if process := self.table[event.target]:
                 process.set_time(event.time)
                 process.receive(event)
@@ -206,6 +213,19 @@ class Simulation:
                 stacklevel=2,
             )
             self.initialize_all()
+
+        # Warn about nodes without bound models
+        unbound = [
+            i for i, p in enumerate(self.table)
+            if p is not None and p.model is None
+        ]
+        if unbound:
+            warnings.warn(
+                f"Nodes {unbound} have no model bound. "
+                f"Events targeting these nodes will be silently ignored.",
+                UserWarning,
+                stacklevel=2,
+            )
 
         self._execute()
         if self.trace:

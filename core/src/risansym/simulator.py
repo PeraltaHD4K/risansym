@@ -50,7 +50,13 @@ class Simulator:
                 ))
 
     def pop_event(self) -> Event:
-        """Pop the nearest event and advance the global clock."""
+        """Pop the nearest event and advance the global clock.
+
+        Raises:
+            RuntimeError: If the agenda is empty.
+        """
+        if not self._agenda:
+            raise RuntimeError("Cannot pop from an empty event agenda.")
         event = heapq.heappop(self._agenda)
         self.clock = event.time
         if self.debug:

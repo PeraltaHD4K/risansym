@@ -43,7 +43,7 @@ export function useMessageArrows(
         originalEvent: event,
         id: `${index}-${event.source}-${event.target}-${event.clock}-${event.name}`,
         name: event.name,
-        color: typeColorMap.get(event.name)!,
+        color: typeColorMap.get(event.name) ?? MESSAGE_COLORS[0],
         startX,
         startY: srcNode.y,
         endX,

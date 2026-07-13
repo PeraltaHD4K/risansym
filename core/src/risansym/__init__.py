@@ -48,4 +48,5 @@ __all__ = [
     "TraceMetadata",
     "TraceOutput",
     "load_adjacency_matrix",
+    "__version__",
 ]

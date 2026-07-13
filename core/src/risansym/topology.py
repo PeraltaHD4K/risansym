@@ -18,7 +18,14 @@ def load_adjacency_matrix(filename: str | Path) -> list[list[int]]:
         for line_idx, line in enumerate(path.read_text().splitlines()):
             if not line.strip():
                 continue
-            neighbors = [int(node) for node in line.split()]
+            # Remove duplicates and self-loops while preserving order
+            current_node = len(graph) + 1
+            seen = set()
+            neighbors = []
+            for node in (int(n) for n in line.split()):
+                if node != current_node and node not in seen:
+                    seen.add(node)
+                    neighbors.append(node)
             graph.append(neighbors)
     except ValueError as e:
         raise ValueError(

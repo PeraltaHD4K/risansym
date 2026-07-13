@@ -180,7 +180,8 @@ class Simulation:
         """Serialize and persist the trace with metadata."""
         graph_name = self._topology_name
         tag = f"_{self.trace_tag}" if self.trace_tag else ""
-        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
+        now = datetime.datetime.now(datetime.timezone.utc)
+        timestamp = now.strftime("%Y%m%d_%H%M%S")
 
         if self.trace_path:
             trace_path = Path(self.trace_path)
@@ -196,7 +197,7 @@ class Simulation:
             algorithm=self.algo_name,
             topology=graph_name,
             tag=self.trace_tag,
-            execution_date=timestamp,
+            execution_date=now,
             parameters={
                 "max_time": self.engine.maxtime,
                 "total_nodes": total_nodes,
@@ -233,5 +234,12 @@ class Simulation:
             )
 
         self._execute()
+        if self.trace_enabled:
+            self._save_trace()
+
+    def __enter__(self) -> Simulation:
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if self.trace_enabled:
             self._save_trace()

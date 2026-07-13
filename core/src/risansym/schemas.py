@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Any, Literal, Union, Annotated
+import datetime
 
 
 class TransmitEvent(BaseModel):
@@ -11,7 +12,7 @@ class TransmitEvent(BaseModel):
     source: int
     target: int
     name: str
-    payload: Any
+    payload: dict[str, Any]
     node_state: dict[str, Any] | None = None
 
 
@@ -23,7 +24,7 @@ class ReceiveEvent(BaseModel):
     source: int
     target: int
     name: str
-    payload: Any
+    payload: dict[str, Any]
     node_state: dict[str, Any] | None = None
 
 
@@ -50,7 +51,7 @@ class TraceMetadata(BaseModel):
     algorithm: str
     topology: str
     tag: str | None = None
-    execution_date: str
+    execution_date: datetime.datetime
     parameters: dict[str, Any]
     metrics: dict[str, Any]
 

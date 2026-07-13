@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { UploadCloud, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useTrace } from '@/lib/TraceContext';
 import { usePlayback } from '@/lib/PlaybackContext';
@@ -13,6 +13,7 @@ export default function Uploader() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = (file: File) => {
     setError(null);
@@ -55,10 +56,11 @@ export default function Uploader() {
       onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
-      onClick={() => document.getElementById('fileUpload')?.click()}
+      onClick={() => fileInputRef.current?.click()}
     >
       <input 
         id="fileUpload" 
+        ref={fileInputRef}
         type="file" 
         accept=".json" 
         style={{ display: 'none' }} 

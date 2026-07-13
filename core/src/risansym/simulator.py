@@ -21,6 +21,8 @@ class Simulator:
     """
 
     def __init__(self, maxtime: float, debug: bool = True, collector: TraceCollector | None = None) -> None:
+        if maxtime <= 0:
+            raise ValueError("maxtime must be greater than 0")
         self.clock: float = 0.0
         self.maxtime: float = maxtime
         self._agenda: list[Event] = []

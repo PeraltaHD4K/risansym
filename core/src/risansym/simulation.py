@@ -43,8 +43,20 @@ class Simulation:
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
+        **kwargs: Any,
     ) -> None:
         from risansym.trace import TraceCollector
+
+        if "trace" in kwargs:
+            warnings.warn(
+                "The 'trace' argument is deprecated. Use 'trace_enabled' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            trace_enabled = kwargs.pop("trace")
+            
+        if kwargs:
+            raise TypeError(f"Simulation.__init__() got unexpected keyword arguments: {kwargs}")
 
         self.algo_name = algo_name
         self.trace_enabled = trace_enabled

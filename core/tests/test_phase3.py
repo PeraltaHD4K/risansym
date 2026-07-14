@@ -46,11 +46,9 @@ def test_simulation_partial_models(temp_topology) -> None:
 
 def test_negative_time_event() -> None:
     # 3. Evento con tiempo negativo
-    # Although Event allows negative time, the simulator agenda doesn't care, 
-    # but let's test that it can be created and sorted.
-    e1 = Event(time=-1.0, source=1, target=2, name="NEG", payload={})
-    e2 = Event(time=0.0, source=1, target=2, name="ZERO", payload={})
-    assert e1 < e2
+    # Event now raises ValueError for negative time
+    with pytest.raises(ValueError, match="Invalid event time"):
+        Event(time=-1.0, source=1, target=2, name="NEG", payload={})
 
 def test_pop_empty_agenda() -> None:
     # 4. pop_event() con agenda vacía

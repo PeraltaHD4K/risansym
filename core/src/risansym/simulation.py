@@ -109,10 +109,13 @@ class Simulation:
 
         Raises:
             IndexError: If ``node_id`` is outside the topology.
+            ValueError: If the node already has a model bound.
         """
         if node_id < 1 or node_id >= len(self.table):
             raise IndexError(f"Node {node_id} does not exist in the topology.")
         if process := self.table[node_id]:
+            if process.model is not None:
+                raise ValueError(f"Node {node_id} already has a model bound.")
             process.set_model(model)
 
     def initialize_all(self) -> None:

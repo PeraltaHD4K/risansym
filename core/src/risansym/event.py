@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, TypeAlias
-
+from typing import TypeAlias, Union
+import math
 
 # Type alias for JSON-serializable payloads exchanged between processes.
-JsonPayload: TypeAlias = dict[str, Any]
+JsonValue: TypeAlias = Union[str, int, float, bool, None, dict[str, 'JsonValue'], list['JsonValue']]
+JsonPayload: TypeAlias = dict[str, JsonValue]
 
 
 @dataclass(order=True, slots=True, frozen=True)
@@ -33,6 +34,10 @@ class Event:
     source: int = field(compare=False)
     target: int = field(compare=False)
     payload: JsonPayload = field(default_factory=dict, compare=False)
+
+    def __post_init__(self) -> None:
+        if math.isnan(self.time) or math.isinf(self.time) or self.time < 0:
+            raise ValueError(f"Invalid event time: {self.time}. Time must be a finite, non-negative number.")
 
     def __repr__(self) -> str:
         return f"Event(t={self.time}, '{self.name}' {self.source}→{self.target})"

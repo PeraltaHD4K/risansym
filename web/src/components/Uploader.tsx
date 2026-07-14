@@ -22,11 +22,12 @@ export default function Uploader() {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const text = e.target?.result;
-        if (typeof text !== 'string') {
+        const result = e.target?.result;
+        if (!result) {
           setError('No se pudo leer el contenido del archivo.');
           return;
         }
+        const text = result as string;
         const rawJson = JSON.parse(text);
         
         // Zod validation (Data Contract)

@@ -19,8 +19,8 @@ describe('Uploader', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useTrace as any).mockReturnValue({ setTraceData: mockSetTraceData });
-    (usePlayback as any).mockReturnValue({
+    vi.mocked(useTrace).mockReturnValue({ setTraceData: mockSetTraceData } as unknown as ReturnType<typeof useTrace>);
+    vi.mocked(usePlayback).mockReturnValue({
       setCurrentClock: mockSetCurrentClock,
       setIsPlaying: mockSetIsPlaying,
     });
@@ -34,15 +34,15 @@ describe('Uploader', () => {
   it('processes file using FileReader', async () => {
     const mockFileReader = {
       readAsText: vi.fn(),
-      onload: null as any,
-      onerror: null as any,
+      onload: null as unknown as typeof FileReader.prototype.onload,
+      onerror: null as unknown as typeof FileReader.prototype.onerror,
     };
     class MockFileReader {
       readAsText = mockFileReader.readAsText;
-      set onload(val: any) { mockFileReader.onload = val; }
-      set onerror(val: any) { mockFileReader.onerror = val; }
+      set onload(val: typeof FileReader.prototype.onload) { mockFileReader.onload = val; }
+      set onerror(val: typeof FileReader.prototype.onerror) { mockFileReader.onerror = val; }
     }
-    window.FileReader = MockFileReader as any;
+    window.FileReader = MockFileReader as unknown as typeof window.FileReader;
 
     render(<Uploader />);
     

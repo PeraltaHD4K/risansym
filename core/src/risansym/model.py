@@ -62,6 +62,8 @@ class Model(ABC):
 
     def set_time(self, time: float) -> None:
         """Advance the node's local clock (called by the framework)."""
+        if time < self.clock:
+            raise ValueError(f"Time cannot go backwards (current: {self.clock}, new: {time})")
         self.clock = time
 
     def set_sink(self, sink: MessageSink, neighbors: list[int], node_id: int) -> None:

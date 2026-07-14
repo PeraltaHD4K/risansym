@@ -54,11 +54,6 @@
   filter: brightness(1.2) drop-shadow(0 0 2px currentColor);
 }
 
-.playhead {
-  stroke: var(--danger-color);
-  stroke-width: 2;
-  stroke-dasharray: 6,4;
-}
 
 .eventDot {
   cursor: pointer;

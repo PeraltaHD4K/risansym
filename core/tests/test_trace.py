@@ -99,3 +99,25 @@ class TestTraceGeneration:
         assert "total_messages" in sim.execution_metrics
         assert "execution_real_time_sec" in sim.execution_metrics
         assert sim.execution_metrics["total_messages"] > 0
+
+    def test_trace_collector_cap(self):
+        # T8: TraceCollector memory limit
+        from risansym.trace import TraceCollector
+        from risansym.schemas import AppLogEvent
+        import pytest
+        
+        collector = TraceCollector(max_events=5)
+        
+        # Insert 5 events, no warning
+        for i in range(5):
+            collector.record(AppLogEvent(clock=float(i), source=1, message="test"))
+        
+        assert len(collector) == 5
+        
+        # 6th event should trigger warning and pop first
+        with pytest.warns(ResourceWarning, match="has reached its limit of 5 events"):
+            collector.record(AppLogEvent(clock=5.0, source=1, message="test"))
+            
+        assert len(collector) == 5
+        # First event was at clock=0.0, now it's gone
+        assert collector._trace[0].clock == 1.0

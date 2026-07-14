@@ -23,7 +23,7 @@ export default function Home() {
 
       <div className={styles.dashboard}>
         {/* Panel Lateral (Controles) */}
-        <aside className={`glass-panel ${styles.sidebar}`}>
+        <aside className={`glass-panel ${styles.sidebar}`} aria-label="Panel de detalles de traza">
           <h3>Inspector de Traza</h3>
           {traceData ? (
             <div className={styles.inspectorContent}>
@@ -33,7 +33,7 @@ export default function Home() {
               <p>Métricas de Simulación:</p>
               <ul className={styles.metricsList}>
                 <li>Eventos: {traceData.trace.length}</li>
-                <li>Nodos Totales: {String(traceData.metadata.parameters.total_nodes || 'N/A')}</li>
+                <li>Nodos Totales: {String(traceData.metadata.parameters.total_nodes ?? 'N/A')}</li>
               </ul>
             </div>
           ) : (
@@ -54,7 +54,7 @@ export default function Home() {
         </aside>
 
         {/* Área Principal (Lienzo / Drag & Drop) */}
-        <section className={`glass-panel ${styles.mainArea}`}>
+        <section className={`glass-panel ${styles.mainArea}`} aria-label="Visualizador principal">
           {!traceData ? (
             <Uploader />
           ) : (

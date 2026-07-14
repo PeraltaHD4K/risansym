@@ -17,6 +17,7 @@ from risansym.model import Model
 from risansym.process import Process
 from risansym.event import Event, JsonPayload
 from risansym.simulator import Simulator
+from risansym.trace import TraceCollector
 from risansym.schemas import (
     TraceEvent,
     TransmitEvent,
@@ -41,6 +42,7 @@ __all__ = [
     "Event",
     "JsonPayload",
     "Simulator",
+    "TraceCollector",
     "TraceEvent",
     "TransmitEvent",
     "ReceiveEvent",

@@ -45,3 +45,26 @@ class TestEventPayload:
         e2 = Event(time=0.0, source=1, target=2, name="B")
         e1.payload["x"] = 1
         assert "x" not in e2.payload
+
+
+class TestEventValidation:
+    """Verify Event construction validation and argument order."""
+
+    def test_event_positional_args(self):
+        # T1: positional args order is (time, name, source, target)
+        e = Event(1.0, "MSG", 1, 2)
+        assert e.time == 1.0
+        assert e.name == "MSG"
+        assert e.source == 1
+        assert e.target == 2
+
+    def test_event_invalid_time(self):
+        import pytest
+        import math
+        # T2: NaN and inf times raise ValueError
+        with pytest.raises(ValueError, match="Invalid event time"):
+            Event(time=math.nan, source=1, target=2, name="MSG")
+        with pytest.raises(ValueError, match="Invalid event time"):
+            Event(time=math.inf, source=1, target=2, name="MSG")
+        with pytest.raises(ValueError, match="Invalid event time"):
+            Event(time=-1.0, source=1, target=2, name="MSG")

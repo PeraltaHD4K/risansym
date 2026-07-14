@@ -58,3 +58,15 @@ class TestTopologyValidation:
 
         with pytest.raises(IndexError, match="does not exist"):
             sim.set_model(Dummy(), node_id=0)
+
+    def test_empty_topology_warning(self, make_topo):
+        # T6: Empty topology
+        topo = make_topo("")
+        with pytest.warns(UserWarning, match="is empty. The simulation will have no nodes"):
+            sim = Simulation.from_file(filename=topo, maxtime=10.0, debug=False)
+        assert len(sim.graph) == 0
+
+    def test_directory_path_raises(self, tmp_path):
+        # T7: Directory path instead of file
+        with pytest.raises(IsADirectoryError):
+            Simulation.from_file(filename=tmp_path, maxtime=10.0, debug=False)

@@ -46,6 +46,8 @@ export default function Visualizer() {
           width={totalWidth}
           height={totalHeight}
           xmlns="http://www.w3.org/2000/svg"
+          role="img"
+          aria-label="Diagrama de secuencia de la simulación distribuida"
         >
           <LifelineLayer nodes={nodes} totalWidth={totalWidth} />
           

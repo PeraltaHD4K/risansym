@@ -4,6 +4,7 @@ import datetime
 import time
 import warnings
 from pathlib import Path
+from types import TracebackType
 from typing import Any
 
 from risansym.event import Event
@@ -43,20 +44,18 @@ class Simulation:
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
-        **kwargs: Any,
+        trace: bool | None = None,
     ) -> None:
         from risansym.trace import TraceCollector
 
-        if "trace" in kwargs:
+        # Backwards compatibility: accept deprecated 'trace' kwarg
+        if trace is not None:
             warnings.warn(
                 "The 'trace' argument is deprecated. Use 'trace_enabled' instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
-            trace_enabled = kwargs.pop("trace")
-            
-        if kwargs:
-            raise TypeError(f"Simulation.__init__() got unexpected keyword arguments: {kwargs}")
+            trace_enabled = trace
 
         self.algo_name = algo_name
         self.trace_enabled = trace_enabled
@@ -83,6 +82,7 @@ class Simulation:
             self.graph = graph
 
         self.execution_metrics: dict[str, Any] = {}
+        self._trace_saved = False
 
         # Index 0 reserved as None; nodes are 1-indexed
         self.table: list[Process | None] = [None] + [
@@ -184,7 +184,7 @@ class Simulation:
 
         self.execution_metrics = {
             "simulated_time_elapsed": self.engine.clock,
-            "total_messages": self.collector.get_event_count() if self.collector else 0,
+            "total_messages": len(self.collector) if self.collector else 0,
             "execution_real_time_sec": round(end_real_time - start_real_time, 5)
         }
 
@@ -248,10 +248,17 @@ class Simulation:
         self._execute()
         if self.trace_enabled:
             self._save_trace()
+            self._trace_saved = True
 
     def __enter__(self) -> Simulation:
+        self._trace_saved = False
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        if self.trace_enabled:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        if self.trace_enabled and not self._trace_saved:
             self._save_trace()

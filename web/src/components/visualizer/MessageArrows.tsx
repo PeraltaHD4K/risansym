@@ -54,7 +54,8 @@ export default function MessageArrows({ messages, currentClock, onSelectEvent }:
 
         if (isPending) {
           // Curve animation using De Casteljau's algorithm
-          const t = (currentClock - msg.clock) / (msg.eventTime - msg.clock);
+          const duration = msg.eventTime - msg.clock;
+          const t = duration > 0 ? (currentClock - msg.clock) / duration : 1;
           const safeT = Math.max(0, Math.min(1, t));
           const invT = 1 - safeT;
 
@@ -74,8 +75,13 @@ export default function MessageArrows({ messages, currentClock, onSelectEvent }:
             key={msg.id}
             className={styles.messageGroup}
             onClick={() => onSelectEvent([msg.originalEvent])}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectEvent([msg.originalEvent]); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Mensaje ${msg.name} de nodo ${msg.originalEvent.source} a nodo ${msg.originalEvent.target}`}
             style={{ cursor: 'pointer', opacity: isPast ? 1 : 0.8 }}
           >
+            <title>{`${msg.name}: nodo ${msg.originalEvent.source} → nodo ${msg.originalEvent.target}`}</title>
             {/* Thick invisible hitbox for easier hover/click */}
             <path
               d={pathD}

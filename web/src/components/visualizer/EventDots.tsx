@@ -46,7 +46,12 @@ export default function EventDots({ groups, onSelectEvent }: EventDotsProps) {
             key={group.key}
             className={styles.eventDot}
             onClick={() => onSelectEvent(events)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectEvent(events); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`${events.length} evento(s) en t=${group.clock}`}
           >
+            <title>{`${events.length} evento(s) en t=${group.clock}`}</title>
             {DotShape}
           </g>
         );

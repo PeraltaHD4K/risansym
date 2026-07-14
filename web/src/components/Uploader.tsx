@@ -22,7 +22,11 @@ export default function Uploader() {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const text = e.target?.result as string;
+        const text = e.target?.result;
+        if (typeof text !== 'string') {
+          setError('No se pudo leer el contenido del archivo.');
+          return;
+        }
         const rawJson = JSON.parse(text);
         
         // Zod validation (Data Contract)
@@ -38,6 +42,9 @@ export default function Uploader() {
         setError(`El archivo no cumple con el esquema V1.0: ${message}`);
         setTraceData(null);
       }
+    };
+    reader.onerror = () => {
+      setError('Error al leer el archivo. Verifica que el archivo no esté dañado.');
     };
     reader.readAsText(file);
   };
@@ -57,6 +64,10 @@ export default function Uploader() {
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
       onClick={() => fileInputRef.current?.click()}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
+      role="button"
+      tabIndex={0}
+      aria-label="Subir archivo de traza JSON"
     >
       <input 
         id="fileUpload" 

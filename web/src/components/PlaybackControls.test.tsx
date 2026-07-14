@@ -23,10 +23,10 @@ describe('PlaybackControls', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useTrace as any).mockReturnValue({
+    vi.mocked(useTrace).mockReturnValue({
       traceData: { metadata: { topology: 'test-topo' } },
     });
-    (usePlayback as any).mockReturnValue({
+    vi.mocked(usePlayback).mockReturnValue({
       currentClock: 1.5,
       setCurrentClock: mockSetCurrentClock,
       isPlaying: false,
@@ -45,7 +45,7 @@ describe('PlaybackControls', () => {
   });
 
   it('returns null if traceData is missing', () => {
-    (useTrace as any).mockReturnValue({ traceData: null });
+    vi.mocked(useTrace).mockReturnValue({ traceData: null });
     const { container } = render(<PlaybackControls />);
     expect(container.firstChild).toBeNull();
   });

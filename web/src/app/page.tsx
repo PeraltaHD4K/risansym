@@ -5,7 +5,6 @@ import styles from './page.module.css';
 import Uploader from '@/components/Uploader';
 import PlaybackControls from '@/components/PlaybackControls';
 import Visualizer from '@/components/Visualizer';
-import ErrorBoundary from '@/components/ErrorBoundary';
 import { useTrace } from '@/lib/TraceContext';
 
 export default function Home() {
@@ -60,9 +59,7 @@ export default function Home() {
             <Uploader />
           ) : (
             <div className={styles.visualizerLayout}>
-              <ErrorBoundary>
-                <Visualizer />
-              </ErrorBoundary>
+              <Visualizer />
               <PlaybackControls />
             </div>
           )}

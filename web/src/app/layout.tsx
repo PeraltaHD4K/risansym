@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { TraceProvider } from "@/lib/TraceContext";
 import { PlaybackProvider } from "@/lib/PlaybackContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,11 +28,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${outfit.variable}`}>
-        <TraceProvider>
-          <PlaybackProvider>
-            {children}
-          </PlaybackProvider>
-        </TraceProvider>
+        <ErrorBoundary>
+          <TraceProvider>
+            <PlaybackProvider>
+              {children}
+            </PlaybackProvider>
+          </TraceProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

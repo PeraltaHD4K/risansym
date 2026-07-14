@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Any, Protocol
+import warnings
 
 from risansym.event import Event
 
@@ -37,7 +38,6 @@ class Model(ABC):
 
     @property
     def id(self) -> int:
-        import warnings
         warnings.warn(
             "Accessing 'Model.id' is deprecated and will be removed in v1.0. "
             "Use 'Model.node_id' instead to avoid shadowing the built-in id().",
@@ -48,7 +48,6 @@ class Model(ABC):
 
     @id.setter
     def id(self, value: int) -> None:
-        import warnings
         warnings.warn(
             "Setting 'Model.id' is deprecated and will be removed in v1.0. "
             "Use 'Model.node_id' instead.",
@@ -68,7 +67,7 @@ class Model(ABC):
     def set_sink(self, sink: MessageSink, neighbors: list[int], node_id: int) -> None:
         """Bind this model to its host environment and topology context (called by the framework)."""
         self.sink = sink
-        self.neighbors = neighbors
+        self.neighbors = list(neighbors)
         self.node_id = node_id
 
     # ------------------------------------------------------------------

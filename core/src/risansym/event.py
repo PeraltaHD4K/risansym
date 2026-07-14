@@ -18,6 +18,8 @@ class Event:
         source: Node ID of the sender.
         target: Node ID of the receiver.
         payload: Optional JSON-serializable data attached to the event.
+                 Note: Although the Event class is frozen, the payload dict is
+                 mutable. Callers should avoid mutating it after creation.
 
     .. deprecated:: 0.5.2
         The old positional field order was ``(time, name, target, source)``.

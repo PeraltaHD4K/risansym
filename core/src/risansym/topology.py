@@ -35,12 +35,30 @@ def load_adjacency_matrix(filename: str | Path) -> list[list[int]]:
 
     # Validate that references do not point to out-of-range nodes
     num_nodes = len(graph)
+    if num_nodes == 0:
+        import warnings
+        warnings.warn(
+            f"Topology file '{path}' is empty. The simulation will have no nodes.",
+            UserWarning,
+            stacklevel=2,
+        )
+
     for i, neighbors in enumerate(graph, start=1):
         for neighbor in neighbors:
             if neighbor < 1 or neighbor > num_nodes:
                 raise ValueError(
                     f"Node {i} references node {neighbor}, which is outside "
                     f"the valid range (1 to {num_nodes})."
+                )
+            
+            # Check for asymmetry
+            if i not in graph[neighbor - 1]:
+                import warnings
+                warnings.warn(
+                    f"Asymmetric link detected: Node {i} links to Node {neighbor}, "
+                    f"but Node {neighbor} does not link back to Node {i}.",
+                    UserWarning,
+                    stacklevel=2,
                 )
 
     return graph

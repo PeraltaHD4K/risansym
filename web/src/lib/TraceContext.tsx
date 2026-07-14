@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, type ReactNode, type Dispatch, type SetStateAction } from 'react';
+import { createContext, useContext, useState, useMemo, type ReactNode, type Dispatch, type SetStateAction } from 'react';
 import type { TraceOutput } from './schema';
 
 interface TraceContextType {
@@ -13,8 +13,10 @@ const TraceContext = createContext<TraceContextType | null>(null);
 export function TraceProvider({ children }: { children: ReactNode }) {
   const [traceData, setTraceData] = useState<TraceOutput | null>(null);
 
+  const value = useMemo(() => ({ traceData, setTraceData }), [traceData]);
+
   return (
-    <TraceContext.Provider value={{ traceData, setTraceData }}>
+    <TraceContext.Provider value={value}>
       {children}
     </TraceContext.Provider>
   );

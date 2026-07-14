@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from risansym.event import Event
 from risansym.model import Model
-from risansym.simulator import Simulator
+from typing import Protocol, Any
+import logging
+
+class EngineProtocol(Protocol):
+    def insert_event(self, event: Event, node_state: dict[str, Any] | None = None) -> None: ...
+    def log_app_event(self, source: int, message: str) -> None: ...
 
 
 class Process:
@@ -12,7 +17,7 @@ class Process:
     between the model's algorithm logic and the simulation engine.
     """
 
-    def __init__(self, neighbors: list[int], engine: Simulator, node_id: int) -> None:
+    def __init__(self, neighbors: list[int], engine: EngineProtocol, node_id: int) -> None:
         self.neighbors = neighbors
         self.engine = engine
         self.node_id = node_id
@@ -46,6 +51,10 @@ class Process:
         """Deliver an incoming event to the bound model for processing."""
         if self.model:
             self.model.receive(event)
+        else:
+            logging.getLogger(__name__).warning(
+                "Process %d received an event but has no bound model.", self.node_id
+            )
 
     def log(self, message: str) -> None:
         """Record an application-level log event via the engine."""

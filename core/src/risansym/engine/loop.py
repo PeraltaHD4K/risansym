@@ -33,7 +33,7 @@ class EventLoop:
         while self.simulator.is_on:
             event = self.simulator.pop_event()
 
-            if event.target < 0 or event.target >= len(self.table):
+            if event.target < 1 or event.target >= len(self.table):
                 raise ValueError(
                     f"Event targets node {event.target}, but only nodes "
                     f"1-{len(self.table) - 1} exist in the topology."

@@ -34,6 +34,8 @@ class Simulator:
 
     def insert_event(self, event: Event, node_state: dict[str, Any] | None = None) -> None:
         """Push an event onto the heap if it falls within the time horizon."""
+        if event.time < self.clock:
+            raise ValueError(f"Causality violation: Cannot schedule event at t={event.time} when clock is at t={self.clock}")
         if event.time <= self.maxtime:
             heapq.heappush(self._agenda, event)
             if self.debug:

@@ -1,22 +1,21 @@
 from __future__ import annotations
 
-import datetime
-import time
 import warnings
 from pathlib import Path
 from types import TracebackType
 from typing import Any
 
+from risansym.engine.builder import SimulationBuilder
+from risansym.engine.exporter import TraceExporter
+from risansym.engine.loop import EventLoop
 from risansym.event import Event
 from risansym.model import Model
-from risansym.process import Process
 from risansym.simulator import Simulator
-from risansym.schemas import TraceMetadata, ReceiveEvent
 from risansym.topology import load_adjacency_matrix
 
 
 class Simulation:
-    """Global orchestrator for the computational graph and simulation cycle.
+    """Global orchestrator (Facade) for the computational graph and simulation cycle.
 
     Creates processes, binds algorithm models, and drives the event loop until completion.
     
@@ -62,33 +61,17 @@ class Simulation:
         self.trace_path = trace_path
         self.trace_dir = trace_dir
         self.trace_tag = trace_tag
-        self._topology_name = "unknown_topology"
         self._initialized = False
 
         self.collector = TraceCollector() if trace_enabled else None
         self.engine = Simulator(maxtime, debug=debug, collector=self.collector)
         
-        # Backwards compatibility: Duck typing the constructor
-        if isinstance(graph, (str, Path)):
-            warnings.warn(
-                "Passing a filename directly to Simulation() is deprecated "
-                "and will be removed in v1.0. Use Simulation.from_file() instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            self.graph = load_adjacency_matrix(graph)
-            self._topology_name = Path(graph).stem
-        else:
-            self.graph = graph
+        # Build topology and processes using the new Builder
+        self.graph, self._topology_name = SimulationBuilder.build_topology(graph)
+        self.table = SimulationBuilder.build_processes(self.graph, self.engine)
 
         self.execution_metrics: dict[str, Any] = {}
         self._trace_saved = False
-
-        # Index 0 reserved as None; nodes are 1-indexed
-        self.table: list[Process | None] = [None] + [
-            Process(row, self.engine, i)
-            for i, row in enumerate(self.graph, start=1)
-        ]
 
     def __repr__(self) -> str:
         nodes = len(self.table) - 1
@@ -121,8 +104,6 @@ class Simulation:
         instance._topology_name = Path(filename).stem
         return instance
 
-
-
     def set_model(self, model: Model, node_id: int) -> None:
         """Bind an algorithm model to a specific node.
 
@@ -151,75 +132,25 @@ class Simulation:
 
     def _execute(self) -> None:
         """Main loop: pop and route events until the agenda is empty."""
-        start_real_time = time.perf_counter()
-
-        while self.engine.is_on:
-            event = self.engine.pop_event()
-
-            if event.target < 0 or event.target >= len(self.table):
-                raise ValueError(
-                    f"Event targets node {event.target}, but only nodes "
-                    f"1-{len(self.table) - 1} exist in the topology."
-                )
-
-            if process := self.table[event.target]:
-                process.set_time(event.time)
-                process.receive(event)
-
-                # Snapshot the node's internal state AFTER processing
-                state = process.model.get_state() if process.model else {}
-
-                if self.collector:
-                    self.collector.record(ReceiveEvent(
-                        action="RECEIVE",
-                        clock=event.time,
-                        source=event.source,
-                        target=event.target,
-                        name=event.name,
-                        payload=event.payload,
-                        node_state=state
-                    ))
-
-        end_real_time = time.perf_counter()
-
-        self.execution_metrics = {
-            "simulated_time_elapsed": self.engine.clock,
-            "total_messages": len(self.collector) if self.collector else 0,
-            "execution_real_time_sec": round(end_real_time - start_real_time, 5)
-        }
+        loop = EventLoop(self.engine, self.table, self.collector)
+        self.execution_metrics = loop.run()
 
     def _save_trace(self) -> None:
         """Serialize and persist the trace with metadata."""
-        graph_name = self._topology_name
-        tag = f"_{self.trace_tag}" if self.trace_tag else ""
-        now = datetime.datetime.now(datetime.timezone.utc)
-        timestamp = now.strftime("%Y%m%d_%H%M%S")
-
-        if self.trace_path:
-            trace_path = Path(self.trace_path)
-        else:
-            file_name = f"{self.algo_name}_{graph_name}{tag}_{timestamp}.json"
-            trace_path = Path(self.trace_dir) / self.algo_name / file_name
-
-        total_edges = sum(len(neighbors) for neighbors in self.graph)
-        total_nodes = len(self.table) - 1
-
-        metadata = TraceMetadata(
-            schema_version="1.0",
-            algorithm=self.algo_name,
-            topology=graph_name,
-            tag=self.trace_tag,
-            execution_date=now,
-            parameters={
-                "max_time": self.engine.maxtime,
-                "total_nodes": total_nodes,
-                "total_edges": total_edges
-            },
-            metrics=self.execution_metrics
+        if not self.collector:
+            return
+            
+        exporter = TraceExporter(
+            algo_name=self.algo_name,
+            topology_name=self._topology_name,
+            graph=self.graph,
+            table=self.table,
+            maxtime=self.engine.maxtime,
+            trace_path=self.trace_path,
+            trace_dir=self.trace_dir,
+            trace_tag=self.trace_tag,
         )
-
-        if self.collector:
-            self.collector.dump(trace_path, metadata)
+        exporter.export(self.collector, self.execution_metrics)
 
     def run(self) -> None:
         """Entry point: execute the simulation and optionally save the trace."""

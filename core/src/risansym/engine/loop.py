@@ -41,7 +41,11 @@ class EventLoop:
 
             if process := self.table[event.target]:
                 process.set_time(event.time)
-                process.receive(event)
+                
+                try:
+                    process.receive(event)
+                except Exception as e:
+                    raise RuntimeError(f"Simulation crashed at Node {event.target} while processing '{event.name}': {e}") from e
 
                 # Snapshot the node's internal state AFTER processing
                 state = process.model.get_state() if process.model else {}

@@ -104,6 +104,7 @@ class Simulation:
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
+        trace: bool | None = None,
     ) -> Simulation:
         """Factory method to instantiate a Simulation from a topology file."""
         graph = load_adjacency_matrix(filename)
@@ -118,6 +119,7 @@ class Simulation:
             trace_path=trace_path,
             trace_dir=trace_dir,
             trace_tag=trace_tag,
+            trace=trace,
         )
         instance._topology_name = Path(filename).stem
         return instance
@@ -147,9 +149,18 @@ class Simulation:
             if process and process.model:
                 process.model.init()
 
-    def init(self, event: Event) -> None:
+    def seed_event(self, event: Event) -> None:
         """Manually insert a seed event into the simulation engine."""
         self.engine.insert_event(event)
+
+    def init(self, event: Event) -> None:
+        """Deprecated: Use seed_event() instead."""
+        warnings.warn(
+            "Simulation.init() is deprecated and will be removed in v1.0. Use seed_event() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.seed_event(event)
 
     def _execute(self) -> None:
         """Main loop: pop and route events until the agenda is empty."""

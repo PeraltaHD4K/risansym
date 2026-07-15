@@ -5,11 +5,6 @@ from risansym.process import Process
 from risansym.event import Event
 from risansym.simulator import Simulator
 
-@pytest.fixture
-def temp_topology(tmp_path) -> str:
-    topo_file = tmp_path / "test_topo.txt"
-    topo_file.write_text("2\n1\n")
-    return str(topo_file)
 
 class DummyModel(Model):
     def init(self) -> None:

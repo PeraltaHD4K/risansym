@@ -14,6 +14,7 @@ export const TransmitEventSchema = z.object({
 export const ReceiveEventSchema = z.object({
   action: z.literal('RECEIVE'),
   clock: z.number(),
+  event_time: z.number().optional(),
   source: z.number(),
   target: z.number(),
   name: z.string(),

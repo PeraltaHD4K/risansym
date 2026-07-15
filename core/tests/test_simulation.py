@@ -14,12 +14,6 @@ class DummyModel(Model):
         elif event.name == "PONG" and self.clock < 5.0:
             self.transmit(Event(time=self.clock + 1.0, source=self.node_id, target=event.source, name="PING", payload={}))
 
-@pytest.fixture
-def temp_topology(tmp_path):
-    topo_file = tmp_path / "topo.txt"
-    # Adjacency list: Node 1 connects to 2, Node 2 connects to 1
-    topo_file.write_text("2\n1\n")
-    return topo_file
 
 def test_basic_simulation(temp_topology):
     sim = Simulation.from_file(filename=temp_topology, maxtime=10.0, algo_name="PingPong", trace_network=False, app_logs=False, trace_enabled=False)

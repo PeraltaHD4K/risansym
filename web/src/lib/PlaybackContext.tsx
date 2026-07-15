@@ -29,9 +29,10 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
     if (fromParams > 0) return fromParams;
     // Fallback: derive from trace events when metadata doesn't include max_time
     if (!traceData?.trace?.length) return 0;
-    return Math.max(...traceData.trace.map(e =>
-      'event_time' in e ? Number(e.event_time ?? e.clock) : e.clock
-    ));
+    return traceData.trace.reduce((max, e) => {
+      const val = 'event_time' in e ? Number(e.event_time ?? e.clock) : e.clock;
+      return val > max ? val : max;
+    }, 0);
   }, [traceData]);
 
   const value = useMemo(() => ({

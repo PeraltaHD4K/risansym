@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from typing import Iterator
+from collections import deque
 
 from pathlib import Path
 from risansym.schemas import TraceEvent, TraceMetadata, TraceOutput
@@ -21,7 +22,7 @@ class TraceCollector:
     """
 
     def __init__(self, max_events: int | None = _DEFAULT_MAX_EVENTS) -> None:
-        self._trace: list[TraceEvent] = []
+        self._trace: deque[TraceEvent] = deque(maxlen=max_events)
         self._max_events = max_events
         self._overflow_warned = False
 
@@ -34,7 +35,7 @@ class TraceCollector:
         If the collector has reached ``max_events``, the oldest event is
         dropped and a one-time warning is emitted.
         """
-        if self._max_events is not None and len(self._trace) >= self._max_events:
+        if self._max_events is not None and len(self._trace) == self._max_events:
             if not self._overflow_warned:
                 warnings.warn(
                     f"TraceCollector has reached its limit of {self._max_events:,} events. "
@@ -44,7 +45,6 @@ class TraceCollector:
                     stacklevel=2,
                 )
                 self._overflow_warned = True
-            self._trace.pop(0)
         self._trace.append(entry)
 
     def get_event_count(self) -> int:
@@ -78,7 +78,7 @@ class TraceCollector:
         """
         filepath.parent.mkdir(parents=True, exist_ok=True)
 
-        output = TraceOutput(metadata=metadata, trace=self._trace)
+        output = TraceOutput(metadata=metadata, trace=list(self._trace))
 
         with filepath.open('w', encoding='utf-8') as f:
             f.write(output.model_dump_json())

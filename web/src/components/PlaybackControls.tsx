@@ -35,15 +35,17 @@ export default function PlaybackControls() {
 
     setCurrentClock((prev: number) => {
       const next = prev + deltaSeconds * playbackSpeed;
-      if (next >= maxTime) {
-        setIsPlaying(false);
-        return maxTime;
-      }
-      return next;
+      return next >= maxTime ? maxTime : next;
     });
 
     rafRef.current = requestAnimationFrame(animate);
-  }, [playbackSpeed, maxTime, setCurrentClock, setIsPlaying]);
+  }, [playbackSpeed, maxTime, setCurrentClock]);
+
+  useEffect(() => {
+    if (isPlaying && currentClock >= maxTime) {
+      setIsPlaying(false);
+    }
+  }, [currentClock, maxTime, isPlaying, setIsPlaying]);
 
   useEffect(() => {
     if (isPlaying) {

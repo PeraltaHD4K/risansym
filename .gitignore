@@ -35,3 +35,14 @@ build/
 # MkDocs
 site/
 .gemini/
+
+# Testing and Cache
+*.log
+*.egg
+*.coverage
+coverage/
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+temp.txt

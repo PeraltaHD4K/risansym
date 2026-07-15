@@ -20,14 +20,28 @@ class Simulator:
     by time.  Events beyond ``maxtime`` are silently discarded.
     """
 
-    def __init__(self, maxtime: float, debug: bool = True, collector: TraceCollector | None = None) -> None:
+    def __init__(self, maxtime: float, trace_network: bool = False, app_logs: bool = True, collector: TraceCollector | None = None) -> None:
         if maxtime <= 0:
             raise ValueError("maxtime must be greater than 0")
         self.clock: float = 0.0
         self.maxtime: float = maxtime
         self._agenda: list[Event] = []
-        self.debug: bool = debug
+        self.trace_network: bool = trace_network
+        self.app_logs: bool = app_logs
         self._collector = collector
+
+        # Jupyter / Colab Logging Workaround
+        if self.trace_network or self.app_logs:
+            import sys
+            pkg_logger = logging.getLogger("risansym")
+            target_level = logging.DEBUG if self.trace_network else logging.INFO
+            pkg_logger.setLevel(target_level)
+
+            if not any(isinstance(h, logging.StreamHandler) for h in pkg_logger.handlers):
+                ch = logging.StreamHandler(sys.stdout)
+                ch.setLevel(target_level)
+                ch.setFormatter(logging.Formatter('%(message)s'))
+                pkg_logger.addHandler(ch)
 
     def __repr__(self) -> str:
         return f"<Simulator(clock={self.clock}, agenda_size={len(self._agenda)})>"
@@ -38,7 +52,7 @@ class Simulator:
             raise ValueError(f"Causality violation: Cannot schedule event at t={event.time} when clock is at t={self.clock}")
         if event.time <= self.maxtime:
             heapq.heappush(self._agenda, event)
-            if self.debug:
+            if self.trace_network:
                 logger.debug("[t=%.1f] Node %d TRANSMITS '%s' -> Node %d (arrives at t=%.1f)", self.clock, event.source, event.name, event.target, event.time)
 
             if self._collector:
@@ -63,7 +77,7 @@ class Simulator:
             raise RuntimeError("Cannot pop from an empty event agenda.")
         event = heapq.heappop(self._agenda)
         self.clock = event.time
-        if self.debug:
+        if self.trace_network:
             logger.debug("[t=%.1f] Node %d RECEIVES '%s' <- Node %d", self.clock, event.target, event.name, event.source)
 
         # Note: ReceiveEvent recording is done in Simulation._execute()
@@ -72,7 +86,7 @@ class Simulator:
 
     def log_app_event(self, source: int, message: str) -> None:
         """Record an application-level log event in the trace."""
-        if self.debug:
+        if self.app_logs:
             logger.info("[t=%.1f] APP Node %d: %s", self.clock, source, message)
 
         if self._collector:

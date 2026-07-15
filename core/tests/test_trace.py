@@ -46,7 +46,7 @@ def two_node_sim(tmp_path):
         filename=topo,
         maxtime=20.0,
         algo_name="EchoTest",
-        debug=False,
+        trace_network=False, app_logs=False,
         trace_enabled=True,
         trace_path=str(trace_path),
     )

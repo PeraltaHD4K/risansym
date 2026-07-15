@@ -25,7 +25,9 @@ class Simulation:
         graph: The adjacency-list representing the topology graph.
         maxtime: Maximum simulation time horizon.
         algo_name: Human-readable algorithm identifier for trace metadata.
-        debug: If ``True``, print event-by-event debug output to stdout.
+        debug: (Deprecated) Replaced by trace_network and app_logs.
+        trace_network: If ``True``, print every network event (TRANSMIT/RECEIVE) to stdout.
+        app_logs: If ``True``, print application-level logs (self.log) to stdout.
         trace_enabled: Controls trace output — ``False`` disables tracing, ``True``
             auto-generates a file path unless ``trace_path`` is set.
         trace_path: Optional explicit output path for the trace file.
@@ -38,7 +40,9 @@ class Simulation:
         graph: list[list[int]] | str | Path,
         maxtime: float,
         algo_name: str = "UnknownAlgo",
-        debug: bool = True,
+        debug: bool | None = None,
+        trace_network: bool = False,
+        app_logs: bool = True,
         trace_enabled: bool = False,
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
@@ -46,6 +50,16 @@ class Simulation:
         trace: bool | None = None,
     ) -> None:
         from risansym.trace import TraceCollector
+
+        # Backwards compatibility: accept deprecated 'debug' kwarg
+        if debug is not None:
+            warnings.warn(
+                "The 'debug' argument is deprecated. Use 'trace_network' and 'app_logs' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            trace_network = debug
+            app_logs = debug
 
         # Backwards compatibility: accept deprecated 'trace' kwarg
         if trace is not None:
@@ -64,7 +78,7 @@ class Simulation:
         self._initialized = False
 
         self.collector = TraceCollector() if trace_enabled else None
-        self.engine = Simulator(maxtime, debug=debug, collector=self.collector)
+        self.engine = Simulator(maxtime, trace_network=trace_network, app_logs=app_logs, collector=self.collector)
         
         # Build topology and processes using the new Builder
         self.graph, self._topology_name = SimulationBuilder.build_topology(graph)
@@ -83,7 +97,9 @@ class Simulation:
         filename: str | Path,
         maxtime: float,
         algo_name: str = "UnknownAlgo",
-        debug: bool = True,
+        debug: bool | None = None,
+        trace_network: bool = False,
+        app_logs: bool = True,
         trace_enabled: bool = False,
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
@@ -96,6 +112,8 @@ class Simulation:
             maxtime=maxtime,
             algo_name=algo_name,
             debug=debug,
+            trace_network=trace_network,
+            app_logs=app_logs,
             trace_enabled=trace_enabled,
             trace_path=trace_path,
             trace_dir=trace_dir,

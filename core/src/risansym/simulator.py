@@ -42,6 +42,7 @@ class Simulator:
                 ch.setLevel(target_level)
                 ch.setFormatter(logging.Formatter('%(message)s'))
                 pkg_logger.addHandler(ch)
+                pkg_logger.propagate = False
 
     def __repr__(self) -> str:
         return f"<Simulator(clock={self.clock}, agenda_size={len(self._agenda)})>"

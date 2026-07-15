@@ -43,7 +43,7 @@ jobs:
       - name: Set up Python for Docs
         uses: actions/setup-python@v5
         with:
-          python-version-file: "core/pyproject.toml"
+          python-version: "3.12"
       - name: Install Docs dependencies
         working-directory: ./core
         run: uv sync --group docs

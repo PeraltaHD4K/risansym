@@ -1,38 +1,27 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/PeraltaHD4K/risansym/main/web/public/globe.svg" alt="Risansym Logo" width="120" />
-</div>
+# Risansym (Core Engine)
 
-<h1 align="center">Risansym</h1>
-<p align="center">
-  <em>A powerful, Python-based discrete event simulator for distributed systems with a gorgeous React/Next.js visualizer.</em>
-</p>
+Risansym is a powerful, Python-based discrete event simulator for distributed systems. It was designed to run complex network algorithms (such as Chandy-Lamport, logical clocks, token rings, etc.) and generate trace files that can be rendered using the Risansym Web Visualizer.
 
----
+## Installation
 
-**Risansym** is an educational and research tool designed to simulate distributed algorithms (like Chandy-Lamport, Ping-Pong, and more) and visualize their execution traces in a browser.
-
-## 📖 Documentación Oficial
-
-Toda la documentación sobre cómo instalar la librería, escribir algoritmos, interactuar con la API y utilizar el visualizador web está disponible en:
-
-👉 **[https://peraltahd4k.github.io/risansym/](https://peraltahd4k.github.io/risansym/)** 👈
-
----
-
-## Estructura del Proyecto
-Este repositorio se compone de dos partes fundamentales:
-1. **`core/`**: El motor de simulación escrito en Python estricto (Pydantic, uv).
-2. **`web/`**: La interfaz gráfica en React / Next.js para renderizar los `.json` generados.
-
-## Instalación Rápida
-Puedes instalar la librería usando pip:
 ```bash
 pip install risansym
 ```
 
-Para correr el visualizador de forma local:
-```bash
-cd web
-npm install
-npm run dev
+## Quick Start
+
+```python
+from risansym.simulation import Simulation
+
+# Initialize with a topology file (e.g. edge list or adjacency matrix)
+sim = Simulation.from_file("topology.txt", maxtime=10.0, trace_enabled=True)
+
+# Run the simulation
+sim.initialize_all()
+sim.run()
 ```
+
+## Official Documentation
+
+For complete API reference, examples, and instructions on how to use the web visualizer, visit:
+**[https://peraltahd4k.github.io/risansym/](https://peraltahd4k.github.io/risansym/)**

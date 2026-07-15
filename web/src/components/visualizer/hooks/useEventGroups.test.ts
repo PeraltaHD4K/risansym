@@ -6,10 +6,12 @@ import type { TraceOutput, NodePosition, TraceEvent } from '@/lib/schema';
 describe('useEventGroups', () => {
   const mockTraceData: TraceOutput = {
     metadata: {
+      schema_version: '1.0',
       algorithm: 'test',
       topology: 'test',
-      version: '1.0',
-      parameters: { total_nodes: 2 }
+      execution_date: '2023-01-01',
+      parameters: { total_nodes: 2 },
+      metrics: {}
     },
     trace: [
       { action: 'TRANSMIT', source: 0, target: 1, clock: 1.0, event_time: 2.0, name: 'MSG_1', payload: {} },

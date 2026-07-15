@@ -975,7 +975,7 @@ wheels = [
 
 [[package]]
 name = "risansym"
-version = "0.5.2"
+version = "0.6.1"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },

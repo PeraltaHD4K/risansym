@@ -2,7 +2,7 @@ from risansym.event import Event
 from risansym.simulator import Simulator
 
 def test_event_ordering():
-    engine = Simulator(maxtime=10.0, debug=False)
+    engine = Simulator(maxtime=10.0, trace_network=False, app_logs=False)
     
     # Insert events out of order
     engine.insert_event(Event(time=3.0, source=1, target=2, name="MSG_3", payload={}))
@@ -24,7 +24,7 @@ def test_event_ordering():
     assert engine.is_on is False
 
 def test_maxtime_limit():
-    engine = Simulator(maxtime=5.0, debug=False)
+    engine = Simulator(maxtime=5.0, trace_network=False, app_logs=False)
     engine.insert_event(Event(time=1.0, source=1, target=2, name="MSG_1", payload={}))
     engine.insert_event(Event(time=6.0, source=1, target=2, name="MSG_6", payload={}))
     

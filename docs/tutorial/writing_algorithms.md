@@ -54,8 +54,9 @@ experiment = Simulation.from_file(
     filename="graph.txt", 
     maxtime=15.0, 
     algo_name="AlgorithmPingPong", 
-    debug=True, 
-    trace=True
+    trace_network=True, 
+    app_logs=True,
+    trace_enabled=True
 )  
 
 # Bind a fresh instance of the model to every node in the graph
@@ -66,7 +67,7 @@ for i in range(1, len(experiment.graph) + 1):
 experiment.initialize_all()
 
 # Inject the seed event into Node 1
-experiment.init(Event(time=0.0, name="START", target=1, source=1))
+experiment.seed_event(Event(time=0.0, name="START", target=1, source=1))
 
 print("=== Starting Ping Pong Simulation ===")
 experiment.run()

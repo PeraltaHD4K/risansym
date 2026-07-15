@@ -7,6 +7,12 @@
   <em>A powerful, Python-based discrete event simulator for distributed systems with a gorgeous React/Next.js visualizer.</em>
 </p>
 
+<p align="center">
+  <a href="https://github.com/PeraltaHD4K/risansym/actions/workflows/ci.yml"><img src="https://github.com/PeraltaHD4K/risansym/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
+  <a href="https://pypi.org/project/risansym/"><img src="https://img.shields.io/pypi/v/risansym" alt="PyPI Version"></a>
+  <a href="https://github.com/PeraltaHD4K/risansym/blob/main/LICENSE"><img src="https://img.shields.io/github/license/PeraltaHD4K/risansym" alt="License"></a>
+</p>
+
 ---
 
 **Risansym** is an educational and research tool designed to simulate distributed algorithms (like Chandy-Lamport, Ping-Pong, and more) and visualize their execution traces in a browser.

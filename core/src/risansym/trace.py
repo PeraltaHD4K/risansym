@@ -5,7 +5,7 @@ from typing import Iterator
 from collections import deque
 
 from pathlib import Path
-from risansym.schemas import TraceEvent, TraceMetadata, TraceOutput
+from risansym.schemas import TraceEvent, TraceMetadata
 
 
 _DEFAULT_MAX_EVENTS = 1_000_000

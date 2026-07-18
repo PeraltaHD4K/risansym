@@ -34,7 +34,7 @@ export default function Uploader() {
         const parsedData = TraceOutputSchema.safeParse(rawJson);
         if (!parsedData.success) {
           console.error("Zod Validation Error:", parsedData.error);
-          setError(`El archivo no cumple con el esquema V1.0: ${parsedData.error.errors[0].message}`);
+          setError(`El archivo no cumple con el esquema V1.0: ${parsedData.error.message}`);
           setTraceData(null);
           return;
         }

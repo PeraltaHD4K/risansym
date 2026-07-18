@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useMemo, type ReactNode, type Dispatch, type SetStateAction } from 'react';
+import { createContext, use, useState, useMemo, type ReactNode, type Dispatch, type SetStateAction } from 'react';
 import { useTrace } from './TraceContext';
 
 interface PlaybackContextType {
@@ -48,14 +48,14 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
   }), [currentClock, isPlaying, playbackSpeed, maxTime, zoomScale]);
 
   return (
-    <PlaybackContext.Provider value={value}>
+    <PlaybackContext value={value}>
       {children}
-    </PlaybackContext.Provider>
+    </PlaybackContext>
   );
 }
 
 export function usePlayback(): PlaybackContextType {
-  const context = useContext(PlaybackContext);
+  const context = use(PlaybackContext);
   if (!context) {
     throw new Error('usePlayback must be used within a PlaybackProvider');
   }

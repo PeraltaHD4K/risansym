@@ -78,7 +78,16 @@ class TraceCollector:
         """
         filepath.parent.mkdir(parents=True, exist_ok=True)
 
-        output = TraceOutput(metadata=metadata, trace=list(self._trace))
-
+        # We serialize manually to achieve true streaming and avoid loading
+        # the entire trace array into RAM as a single string (OOM risk).
         with filepath.open('w', encoding='utf-8') as f:
-            f.write(output.model_dump_json())
+            f.write('{"metadata":')
+            f.write(metadata.model_dump_json())
+            f.write(',"trace":[')
+            
+            for i, event in enumerate(self._trace):
+                if i > 0:
+                    f.write(',')
+                f.write(event.model_dump_json())
+            
+            f.write(']}')

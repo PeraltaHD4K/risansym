@@ -31,16 +31,21 @@ export default function Uploader() {
         const rawJson = JSON.parse(text);
         
         // Zod validation (Data Contract)
-        const parsedData = TraceOutputSchema.parse(rawJson);
+        const parsedData = TraceOutputSchema.safeParse(rawJson);
+        if (!parsedData.success) {
+          console.error("Zod Validation Error:", parsedData.error);
+          setError(`El archivo no cumple con el esquema V1.0: ${parsedData.error.errors[0].message}`);
+          setTraceData(null);
+          return;
+        }
         
-        setTraceData(parsedData);
+        setTraceData(parsedData.data);
         setCurrentClock(0);
         setIsPlaying(false);
         setSuccess(true);
       } catch (err: unknown) {
-        console.error("Zod Validation Error:", err);
-        const message = err instanceof Error ? err.message : "Error desconocido";
-        setError(`El archivo no cumple con el esquema V1.0: ${message}`);
+        console.error("JSON Parsing Error:", err);
+        setError("El archivo no es un JSON válido.");
         setTraceData(null);
       }
     };

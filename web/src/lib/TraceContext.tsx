@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useMemo, type ReactNode, type Dispatch, type SetStateAction } from 'react';
+import { createContext, use, useState, useMemo, type ReactNode, type Dispatch, type SetStateAction } from 'react';
 import type { TraceOutput } from './schema';
 
 interface TraceContextType {
@@ -16,14 +16,14 @@ export function TraceProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({ traceData, setTraceData }), [traceData]);
 
   return (
-    <TraceContext.Provider value={value}>
+    <TraceContext value={value}>
       {children}
-    </TraceContext.Provider>
+    </TraceContext>
   );
 }
 
 export function useTrace(): TraceContextType {
-  const context = useContext(TraceContext);
+  const context = use(TraceContext);
   if (!context) {
     throw new Error('useTrace must be used within a TraceProvider');
   }

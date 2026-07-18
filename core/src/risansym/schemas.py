@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Any, Literal, Union, Annotated
+from typing import Any, Literal, Annotated
 import datetime
 
 
@@ -42,7 +42,7 @@ class AppLogEvent(BaseModel):
 
 # Union of all valid trace event types
 TraceEvent = Annotated[
-    Union[TransmitEvent, ReceiveEvent, AppLogEvent],
+    TransmitEvent | ReceiveEvent | AppLogEvent,
     Field(discriminator="action")
 ]
 

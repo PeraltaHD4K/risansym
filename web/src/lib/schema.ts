@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const TransmitEventSchema = z.object({
+export const TransmitEventSchema = z.strictObject({
   action: z.literal('TRANSMIT'),
   clock: z.number(),
   event_time: z.number(),
@@ -11,7 +11,7 @@ export const TransmitEventSchema = z.object({
   node_state: z.unknown().nullable().optional()
 });
 
-export const ReceiveEventSchema = z.object({
+export const ReceiveEventSchema = z.strictObject({
   action: z.literal('RECEIVE'),
   clock: z.number(),
   event_time: z.number().optional(),
@@ -22,7 +22,7 @@ export const ReceiveEventSchema = z.object({
   node_state: z.unknown().nullable().optional()
 });
 
-export const AppLogEventSchema = z.object({
+export const AppLogEventSchema = z.strictObject({
   action: z.literal('APP_LOG'),
   clock: z.number(),
   source: z.number(),
@@ -35,7 +35,7 @@ export const TraceEventSchema = z.discriminatedUnion('action', [
   AppLogEventSchema
 ]);
 
-export const TraceMetadataSchema = z.object({
+export const TraceMetadataSchema = z.strictObject({
   schema_version: z.literal('1.0'),
   algorithm: z.string(),
   topology: z.string(),
@@ -45,7 +45,7 @@ export const TraceMetadataSchema = z.object({
   metrics: z.record(z.string(), z.unknown())
 });
 
-export const TraceOutputSchema = z.object({
+export const TraceOutputSchema = z.strictObject({
   metadata: TraceMetadataSchema,
   trace: z.array(TraceEventSchema)
 });

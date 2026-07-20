@@ -3,9 +3,16 @@
 import { createContext, use, useState, useMemo, type ReactNode, type Dispatch, type SetStateAction } from 'react';
 import { useTrace } from './TraceContext';
 
-interface PlaybackContextType {
+// --- High-frequency context: only currentClock ---
+interface ClockContextType {
   currentClock: number;
   setCurrentClock: Dispatch<SetStateAction<number>>;
+}
+
+const ClockContext = createContext<ClockContextType | null>(null);
+
+// --- Low-frequency context: everything else ---
+interface PlaybackApiContextType {
   isPlaying: boolean;
   setIsPlaying: Dispatch<SetStateAction<boolean>>;
   playbackSpeed: number;
@@ -15,7 +22,7 @@ interface PlaybackContextType {
   setZoomScale: Dispatch<SetStateAction<number>>;
 }
 
-const PlaybackContext = createContext<PlaybackContextType | null>(null);
+const PlaybackApiContext = createContext<PlaybackApiContextType | null>(null);
 
 export function PlaybackProvider({ children }: { children: ReactNode }) {
   const { traceData } = useTrace();
@@ -35,9 +42,9 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
     }, 0);
   }, [traceData]);
 
-  const value = useMemo(() => ({
-    currentClock,
-    setCurrentClock,
+  const clockValue = useMemo(() => ({ currentClock, setCurrentClock }), [currentClock]);
+
+  const apiValue = useMemo(() => ({
     isPlaying,
     setIsPlaying,
     playbackSpeed,
@@ -45,19 +52,36 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
     maxTime,
     zoomScale,
     setZoomScale,
-  }), [currentClock, isPlaying, playbackSpeed, maxTime, zoomScale]);
+  }), [isPlaying, playbackSpeed, maxTime, zoomScale]);
 
   return (
-    <PlaybackContext value={value}>
-      {children}
-    </PlaybackContext>
+    <PlaybackApiContext value={apiValue}>
+      <ClockContext value={clockValue}>
+        {children}
+      </ClockContext>
+    </PlaybackApiContext>
   );
 }
 
-export function usePlayback(): PlaybackContextType {
-  const context = use(PlaybackContext);
+/** High-frequency hook: only subscribe to currentClock changes. */
+export function useClock(): ClockContextType {
+  const context = use(ClockContext);
   if (!context) {
-    throw new Error('usePlayback must be used within a PlaybackProvider');
+    throw new Error('useClock must be used within a PlaybackProvider');
   }
   return context;
+}
+
+/** Low-frequency hook: subscribe to playback API (isPlaying, speed, zoom, maxTime). */
+export function usePlaybackApi(): PlaybackApiContextType {
+  const context = use(PlaybackApiContext);
+  if (!context) {
+    throw new Error('usePlaybackApi must be used within a PlaybackProvider');
+  }
+  return context;
+}
+
+/** Combined hook for backwards compatibility. Components using this will re-render on clock changes. */
+export function usePlayback(): ClockContextType & PlaybackApiContextType {
+  return { ...useClock(), ...usePlaybackApi() };
 }

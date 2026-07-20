@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react';
 import type { TraceEvent } from '@/lib/schema';
 import { isTransmitEvent, isReceiveEvent } from '@/lib/schema';
 import type { EventGroup } from './hooks/useEventGroups';
@@ -11,7 +12,7 @@ interface EventDotsProps {
 }
 
 /** Renders grouped event dots: circles for TRANSMIT, squares for RECEIVE, diamonds for APP_LOG. */
-export default function EventDots({ groups, onSelectEvent }: EventDotsProps) {
+function EventDotsInner({ groups, onSelectEvent }: EventDotsProps) {
   return (
     <>
       {/* Puntos Discretos de Eventos Agrupados (Event Dots) */}
@@ -59,3 +60,7 @@ export default function EventDots({ groups, onSelectEvent }: EventDotsProps) {
     </>
   );
 }
+
+const EventDots = memo(EventDotsInner);
+EventDots.displayName = 'EventDots';
+export default EventDots;

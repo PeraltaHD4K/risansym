@@ -2,14 +2,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Uploader from './Uploader';
 import { useTrace } from '@/lib/TraceContext';
-import { usePlayback } from '@/lib/PlaybackContext';
+import { useClock, usePlaybackApi } from '@/lib/PlaybackContext';
 
 vi.mock('@/lib/TraceContext', () => ({
   useTrace: vi.fn(),
 }));
 
 vi.mock('@/lib/PlaybackContext', () => ({
-  usePlayback: vi.fn(),
+  useClock: vi.fn(),
+  usePlaybackApi: vi.fn(),
 }));
 
 describe('Uploader', () => {
@@ -20,10 +21,12 @@ describe('Uploader', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useTrace).mockReturnValue({ setTraceData: mockSetTraceData } as unknown as ReturnType<typeof useTrace>);
-    vi.mocked(usePlayback).mockReturnValue({
+    vi.mocked(useClock).mockReturnValue({
       setCurrentClock: mockSetCurrentClock,
+    } as unknown as ReturnType<typeof useClock>);
+    vi.mocked(usePlaybackApi).mockReturnValue({
       setIsPlaying: mockSetIsPlaying,
-    });
+    } as unknown as ReturnType<typeof usePlaybackApi>);
   });
 
   it('renders default state correctly', () => {

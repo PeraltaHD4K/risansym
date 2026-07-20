@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { TraceEvent } from '@/lib/schema';
 import { useTrace } from '@/lib/TraceContext';
-import { usePlayback } from '@/lib/PlaybackContext';
+import { useClock, usePlaybackApi } from '@/lib/PlaybackContext';
 
 import { useNodePositions } from './hooks/useNodePositions';
 import { useMessageArrows } from './hooks/useMessageArrows';
@@ -21,7 +21,8 @@ import styles from './Visualizer.module.css';
 
 export default function Visualizer() {
   const { traceData } = useTrace();
-  const { currentClock, maxTime, zoomScale } = usePlayback();
+  const { currentClock } = useClock();
+  const { maxTime, zoomScale } = usePlaybackApi();
   const [selectedEvents, setSelectedEvents] = useState<TraceEvent[] | null>(null);
 
   const nodes = useNodePositions(traceData);

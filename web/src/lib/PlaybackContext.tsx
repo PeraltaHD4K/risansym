@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, use, useState, useMemo, useCallback, useRef, type ReactNode, type Dispatch, type SetStateAction } from 'react';
+import { createContext, use, useState, useMemo, type ReactNode, type Dispatch, type SetStateAction } from 'react';
 import { useTrace } from './TraceContext';
 
 // --- High-frequency context: only currentClock ---

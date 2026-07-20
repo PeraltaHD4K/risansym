@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Literal, Annotated
 import datetime
-from risansym.event import JsonPayload
+from risansym.event import JsonPayload, JsonValue
 
 class TransmitEvent(BaseModel):
     """Recorded when a node schedules a message for transmission."""
@@ -66,3 +66,8 @@ class TraceOutput(BaseModel):
 
     metadata: TraceMetadata
     trace: list[TraceEvent]
+
+TransmitEvent.model_rebuild()
+ReceiveEvent.model_rebuild()
+TraceMetadata.model_rebuild()
+TraceOutput.model_rebuild()

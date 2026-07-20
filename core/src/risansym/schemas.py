@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import Any, Literal, Annotated
 import datetime
 
-
 class TransmitEvent(BaseModel):
     """Recorded when a node schedules a message for transmission."""
     model_config = ConfigDict(frozen=True, extra="forbid")

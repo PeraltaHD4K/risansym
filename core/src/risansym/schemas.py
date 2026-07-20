@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Literal, Annotated
 import datetime
-from risansym.event import JsonPayload, JsonValue
+from risansym.event import JsonPayload, JsonValue  # noqa: F401
 
 class TransmitEvent(BaseModel):
     """Recorded when a node schedules a message for transmission."""

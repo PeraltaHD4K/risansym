@@ -2,14 +2,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import PlaybackControls from './PlaybackControls';
 import { useTrace } from '@/lib/TraceContext';
-import { usePlayback } from '@/lib/PlaybackContext';
+import { useClock, usePlaybackApi } from '@/lib/PlaybackContext';
 
 vi.mock('@/lib/TraceContext', () => ({
   useTrace: vi.fn(),
 }));
 
 vi.mock('@/lib/PlaybackContext', () => ({
-  usePlayback: vi.fn(),
+  useClock: vi.fn(),
+  usePlaybackApi: vi.fn(),
 }));
 
 vi.mock('@/lib/exportUtils', () => ({
@@ -26,16 +27,18 @@ describe('PlaybackControls', () => {
     vi.mocked(useTrace).mockReturnValue({
       traceData: { metadata: { topology: 'test-topo' } },
     });
-    vi.mocked(usePlayback).mockReturnValue({
+    vi.mocked(useClock).mockReturnValue({
       currentClock: 1.5,
       setCurrentClock: mockSetCurrentClock,
+    } as unknown as ReturnType<typeof useClock>);
+    vi.mocked(usePlaybackApi).mockReturnValue({
       isPlaying: false,
       setIsPlaying: mockSetIsPlaying,
       playbackSpeed: 1,
       maxTime: 10,
       zoomScale: 1,
       setZoomScale: mockSetZoomScale,
-    });
+    } as unknown as ReturnType<typeof usePlaybackApi>);
   });
 
   it('renders controls when traceData exists', () => {

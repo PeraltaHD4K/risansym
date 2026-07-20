@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import type { TraceEvent, ComputedMessage } from '@/lib/schema';
 import styles from './Visualizer.module.css';
 
@@ -11,7 +11,7 @@ interface MessageArrowsProps {
 }
 
 /** Renders Bézier curve arrows between nodes with De Casteljau animation for pending messages. */
-export default function MessageArrows({ messages, currentClock, onSelectEvent }: MessageArrowsProps) {
+function MessageArrowsInner({ messages, currentClock, onSelectEvent }: MessageArrowsProps) {
   // Collect unique colors for SVG marker definitions
   const uniqueColors = useMemo(() => Array.from(new Set(messages.map(m => m.color))), [messages]);
 
@@ -115,3 +115,7 @@ export default function MessageArrows({ messages, currentClock, onSelectEvent }:
     </>
   );
 }
+
+const MessageArrows = memo(MessageArrowsInner);
+MessageArrows.displayName = 'MessageArrows';
+export default MessageArrows;

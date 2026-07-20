@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import styles from './Visualizer.module.css';
-import { PADDING_X } from './constants';
+import { PADDING_X, TIME_AXIS_OFFSET_Y, TIME_AXIS_TICK_SIZE, TIME_AXIS_LABEL_OFFSET } from './constants';
 
 interface TimeAxisProps {
   maxTime: number;
@@ -29,19 +29,19 @@ const TimeAxis = memo(function TimeAxis({ maxTime, timeScale, totalHeight, total
     <>
       {/* Eje de Tiempo (Ticks abajo) */}
       <line
-        x1={PADDING_X} y1={totalHeight - 20}
-        x2={totalWidth - 50} y2={totalHeight - 20}
+        x1={PADDING_X} y1={totalHeight - TIME_AXIS_OFFSET_Y}
+        x2={totalWidth - 50} y2={totalHeight - TIME_AXIS_OFFSET_Y}
         className={styles.timeAxis}
       />
       {ticks.map((t) => (
         <g key={`tick-${t}`}>
           <line
-            x1={PADDING_X + t * timeScale} y1={totalHeight - 25}
-            x2={PADDING_X + t * timeScale} y2={totalHeight - 15}
+            x1={PADDING_X + t * timeScale} y1={totalHeight - TIME_AXIS_OFFSET_Y - TIME_AXIS_TICK_SIZE}
+            x2={PADDING_X + t * timeScale} y2={totalHeight - TIME_AXIS_OFFSET_Y + TIME_AXIS_TICK_SIZE}
             stroke="var(--text-secondary)"
           />
           <text
-            x={PADDING_X + t * timeScale} y={totalHeight - 5}
+            x={PADDING_X + t * timeScale} y={totalHeight - TIME_AXIS_OFFSET_Y + TIME_AXIS_LABEL_OFFSET}
             className={styles.timeTick}
           >
             {t}s

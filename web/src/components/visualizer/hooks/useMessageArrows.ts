@@ -38,6 +38,10 @@ export function useMessageArrows(
 
       const startX = PADDING_X + event.clock * timeScale;
       const endX = PADDING_X + event.event_time * timeScale;
+      const dy = dstNode.y - srcNode.y;
+      const cx = (startX + endX) / 2;
+      const cy = (srcNode.y + dstNode.y) / 2 - (dy * 0.15);
+      const staticPathD = `M ${startX},${srcNode.y} Q ${cx},${cy} ${endX},${dstNode.y}`;
 
       results.push({
         originalEvent: event,
@@ -48,6 +52,9 @@ export function useMessageArrows(
         startY: srcNode.y,
         endX,
         endY: dstNode.y,
+        cx,
+        cy,
+        staticPathD,
         clock: event.clock,
         eventTime: event.event_time,
         payload: event.payload,

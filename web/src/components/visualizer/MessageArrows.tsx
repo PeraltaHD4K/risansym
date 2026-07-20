@@ -43,12 +43,6 @@ function MessageArrowsInner({ messages, currentClock, onSelectEvent }: MessageAr
 
         if (isFuture) return null;
 
-        // Control point for the curve. We make it bulge slightly up
-        // or down based on vertical distance, preventing collinear arrows from overlapping.
-        const dy = msg.endY - msg.startY;
-        const cx = (msg.startX + msg.endX) / 2;
-        const cy = (msg.startY + msg.endY) / 2 - (dy * 0.15);
-
         let pathD = '';
         let endX = msg.endX;
         let endY = msg.endY;
@@ -60,27 +54,26 @@ function MessageArrowsInner({ messages, currentClock, onSelectEvent }: MessageAr
           const safeT = Math.max(0, Math.min(1, t));
           const invT = 1 - safeT;
 
-          endX = invT * invT * msg.startX + 2 * invT * safeT * cx + safeT * safeT * msg.endX;
-          endY = invT * invT * msg.startY + 2 * invT * safeT * cy + safeT * safeT * msg.endY;
+          endX = invT * invT * msg.startX + 2 * invT * safeT * msg.cx + safeT * safeT * msg.endX;
+          endY = invT * invT * msg.startY + 2 * invT * safeT * msg.cy + safeT * safeT * msg.endY;
 
-          const newCx = msg.startX + safeT * (cx - msg.startX);
-          const newCy = msg.startY + safeT * (cy - msg.startY);
+          const newCx = msg.startX + safeT * (msg.cx - msg.startX);
+          const newCy = msg.startY + safeT * (msg.cy - msg.startY);
 
           pathD = `M ${msg.startX},${msg.startY} Q ${newCx},${newCy} ${endX},${endY}`;
         } else {
-          pathD = `M ${msg.startX},${msg.startY} Q ${cx},${cy} ${msg.endX},${msg.endY}`;
+          pathD = msg.staticPathD;
         }
 
         return (
           <g
             key={msg.id}
-            className={styles.messageGroup}
+            className={`${styles.messageGroup} ${isPast ? styles.pastMessage : ''}`}
             onClick={() => onSelectEvent([msg.originalEvent])}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectEvent([msg.originalEvent]); } }}
             role="button"
             tabIndex={0}
             aria-label={`Mensaje ${msg.name} de nodo ${msg.originalEvent.source} a nodo ${msg.originalEvent.target}`}
-            style={{ cursor: 'pointer', opacity: isPast ? 1 : 0.8 }}
           >
             <title>{`${msg.name}: nodo ${msg.originalEvent.source} → nodo ${msg.originalEvent.target}`}</title>
             {/* Thick invisible hitbox for easier hover/click */}
@@ -101,8 +94,8 @@ function MessageArrowsInner({ messages, currentClock, onSelectEvent }: MessageAr
             />
             {!isPending && (
               <text
-                x={cx}
-                y={cy - 5}
+                x={msg.cx}
+                y={msg.cy - 5}
                 className={styles.messageLabel}
                 fill={msg.color}
               >

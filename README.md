@@ -21,7 +21,7 @@
 
 Toda la documentación sobre cómo instalar la librería, escribir algoritmos, interactuar con la API y utilizar el visualizador web está disponible en:
 
-👉 **[https://peraltahd4k.github.io/risansym/](https://peraltahd4k.github.io/risansym/)** 👈
+👉 **[https://peraltahd4k.github.io/risansym/docs](https://peraltahd4k.github.io/risansym/docs)** 👈
 
 ---
 

@@ -24,4 +24,4 @@ sim.run()
 ## Official Documentation
 
 For complete API reference, examples, and instructions on how to use the web visualizer, visit:
-**[https://peraltahd4k.github.io/risansym/](https://peraltahd4k.github.io/risansym/)**
+**[https://peraltahd4k.github.io/risansym/docs](https://peraltahd4k.github.io/risansym/docs)**

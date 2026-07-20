@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Any, Literal, Annotated
+from typing import Literal, Annotated
 import datetime
 from risansym.event import JsonPayload
 

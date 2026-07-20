@@ -8,7 +8,7 @@ import { useClock, usePlaybackApi } from '@/lib/PlaybackContext';
 import { useNodePositions } from './hooks/useNodePositions';
 import { useMessageArrows } from './hooks/useMessageArrows';
 import { useEventGroups } from './hooks/useEventGroups';
-import { BASE_TIME_SCALE, PADDING_X, PADDING_Y, NODE_HEIGHT } from './constants';
+import { BASE_TIME_SCALE, PADDING_X, PADDING_Y, NODE_HEIGHT, MIN_SVG_HEIGHT, MIN_SVG_WIDTH, SVG_PADDING_RIGHT } from './constants';
 
 import LifelineLayer from './LifelineLayer';
 import TimeAxis from './TimeAxis';
@@ -33,8 +33,8 @@ export default function Visualizer() {
 
   const timeScale = BASE_TIME_SCALE * zoomScale;
   
-  const totalHeight = nodes.length > 0 ? PADDING_Y * 2 + (nodes.length - 1) * NODE_HEIGHT : 400;
-  const totalWidth = Math.max(800, PADDING_X * 2 + maxTime * timeScale + 200);
+  const totalHeight = nodes.length > 0 ? PADDING_Y * 2 + (nodes.length - 1) * NODE_HEIGHT : MIN_SVG_HEIGHT;
+  const totalWidth = Math.max(MIN_SVG_WIDTH, PADDING_X * 2 + maxTime * timeScale + SVG_PADDING_RIGHT);
   
   const currentX = PADDING_X + currentClock * timeScale;
 

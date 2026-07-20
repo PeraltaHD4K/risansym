@@ -49,6 +49,15 @@
   text-anchor: middle;
 }
 
+.messageGroup {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.pastMessage {
+  opacity: 1;
+}
+
 .messageGroup:hover path:not([stroke="transparent"]) {
   stroke-width: 4 !important;
   filter: brightness(1.2) drop-shadow(0 0 2px currentColor);

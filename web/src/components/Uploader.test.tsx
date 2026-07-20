@@ -23,10 +23,10 @@ describe('Uploader', () => {
     vi.mocked(useTrace).mockReturnValue({ setTraceData: mockSetTraceData } as unknown as ReturnType<typeof useTrace>);
     vi.mocked(useClock).mockReturnValue({
       setCurrentClock: mockSetCurrentClock,
-    } as any);
+    } as unknown as ReturnType<typeof useClock>);
     vi.mocked(usePlaybackApi).mockReturnValue({
       setIsPlaying: mockSetIsPlaying,
-    } as any);
+    } as unknown as ReturnType<typeof usePlaybackApi>);
   });
 
   it('renders default state correctly', () => {

@@ -30,7 +30,7 @@ describe('PlaybackControls', () => {
     vi.mocked(useClock).mockReturnValue({
       currentClock: 1.5,
       setCurrentClock: mockSetCurrentClock,
-    } as any);
+    } as unknown as ReturnType<typeof useClock>);
     vi.mocked(usePlaybackApi).mockReturnValue({
       isPlaying: false,
       setIsPlaying: mockSetIsPlaying,
@@ -38,7 +38,7 @@ describe('PlaybackControls', () => {
       maxTime: 10,
       zoomScale: 1,
       setZoomScale: mockSetZoomScale,
-    } as any);
+    } as unknown as ReturnType<typeof usePlaybackApi>);
   });
 
   it('renders controls when traceData exists', () => {

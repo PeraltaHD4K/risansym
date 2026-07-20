@@ -1,7 +1,7 @@
 export const downloadSVG = (topologyName?: string) => {
   const svgElement = document.getElementById('visualizer-svg');
   if (!svgElement) {
-    alert("No se encontró el lienzo del visualizador.");
+    console.error("No se encontró el lienzo del visualizador para exportar.");
     return;
   }
 

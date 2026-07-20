@@ -81,6 +81,9 @@ export interface ComputedMessage {
   startY: number;
   endX: number;
   endY: number;
+  cx: number;
+  cy: number;
+  staticPathD: string;
   clock: number;
   eventTime: number;
   payload: Record<string, unknown>;

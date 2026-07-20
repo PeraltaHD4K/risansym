@@ -45,6 +45,9 @@ class EventLoop:
                 
                 try:
                     process.receive(event)
+                # Note: Catching 'Exception' is safe here. It catches application errors
+                # but naturally allows 'SystemExit' and 'KeyboardInterrupt' (which inherit
+                # from 'BaseException') to bubble up and terminate the simulation.
                 except Exception as e:
                     raise RuntimeError(f"Simulation crashed at Node {event.target} while processing '{event.name}': {e}") from e
 

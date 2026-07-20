@@ -7,8 +7,8 @@ export const TransmitEventSchema = z.strictObject({
   source: z.number(),
   target: z.number(),
   name: z.string(),
-  payload: z.unknown(),
-  node_state: z.unknown().nullable().optional()
+  payload: z.record(z.string(), z.unknown()),
+  node_state: z.record(z.string(), z.unknown()).nullable().optional()
 });
 
 export const ReceiveEventSchema = z.strictObject({
@@ -18,8 +18,8 @@ export const ReceiveEventSchema = z.strictObject({
   source: z.number(),
   target: z.number(),
   name: z.string(),
-  payload: z.unknown(),
-  node_state: z.unknown().nullable().optional()
+  payload: z.record(z.string(), z.unknown()),
+  node_state: z.record(z.string(), z.unknown()).nullable().optional()
 });
 
 export const AppLogEventSchema = z.strictObject({
@@ -83,7 +83,7 @@ export interface ComputedMessage {
   endY: number;
   clock: number;
   eventTime: number;
-  payload: unknown;
+  payload: Record<string, unknown>;
 }
 
 export interface NodePosition {

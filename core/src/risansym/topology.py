@@ -43,6 +43,7 @@ def load_adjacency_matrix(filename: str | Path) -> list[list[int]]:
             stacklevel=2,
         )
 
+    graph_sets = [set(neighbors) for neighbors in graph]
     for i, neighbors in enumerate(graph, start=1):
         for neighbor in neighbors:
             if neighbor < 1 or neighbor > num_nodes:
@@ -51,8 +52,8 @@ def load_adjacency_matrix(filename: str | Path) -> list[list[int]]:
                     f"the valid range (1 to {num_nodes})."
                 )
             
-            # Check for asymmetry
-            if i not in graph[neighbor - 1]:
+            # Check for asymmetry (O(1) lookup)
+            if i not in graph_sets[neighbor - 1]:
                 import warnings
                 warnings.warn(
                     f"Asymmetric link detected: Node {i} links to Node {neighbor}, "

@@ -2,23 +2,22 @@
 
 import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut, Download } from 'lucide-react';
 import { useTrace } from '@/lib/TraceContext';
-import { usePlayback } from '@/lib/PlaybackContext';
+import { useClock, usePlaybackApi } from '@/lib/PlaybackContext';
 import styles from './PlaybackControls.module.css';
 import { useEffect, useRef, useCallback } from 'react';
 import { downloadSVG } from '@/lib/exportUtils';
 
 export default function PlaybackControls() {
   const { traceData } = useTrace();
+  const { currentClock, setCurrentClock } = useClock();
   const { 
-    currentClock, 
-    setCurrentClock, 
     isPlaying, 
     setIsPlaying, 
     playbackSpeed,
     maxTime,
     zoomScale,
     setZoomScale
-  } = usePlayback();
+  } = usePlaybackApi();
   
   const rafRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);

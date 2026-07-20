@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import time
 from typing import Any
 
@@ -48,10 +49,11 @@ class EventLoop:
                     raise RuntimeError(f"Simulation crashed at Node {event.target} while processing '{event.name}': {e}") from e
 
                 # Snapshot the node's internal state AFTER processing
-                state = process.model.get_state() if process.model else {}
+                raw_state = process.model.get_state() if process.model else {}
+                state = copy.deepcopy(raw_state)
 
                 if self.collector:
-                    self.collector.record(ReceiveEvent(
+                    self.collector.record(ReceiveEvent.model_construct(
                         action="RECEIVE",
                         clock=event.time,
                         source=event.source,

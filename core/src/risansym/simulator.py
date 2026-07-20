@@ -57,7 +57,7 @@ class Simulator:
                 logger.debug("[t=%.1f] Node %d TRANSMITS '%s' -> Node %d (arrives at t=%.1f)", self.clock, event.source, event.name, event.target, event.time)
 
             if self._collector:
-                self._collector.record(TransmitEvent(
+                self._collector.record(TransmitEvent.model_construct(
                     action="TRANSMIT",
                     clock=self.clock,
                     event_time=event.time,
@@ -91,7 +91,7 @@ class Simulator:
             logger.info("[t=%.1f] APP Node %d: %s", self.clock, source, message)
 
         if self._collector:
-            self._collector.record(AppLogEvent(
+            self._collector.record(AppLogEvent.model_construct(
                 action="APP_LOG",
                 clock=self.clock,
                 source=source,

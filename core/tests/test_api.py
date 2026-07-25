@@ -82,7 +82,10 @@ class TestPublicAPI:
 
         assert hasattr(risansym, "__version__")
         assert isinstance(risansym.__version__, str)
-        assert re.match(r"^\d+\.\d+\.\d+(-\w+)?$", risansym.__version__)
+        assert re.fullmatch(
+            r"\d+\.\d+\.\d+(?:(?:a|b|rc)\d+)?(?:\.post\d+)?(?:\.dev\d+)?",
+            risansym.__version__,
+        )
 
     def test_all_exports_match(self):
         import risansym

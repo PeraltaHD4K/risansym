@@ -35,4 +35,4 @@ def test_event_loop_crash_resilience():
         SimulationError,
         match="Simulation crashed at node 1 while processing 'A'",
     ):
-        loop.run()
+        loop.run(max_events=10)

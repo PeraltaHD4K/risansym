@@ -11,8 +11,7 @@ pip install risansym
 ## Quick Start
 
 ```python
-from risansym import Event, Model, ScheduleResult
-from risansym.simulation import Simulation
+from risansym import Event, Model, ScheduleResult, Simulation
 
 
 class Ping(Model):
@@ -38,8 +37,35 @@ result = sim.seed_event(
     Event(time=0.0, name="PING", source=1, target=2),
 )
 assert result is ScheduleResult.SCHEDULED
-sim.run()
+simulation_result = sim.run()
+assert simulation_result.complete
 ```
+
+## Lifecycle and incremental execution
+
+A simulation moves through `CREATED`, `INITIALIZING`, `READY`, `RUNNING`,
+`STOPPED`, `COMPLETED`, or `FAILED`. Models and plugins can only be configured
+while it is `CREATED`. Initialization is transactional: a model failure leaves
+the simulation in `FAILED` and removes events scheduled by earlier model
+initializers.
+
+`run()`, `step()`, and `run_until(time)` return an immutable
+`SimulationResult`. Event-budget and time-boundary results remain in `STOPPED`
+and can continue later; a `COMPLETED` simulation cannot run again.
+
+```python
+partial = sim.run(max_events=100)
+if not partial.complete:
+    final = sim.run()
+```
+
+## Plugins
+
+Plugins subclass `SimulationPlugin` and receive immutable
+`SimulationContext` or `EngineContext` values. They run in registration order.
+Failures use an explicit `PluginFailurePolicy`: `RAISE`, `LOG`, or `DISABLE`.
+The default is `RAISE`; trace export errors are therefore visible to callers.
+State snapshots are copied only when an enabled plugin requests them.
 
 ## Topology contract
 

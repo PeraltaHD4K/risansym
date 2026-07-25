@@ -63,14 +63,15 @@ experiment = Simulation.from_file(
 for i in range(1, len(experiment.graph) + 1):
     experiment.set_model(AlgorithmPingPong(), i)
 
-# Explicitly initialize all models (Required in >=v0.4.0)
+# Explicitly initialize all models.
 experiment.initialize_all()
 
 # Inject the seed event into Node 1
 experiment.seed_event(Event(time=0.0, name="START", target=1, source=1))
 
 print("=== Starting Ping Pong Simulation ===")
-experiment.run()
+result = experiment.run()
+print(result.reason.value)
 print("=== End of Simulation ===")
 ```
 

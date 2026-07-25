@@ -27,7 +27,14 @@ from risansym.exceptions import (
     TopologyError,
     TraceExportError,
 )
-from risansym.results import ScheduleResult
+from risansym.plugins.base import EngineContext, SimulationContext, SimulationPlugin
+from risansym.plugins.manager import PluginFailurePolicy, PluginManager
+from risansym.results import (
+    ScheduleResult,
+    SimulationResult,
+    SimulationState,
+    TerminationReason,
+)
 from risansym.simulator import Simulator
 from risansym.trace import TraceCollector
 from risansym.schemas import (
@@ -61,6 +68,14 @@ __all__ = [
     "Event",
     "JsonPayload",
     "ScheduleResult",
+    "SimulationResult",
+    "SimulationState",
+    "TerminationReason",
+    "SimulationPlugin",
+    "SimulationContext",
+    "EngineContext",
+    "PluginFailurePolicy",
+    "PluginManager",
     "RisansymError",
     "ConfigurationError",
     "TopologyError",

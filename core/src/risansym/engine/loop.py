@@ -15,9 +15,11 @@ class EventLoop:
         self,
         simulator: Simulator,
         table: list[Process | None],
+        max_events: int = 10_000_000,
     ) -> None:
         self.simulator = simulator
         self.table = table
+        self.max_events = max_events
         
     def run(self) -> dict[str, Any]:
         """Main loop: pop and route events until the agenda is empty.
@@ -29,6 +31,13 @@ class EventLoop:
         processed_events = 0
 
         while self.simulator.is_on:
+            if processed_events >= self.max_events:
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"Simulation aborted: Event budget of {self.max_events} exceeded."
+                )
+                break
+                
             event = self.simulator.pop_event()
 
             if event.target < 1 or event.target >= len(self.table):

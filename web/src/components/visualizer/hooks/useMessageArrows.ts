@@ -60,7 +60,7 @@ export function useMessageArrows(
         payload: event.payload,
       });
     });
-
+    results.sort((a, b) => a.clock - b.clock);
     return results;
   }, [traceData, nodes, zoomScale]);
 }

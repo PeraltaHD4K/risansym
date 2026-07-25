@@ -56,3 +56,4 @@ nav:
       - Event: api/event.md
       - Trace schema: api/schemas.md
   - Architecture: architecture.md
+  - Releasing: releasing.md

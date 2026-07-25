@@ -67,6 +67,18 @@ Failures use an explicit `PluginFailurePolicy`: `RAISE`, `LOG`, or `DISABLE`.
 The default is `RAISE`; trace export errors are therefore visible to callers.
 State snapshots are copied only when an enabled plugin requests them.
 
+## Public API and trace contract
+
+The package root exposes the stable 1.0 simulation API. Trace models and
+built-in plugins are advanced APIs under `risansym.schemas` and
+`risansym.plugins`. Engine, process, builder, exporter, plugin-manager, and
+collector modules are implementation details.
+
+Event payloads and model snapshots must contain JSON values. Payload input is
+deep-copied when an event is created and should be treated as read-only.
+Traces are written atomically and include `metadata.capture`, which identifies
+retention limits and any discarded events.
+
 ## Topology contract
 
 Risansym uses a validated adjacency list with one-based node identifiers.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from risansym.event import Event
+from risansym.event import Event, JsonPayload
 from risansym.plugins.base import EngineContext, SimulationPlugin
 
 logger = logging.getLogger("risansym")
@@ -21,7 +21,7 @@ class ConsoleLoggerPlugin(SimulationPlugin):
         self,
         event: Event,
         context: EngineContext,
-        node_state: dict[str, object] | None = None,
+        node_state: JsonPayload | None = None,
     ) -> Event:
         if self.trace_network:
             logger.debug(
@@ -37,7 +37,7 @@ class ConsoleLoggerPlugin(SimulationPlugin):
     def on_event_processed(
         self,
         event: Event,
-        node_state: dict[str, object],
+        node_state: JsonPayload,
         context: EngineContext,
     ) -> None:
         if self.trace_network:

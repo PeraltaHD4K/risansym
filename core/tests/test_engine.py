@@ -27,7 +27,7 @@ def test_event_loop_crash_resilience():
     sim.insert_event(Event(time=1.0, source=1, target=1, name="A", payload={}))
 
     p = Process(node_id=1, neighbors=[2], engine=sim)
-    p.set_model(BadModel())
+    p._bind_model(BadModel())
 
     loop = EventLoop(simulator=sim, table=[None, p, None])
 

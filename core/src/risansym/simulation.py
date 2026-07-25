@@ -39,6 +39,7 @@ class Simulation:
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
+        trace_max_events: int = 1_000_000,
         max_events: int = 10_000_000,
         max_agenda_size: int | None = None,
         plugin_failure_policy: PluginFailurePolicy = PluginFailurePolicy.RAISE,
@@ -75,7 +76,12 @@ class Simulation:
             from risansym.plugins.tracer import JSONTracerPlugin
 
             self.attach(
-                JSONTracerPlugin(trace_path=trace_path, trace_dir=trace_dir, trace_tag=trace_tag)
+                JSONTracerPlugin(
+                    trace_path=trace_path,
+                    trace_dir=trace_dir,
+                    trace_tag=trace_tag,
+                    max_events=trace_max_events,
+                )
             )
 
     @staticmethod
@@ -140,6 +146,7 @@ class Simulation:
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
+        trace_max_events: int = 1_000_000,
         format: str = "adjacency_list",
         node_count: int | None = None,
         max_events: int = 10_000_000,
@@ -171,6 +178,7 @@ class Simulation:
             trace_path=trace_path,
             trace_dir=trace_dir,
             trace_tag=trace_tag,
+            trace_max_events=trace_max_events,
             max_events=max_events,
             max_agenda_size=max_agenda_size,
             plugin_failure_policy=plugin_failure_policy,
@@ -190,7 +198,7 @@ class Simulation:
             raise SimulationError(f"Node {node_id} has no process.")
         if process.model is not None:
             raise ConfigurationError(f"Node {node_id} already has a model bound.")
-        process.set_model(model)
+        process._bind_model(model)
 
     def initialize_all(self) -> None:
         """Initialize all bound models as one lifecycle transition."""

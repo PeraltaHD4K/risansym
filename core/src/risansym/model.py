@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Protocol
-import warnings
+from typing import Protocol
 
-from risansym.event import Event
+from risansym.event import Event, JsonPayload
 from risansym.results import ScheduleResult
 
 
@@ -37,45 +36,17 @@ class Model(ABC):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}(node_id={self.node_id}, clock={self.clock})>"
 
-    @property
-    def id(self) -> int:
-        warnings.warn(
-            "Accessing 'Model.id' is deprecated and will be removed in v1.0. "
-            "Use 'Model.node_id' instead to avoid shadowing the built-in id().",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.node_id
-
-    @id.setter
-    def id(self, value: int) -> None:
-        warnings.warn(
-            "Setting 'Model.id' is deprecated and will be removed in v1.0. "
-            "Use 'Model.node_id' instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.node_id = value
-
-    # ------------------------------------------------------------------
-    # Internal setters — called by the framework, not by user algorithms
-    # ------------------------------------------------------------------
-
-    def set_time(self, time: float) -> None:
+    def _set_time(self, time: float) -> None:
         """Advance the node's local clock (called by the framework)."""
         if time < self.clock:
             raise ValueError(f"Time cannot go backwards (current: {self.clock}, new: {time})")
         self.clock = time
 
-    def set_sink(self, sink: MessageSink, neighbors: list[int], node_id: int) -> None:
+    def _bind(self, sink: MessageSink, neighbors: list[int], node_id: int) -> None:
         """Bind this model to its host environment and topology context (called by the framework)."""
         self.sink = sink
         self.neighbors = list(neighbors)
         self.node_id = node_id
-
-    # ------------------------------------------------------------------
-    # Public API for user algorithms
-    # ------------------------------------------------------------------
 
     def transmit(self, event: Event) -> ScheduleResult:
         """Schedule a message transmission to another node."""
@@ -99,7 +70,7 @@ class Model(ABC):
             )
         self.sink.log(message)
 
-    def get_state(self) -> dict[str, Any]:
+    def get_state(self) -> JsonPayload:
         """Return a snapshot of the node's internal state.
 
         Override in subclasses to expose algorithm-specific state that

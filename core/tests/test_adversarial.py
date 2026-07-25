@@ -1,10 +1,8 @@
-import pytest
 import tempfile
 from pathlib import Path
 from risansym.simulation import Simulation
 from risansym.event import Event
 from risansym.model import Model
-from risansym.engine.loop import EventLoop
 
 class InfinitePingModel(Model):
     def init(self) -> None:

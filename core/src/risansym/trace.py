@@ -49,10 +49,12 @@ class TraceCollector:
 
     def get_event_count(self) -> int:
         """Return the number of recorded events.
-        
+
         Deprecated: use len(collector) instead.
         """
-        warnings.warn("get_event_count() is deprecated. Use len() instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "get_event_count() is deprecated. Use len() instead.", DeprecationWarning, stacklevel=2
+        )
         return len(self._trace)
 
     def __len__(self) -> int:
@@ -72,7 +74,7 @@ class TraceCollector:
 
     def dump(self, filepath: Path, metadata: TraceMetadata) -> None:
         """Validate and persist the trace to a JSON file on disk.
-        
+
         Uses streaming JSON serialization to avoid doubling memory usage
         for large traces.
         """
@@ -80,14 +82,14 @@ class TraceCollector:
 
         # We serialize manually to achieve true streaming and avoid loading
         # the entire trace array into RAM as a single string (OOM risk).
-        with filepath.open('w', encoding='utf-8') as f:
+        with filepath.open("w", encoding="utf-8") as f:
             f.write('{"metadata":')
             f.write(metadata.model_dump_json())
             f.write(',"trace":[')
-            
+
             for i, event in enumerate(self._trace):
                 if i > 0:
-                    f.write(',')
+                    f.write(",")
                 f.write(event.model_dump_json())
-            
-            f.write(']}')
+
+            f.write("]}")

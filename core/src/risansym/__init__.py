@@ -16,6 +16,18 @@ from risansym.simulation import Simulation
 from risansym.model import Model
 from risansym.process import Process
 from risansym.event import Event, JsonPayload
+from risansym.exceptions import (
+    CausalityError,
+    ConfigurationError,
+    InvalidEventError,
+    PluginError,
+    RisansymError,
+    SimulationError,
+    SimulationLimitReached,
+    TopologyError,
+    TraceExportError,
+)
+from risansym.results import ScheduleResult
 from risansym.simulator import Simulator
 from risansym.trace import TraceCollector
 from risansym.schemas import (
@@ -26,7 +38,14 @@ from risansym.schemas import (
     TraceMetadata,
     TraceOutput,
 )
-from risansym.topology import load_adjacency_matrix, TopologyGenerator
+from risansym.topology import (
+    AdjacencyList,
+    TopologyGenerator,
+    load_adjacency_list,
+    load_dense_matrix,
+    load_edge_list,
+    normalize_topology,
+)
 
 from importlib.metadata import version, PackageNotFoundError
 
@@ -41,6 +60,16 @@ __all__ = [
     "Process",
     "Event",
     "JsonPayload",
+    "ScheduleResult",
+    "RisansymError",
+    "ConfigurationError",
+    "TopologyError",
+    "SimulationError",
+    "CausalityError",
+    "InvalidEventError",
+    "SimulationLimitReached",
+    "PluginError",
+    "TraceExportError",
     "Simulator",
     "TraceCollector",
     "TraceEvent",
@@ -49,7 +78,11 @@ __all__ = [
     "AppLogEvent",
     "TraceMetadata",
     "TraceOutput",
-    "load_adjacency_matrix",
+    "AdjacencyList",
+    "normalize_topology",
+    "load_adjacency_list",
+    "load_edge_list",
+    "load_dense_matrix",
     "TopologyGenerator",
     "__version__",
 ]

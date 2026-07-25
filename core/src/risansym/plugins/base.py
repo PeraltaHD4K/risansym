@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from risansym.event import Event
+from risansym.event import Event, JsonPayload
 from risansym.results import SimulationResult, SimulationState
 
 
@@ -52,7 +52,7 @@ class SimulationPlugin:
         self,
         event: Event,
         context: EngineContext,
-        node_state: dict[str, object] | None = None,
+        node_state: JsonPayload | None = None,
     ) -> Event | None:
         """Transform, accept, or drop an event before agenda insertion."""
         return event
@@ -60,7 +60,7 @@ class SimulationPlugin:
     def on_event_processed(
         self,
         event: Event,
-        node_state: dict[str, object],
+        node_state: JsonPayload,
         context: EngineContext,
     ) -> None:
         """Called after a model processes an event."""

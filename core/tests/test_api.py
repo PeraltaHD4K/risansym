@@ -1,5 +1,7 @@
 """Tests for the public API exposed via __init__.py."""
 
+import logging
+
 
 class TestPublicAPI:
     """Verify that all symbols are importable from the top-level package."""
@@ -19,21 +21,14 @@ class TestPublicAPI:
 
         assert Event is not None
 
-    def test_import_process(self):
-        from risansym import Process
+    def test_internal_engine_types_are_not_exported(self):
+        import risansym
 
-        assert Process is not None
-
-    def test_import_simulator(self):
-        from risansym import Simulator
-
-        assert Simulator is not None
-
-    def test_import_schema_types(self):
-        from risansym import TraceEvent, TransmitEvent
-
-        assert TraceEvent is not None
-        assert TransmitEvent is not None
+        assert not hasattr(risansym, "Process")
+        assert not hasattr(risansym, "Simulator")
+        assert not hasattr(risansym, "PluginManager")
+        assert not hasattr(risansym, "TraceCollector")
+        assert not hasattr(risansym, "TraceOutput")
 
     def test_import_json_payload(self):
         from risansym import JsonPayload
@@ -51,7 +46,6 @@ class TestPublicAPI:
         from risansym import (
             EngineContext,
             PluginFailurePolicy,
-            PluginManager,
             SimulationContext,
             SimulationPlugin,
             SimulationResult,
@@ -66,7 +60,6 @@ class TestPublicAPI:
         assert SimulationContext is not None
         assert EngineContext is not None
         assert PluginFailurePolicy.RAISE.value == "raise"
-        assert PluginManager is not None
 
     def test_import_topology_api(self):
         from risansym import (
@@ -96,3 +89,10 @@ class TestPublicAPI:
 
         for name in risansym.__all__:
             assert hasattr(risansym, name), f"{name} listed in __all__ but not importable"
+
+    def test_library_installs_only_a_null_logging_handler(self):
+        import risansym
+
+        handlers = logging.getLogger(risansym.__name__).handlers
+        assert handlers
+        assert all(isinstance(handler, logging.NullHandler) for handler in handlers)

@@ -54,6 +54,5 @@ nav:
       - Simulation: api/simulation.md
       - Model: api/model.md
       - Event: api/event.md
-      - Process: api/process.md
-      - Schemas: api/schemas.md
+      - Trace schema: api/schemas.md
   - Architecture: architecture.md

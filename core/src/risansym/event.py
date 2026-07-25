@@ -1,14 +1,40 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import copy
 import math
-from typing import TypeAlias, Union
+from typing import Union
+
+from typing_extensions import TypeAliasType
 
 from risansym.exceptions import InvalidEventError
 
 # Type alias for JSON-serializable payloads exchanged between processes.
-JsonValue: TypeAlias = Union[str, int, float, bool, None, dict[str, "JsonValue"], list["JsonValue"]]
-JsonPayload: TypeAlias = dict[str, JsonValue]
+JsonValue = TypeAliasType(  # type: ignore[misc]
+    "JsonValue",
+    Union[str, int, float, bool, None, dict[str, "JsonValue"], list["JsonValue"]],  # type: ignore[misc]
+)
+JsonPayload = TypeAliasType("JsonPayload", dict[str, JsonValue])  # type: ignore[misc]
+
+
+def _validate_json_value(value: object, path: str = "payload") -> None:
+    if value is None or isinstance(value, (str, bool, int)):
+        return
+    if isinstance(value, float):
+        if math.isfinite(value):
+            return
+        raise InvalidEventError(f"{path} contains a non-finite number.")
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _validate_json_value(item, f"{path}[{index}]")
+        return
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise InvalidEventError(f"{path} keys must be strings.")
+            _validate_json_value(item, f"{path}.{key}")
+        return
+    raise InvalidEventError(f"{path} must contain only JSON values, got {type(value).__name__}.")
 
 
 @dataclass(order=True, slots=True, frozen=True)
@@ -20,9 +46,9 @@ class Event:
         name: Human-readable name identifying the event type.
         source: Node ID of the sender.
         target: Node ID of the receiver.
-        payload: Optional JSON-serializable data attached to the event.
-                 Note: Although the Event class is frozen, the payload dict is
-                 mutable. Callers should avoid mutating it after creation.
+        payload: JSON-serializable data attached to the event. The mapping is
+            deep-copied on construction, so later mutations of the input do not
+            alter the scheduled event. Treat ``event.payload`` as read-only.
 
     Note on event ordering:
         Events scheduled for the exact same time are processed in FIFO order
@@ -49,6 +75,10 @@ class Event:
             raise InvalidEventError("Event target must be a positive integer.")
         if not isinstance(self.name, str) or not self.name:
             raise InvalidEventError("Event name must be a non-empty string.")
+        if not isinstance(self.payload, dict):
+            raise InvalidEventError("Event payload must be a dictionary.")
+        _validate_json_value(self.payload)
+        object.__setattr__(self, "payload", copy.deepcopy(self.payload))
 
     def __repr__(self) -> str:
         return f"Event(t={self.time}, '{self.name}' {self.source}→{self.target})"

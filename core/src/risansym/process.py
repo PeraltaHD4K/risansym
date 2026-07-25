@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Any, Protocol
+from typing import Protocol
 
-from risansym.event import Event
+from risansym.event import Event, JsonPayload
 from risansym.exceptions import InvalidEventError
 from risansym.model import Model
 from risansym.results import ScheduleResult
@@ -14,7 +14,7 @@ class EngineProtocol(Protocol):
     def insert_event(
         self,
         event: Event,
-        node_state: dict[str, Any] | None = None,
+        node_state: JsonPayload | None = None,
     ) -> ScheduleResult: ...
 
     def log_app_event(self, source: int, message: str) -> None: ...
@@ -39,15 +39,15 @@ class Process:
     def __repr__(self) -> str:
         return f"<Process(node_id={self.node_id}, neighbors={self.neighbors})>"
 
-    def set_model(self, model: Model) -> None:
+    def _bind_model(self, model: Model) -> None:
         """Bind a model to this process without triggering initialization."""
         self.model = model
-        self.model.set_sink(self, self.neighbors, self.node_id)
+        self.model._bind(self, self.neighbors, self.node_id)
 
-    def set_time(self, time: float) -> None:
+    def _set_time(self, time: float) -> None:
         """Forward the simulation clock to the bound model."""
         if self.model:
-            self.model.set_time(time)
+            self.model._set_time(time)
 
     def transmit(self, event: Event) -> ScheduleResult:
         """Delegate event insertion to the engine, attaching the node's current state."""

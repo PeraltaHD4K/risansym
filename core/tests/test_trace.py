@@ -5,7 +5,9 @@ import pytest
 from risansym.simulation import Simulation
 from risansym.model import Model
 from risansym.event import Event
-from risansym.schemas import TraceOutput
+from risansym.exceptions import ConfigurationError
+from risansym.schemas import AppLogEvent, TraceCapture, TraceMetadata, TraceOutput
+from risansym.trace import TraceCollector
 
 
 class EchoModel(Model):
@@ -108,10 +110,6 @@ class TestTraceGeneration:
 
     def test_trace_collector_cap(self):
         # T8: TraceCollector memory limit
-        from risansym.trace import TraceCollector
-        from risansym.schemas import AppLogEvent
-        import pytest
-
         collector = TraceCollector(max_events=5)
 
         # Insert 5 events, no warning
@@ -127,3 +125,63 @@ class TestTraceGeneration:
         assert len(collector) == 5
         # First event was at clock=0.0, now it's gone
         assert collector._trace[0].clock == 1.0
+        assert collector.total_events == 6
+        assert collector.dropped_events == 1
+
+    @pytest.mark.parametrize("limit", [0, -1, 1_000_001, None, True])
+    def test_trace_collector_rejects_invalid_cap(self, limit):
+        with pytest.raises(ConfigurationError, match="max_events"):
+            TraceCollector(max_events=limit)
+
+    def test_truncated_trace_is_identified_in_metadata(self, tmp_path):
+        trace_path = tmp_path / "truncated.json"
+        sim = Simulation(
+            [[]],
+            10.0,
+            trace_enabled=True,
+            trace_path=trace_path,
+            trace_max_events=1,
+        )
+        sim.initialize_all()
+        sim.seed_event(Event(time=0.0, source=1, target=1, name="ONE"))
+        with pytest.warns(ResourceWarning):
+            sim.seed_event(Event(time=1.0, source=1, target=1, name="TWO"))
+        with pytest.warns(UserWarning, match="no model bound"):
+            sim.run()
+
+        output = TraceOutput.model_validate_json(trace_path.read_text())
+        assert output.metadata.capture.truncated is True
+        assert output.metadata.capture.recorded_events == 1
+        assert output.metadata.capture.dropped_events > 0
+
+    def test_atomic_dump_preserves_existing_file_and_cleans_temporary_file(
+        self, tmp_path, monkeypatch
+    ):
+        target = tmp_path / "trace.json"
+        target.write_text("existing", encoding="utf-8")
+        collector = TraceCollector(max_events=10)
+        collector.record(AppLogEvent(clock=0.0, source=1, message="test"))
+        metadata = TraceMetadata(
+            algorithm="Test",
+            topology="single",
+            execution_date="2026-07-25T00:00:00Z",
+            parameters={},
+            metrics={},
+            capture=TraceCapture(
+                max_events=10,
+                recorded_events=1,
+                dropped_events=0,
+                truncated=False,
+            ),
+        )
+
+        def fail_replace(self, target_path):
+            raise OSError("simulated atomic replacement failure")
+
+        monkeypatch.setattr(type(target), "replace", fail_replace)
+
+        with pytest.raises(OSError, match="replacement failure"):
+            collector.dump(target, metadata)
+
+        assert target.read_text(encoding="utf-8") == "existing"
+        assert list(tmp_path.glob("*.tmp")) == []

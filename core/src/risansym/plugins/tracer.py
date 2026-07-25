@@ -6,6 +6,7 @@ from pathlib import Path
 
 from risansym.engine.exporter import TraceExporter
 from risansym.event import Event, JsonPayload
+from risansym.exceptions import ConfigurationError
 from risansym.plugins.base import EngineContext, SimulationContext, SimulationPlugin
 from risansym.schemas import AppLogEvent, ReceiveEvent, TransmitEvent
 from risansym.trace import TraceCollector
@@ -16,11 +17,15 @@ class JSONTracerPlugin(SimulationPlugin):
 
     def __init__(
         self,
+        algorithm: str,
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
         max_events: int = 1_000_000,
     ) -> None:
+        if not isinstance(algorithm, str) or not algorithm.strip():
+            raise ConfigurationError("algorithm must be a non-empty string.")
+        self.algorithm = algorithm
         self.collector = TraceCollector(max_events=max_events)
         self.trace_path = trace_path
         self.trace_dir = trace_dir
@@ -83,7 +88,7 @@ class JSONTracerPlugin(SimulationPlugin):
         if context.result is None:
             return
         exporter = TraceExporter(
-            algo_name=context.algorithm,
+            algorithm=self.algorithm,
             topology_name=context.topology,
             graph=[list(neighbors) for neighbors in context.graph],
             directed=context.directed,

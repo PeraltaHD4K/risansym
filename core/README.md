@@ -12,6 +12,7 @@ pip install risansym
 
 ```python
 from risansym import Event, Model, ScheduleResult, Simulation
+from risansym.plugins import JSONTracerPlugin
 
 
 class Ping(Model):
@@ -27,8 +28,8 @@ sim = Simulation(
     [[2], [1]],
     maxtime=10.0,
     directed=False,
-    trace_enabled=True,
 )
+sim.attach(JSONTracerPlugin("Ping", trace_dir="traces"))
 
 sim.set_model(Ping(), 1)
 sim.set_model(Ping(), 2)
@@ -71,7 +72,7 @@ State snapshots are copied only when an enabled plugin requests them.
 
 The package root exposes the stable 1.0 simulation API. Trace models and
 built-in plugins are advanced APIs under `risansym.schemas` and
-`risansym.plugins`. Engine, process, builder, exporter, plugin-manager, and
+`risansym.plugins`. Engine, process, runtime, exporter, plugin-manager, and
 collector modules are implementation details.
 
 Event payloads and model snapshots must contain JSON values. Payload input is

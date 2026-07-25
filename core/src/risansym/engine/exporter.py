@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from risansym.exceptions import TraceExportError
+from risansym.engine.trace_writer import AtomicJSONTraceWriter
 from risansym.schemas import TraceCapture, TraceMetadata
 from risansym.trace import TraceCollector
 
@@ -16,7 +17,7 @@ class TraceExporter:
 
     def __init__(
         self,
-        algo_name: str,
+        algorithm: str,
         topology_name: str,
         graph: list[list[int]],
         directed: bool,
@@ -26,7 +27,7 @@ class TraceExporter:
         trace_dir: str = "traces",
         trace_tag: str | None = None,
     ) -> None:
-        self.algo_name = algo_name
+        self.algorithm = algorithm
         self.topology_name = topology_name
         self.graph = graph
         self.directed = directed
@@ -45,7 +46,7 @@ class TraceExporter:
             # Allow alphanumeric, dot, underscore, dash. Replace others with underscore.
             return re.sub(r"[^A-Za-z0-9._-]", "_", name)[:64]
 
-        safe_algo = sanitize(self.algo_name)
+        safe_algo = sanitize(self.algorithm)
         safe_topo = sanitize(self.topology_name)
         safe_tag = f"_{sanitize(self.trace_tag)}" if self.trace_tag else ""
 
@@ -70,7 +71,7 @@ class TraceExporter:
 
         metadata = TraceMetadata(
             schema_version="1.0",
-            algorithm=self.algo_name,
+            algorithm=self.algorithm,
             topology=self.topology_name,
             tag=self.trace_tag,
             execution_date=now,
@@ -90,7 +91,7 @@ class TraceExporter:
         )
 
         try:
-            collector.dump(trace_path, metadata)
+            AtomicJSONTraceWriter().write(trace_path, metadata, collector)
         except Exception as error:
             raise TraceExportError(f"Could not export trace to '{trace_path}': {error}") from error
         return trace_path

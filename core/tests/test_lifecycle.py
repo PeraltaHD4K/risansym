@@ -60,8 +60,8 @@ def test_initialization_failure_is_transactional_and_identifies_node() -> None:
 
     assert isinstance(captured.value.__cause__, ValueError)
     assert simulation.state is SimulationState.FAILED
-    assert simulation.engine.pending_events == 0
-    assert simulation.engine.scheduled_events == 0
+    assert simulation._runtime.pending_events == 0
+    assert simulation._runtime.scheduled_events == 0
 
 
 @pytest.mark.parametrize("operation", ["set_model", "attach", "initialize"])
@@ -74,7 +74,7 @@ def test_configuration_is_frozen_after_initialization(operation: str) -> None:
         if operation == "set_model":
             simulation.set_model(PassiveModel(), 1)
         elif operation == "attach":
-            simulation.attach(JSONTracerPlugin())
+            simulation.attach(JSONTracerPlugin("LifecycleTest"))
         else:
             simulation.initialize_all()
 
@@ -97,7 +97,7 @@ def test_context_manager_protocol_was_removed() -> None:
 def test_tracer_is_accessible_without_private_engine_state(tmp_path: Path) -> None:
     trace_path = tmp_path / "trace.json"
     simulation = Simulation([[]], 10.0)
-    tracer = JSONTracerPlugin(trace_path=trace_path)
+    tracer = JSONTracerPlugin("LifecycleTest", trace_path=trace_path)
     simulation.attach(tracer)
     simulation.initialize_all()
     simulation.run()

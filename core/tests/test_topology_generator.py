@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from risansym.exceptions import ConfigurationError
-from risansym.topology import TopologyGenerator
+from risansym.topology import TopologyGenerator, export_adjacency_list, export_dot
 
 
 def test_line_topology() -> None:
@@ -60,13 +60,13 @@ def test_random_topology_rejects_seed_and_rng() -> None:
 
 def test_export_adjacency_list(tmp_path: Path) -> None:
     path = tmp_path / "topology.txt"
-    TopologyGenerator.export_adjacency_list(TopologyGenerator.ring(3), path)
+    export_adjacency_list(TopologyGenerator.ring(3), path)
     assert path.read_text(encoding="utf-8").splitlines() == ["2 3", "1 3", "1 2"]
 
 
 def test_export_dot_respects_direction(tmp_path: Path) -> None:
     path = tmp_path / "topology.dot"
-    TopologyGenerator.export_dot([[2], []], path, directed=True)
+    export_dot([[2], []], path, directed=True)
     content = path.read_text(encoding="utf-8")
     assert content.startswith("digraph G")
     assert "1 -> 2;" in content

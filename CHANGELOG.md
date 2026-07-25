@@ -4,11 +4,38 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.0rc2] - 2026-07-25
+
+### Added
+- An internal `SimulationRuntime` boundary that coordinates the pure scheduler
+  with plugins without coupling either the event loop or scheduler to the
+  concrete plugin manager.
+- Standalone `describe_topology`, `export_adjacency_list`, and `export_dot`
+  helpers at the package root.
+- Dedicated atomic trace persistence and named immutable runtime checkpoint
+  records.
+
 ### Changed
+- Reduced `Simulation` construction to topology and execution configuration;
+  observability is now composed explicitly with `attach()`.
+- Moved trace algorithm metadata, paths, tags, and retention configuration into
+  `JSONTracerPlugin`.
+- Split trace accumulation from persistence and topology generation from
+  description and export.
 - Documented the neighbor-only transmission contract, exception chaining, and
   the distinction between scheduling outcomes and exceptional failures.
-- Replaced nested internal checkpoint tuples with named immutable checkpoint
-  records.
+
+### Removed
+- Removed the internal `SimulationBuilder`, public access to the scheduler
+  through `Simulation.engine`, and topology export methods from
+  `TopologyGenerator`.
+- Removed the algorithm label from `SimulationContext`; plugins own any
+  observability labels they require.
+
+### Breaking
+- Removed trace, console logging, algorithm-label, and plugin-failure-policy
+  arguments from `Simulation` and `Simulation.from_file`.
+- `JSONTracerPlugin` now requires an explicit non-empty algorithm label.
 
 ## [1.0.0rc1] - 2026-07-25
 

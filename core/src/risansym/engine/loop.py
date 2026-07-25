@@ -49,8 +49,11 @@ class EventLoop:
                     raise RuntimeError(f"Simulation crashed at Node {event.target} while processing '{event.name}': {e}") from e
 
                 # Snapshot the node's internal state AFTER processing
-                raw_state = process.model.get_state() if process.model else {}
-                state = copy.deepcopy(raw_state)
+                if self.simulator.requires_state_snapshot:
+                    raw_state = process.model.get_state() if process.model else {}
+                    state = copy.deepcopy(raw_state)
+                else:
+                    state = {}
 
                 for plugin in self.simulator._plugins:
                     plugin.on_event_processed(event, state, self.simulator)

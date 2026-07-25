@@ -26,6 +26,9 @@ class JSONTracerPlugin:
         self.trace_path = trace_path
         self.trace_dir = trace_dir
         self.trace_tag = trace_tag
+    @property
+    def requires_state_snapshot(self) -> bool:
+        return True
 
     def on_start(self, simulation: Simulation) -> None:
         pass
@@ -34,7 +37,7 @@ class JSONTracerPlugin:
         self, event: Event, simulator: Simulator, node_state: dict[str, Any] | None = None
     ) -> Event | None:
         self.collector.record(
-            TransmitEvent.model_construct(
+            TransmitEvent(
                 action="TRANSMIT",
                 clock=simulator.clock,
                 event_time=event.time,
@@ -51,7 +54,7 @@ class JSONTracerPlugin:
         self, event: Event, node_state: dict[str, Any], simulator: Simulator
     ) -> None:
         self.collector.record(
-            ReceiveEvent.model_construct(
+            ReceiveEvent(
                 action="RECEIVE",
                 clock=simulator.clock,
                 source=event.source,
@@ -64,7 +67,7 @@ class JSONTracerPlugin:
 
     def on_app_log(self, source: int, message: str, clock: float, simulator: Simulator) -> None:
         self.collector.record(
-            AppLogEvent.model_construct(
+            AppLogEvent(
                 action="APP_LOG", clock=clock, source=source, message=message
             )
         )

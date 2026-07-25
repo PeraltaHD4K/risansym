@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import datetime
+import re
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -34,15 +36,30 @@ class TraceExporter:
         
     def export(self, collector: TraceCollector, metrics: dict[str, Any]) -> None:
         """Serialize and persist the trace with metadata."""
-        tag = f"_{self.trace_tag}" if self.trace_tag else ""
+        def sanitize(name: str | None) -> str:
+            if not name:
+                return ""
+            # Allow alphanumeric, dot, underscore, dash. Replace others with underscore.
+            return re.sub(r"[^A-Za-z0-9._-]", "_", name)[:64]
+            
+        safe_algo = sanitize(self.algo_name)
+        safe_topo = sanitize(self.topology_name)
+        safe_tag = f"_{sanitize(self.trace_tag)}" if self.trace_tag else ""
+        
         now = datetime.datetime.now(datetime.timezone.utc)
         timestamp = now.strftime("%Y%m%d_%H%M%S")
+        unique_id = uuid.uuid4().hex[:6]
 
         if self.trace_path:
             trace_path = Path(self.trace_path)
         else:
-            file_name = f"{self.algo_name}_{self.topology_name}{tag}_{timestamp}.json"
-            trace_path = Path(self.trace_dir) / self.algo_name / file_name
+            file_name = f"{safe_algo}_{safe_topo}{safe_tag}_{timestamp}_{unique_id}.json"
+            base_dir = Path(self.trace_dir).resolve()
+            trace_path = (base_dir / safe_algo / file_name).resolve()
+            
+            # Ensure we didn't somehow escape trace_dir
+            if not trace_path.is_relative_to(base_dir):
+                raise ValueError("Generated trace path escapes the intended directory.")
 
         total_edges = sum(len(neighbors) for neighbors in self.graph)
         total_nodes = len(self.table) - 1

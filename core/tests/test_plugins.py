@@ -5,7 +5,12 @@ from dataclasses import FrozenInstanceError
 import pytest
 
 from risansym.event import Event
-from risansym.exceptions import CausalityError, PluginError, TraceExportError
+from risansym.exceptions import (
+    CausalityError,
+    ConfigurationError,
+    PluginError,
+    TraceExportError,
+)
 from risansym.plugins.base import EngineContext, SimulationContext, SimulationPlugin
 from risansym.plugins.manager import PluginFailurePolicy
 from risansym.plugins.tracer import JSONTracerPlugin
@@ -84,7 +89,7 @@ def test_plugin_contexts_are_immutable() -> None:
 
     assert captured[0].state is SimulationState.RUNNING
     with pytest.raises(FrozenInstanceError):
-        captured[0].algorithm = "changed"  # type: ignore[misc]
+        captured[0].topology = "changed"  # type: ignore[misc]
 
 
 def test_raise_policy_preserves_plugin_failure_cause() -> None:
@@ -145,7 +150,7 @@ def test_transformed_event_is_revalidated_before_next_plugin() -> None:
     simulation.attach(PastPlugin())
     simulation.attach(ObserverPlugin())
     simulation.initialize_all()
-    simulation.engine.clock = 2.0
+    simulation._runtime.clock = 2.0
 
     with pytest.raises(CausalityError):
         simulation.seed_event(Event(time=2.0, source=1, target=1, name="VALID"))
@@ -178,7 +183,7 @@ def test_incomplete_non_plugin_object_is_rejected() -> None:
 
 def test_trace_export_failure_is_critical(tmp_path) -> None:
     simulation = Simulation([[]], 10.0)
-    simulation.attach(JSONTracerPlugin(trace_path=tmp_path))
+    simulation.attach(JSONTracerPlugin("FailureTest", trace_path=tmp_path))
     simulation.initialize_all()
 
     with pytest.raises(PluginError) as captured:
@@ -186,3 +191,9 @@ def test_trace_export_failure_is_critical(tmp_path) -> None:
 
     assert isinstance(captured.value.__cause__, TraceExportError)
     assert simulation.state is SimulationState.FAILED
+
+
+@pytest.mark.parametrize("algorithm", ["", "   ", None])
+def test_tracer_requires_an_explicit_algorithm_name(algorithm: object) -> None:
+    with pytest.raises(ConfigurationError, match="algorithm"):
+        JSONTracerPlugin(algorithm)  # type: ignore[arg-type]

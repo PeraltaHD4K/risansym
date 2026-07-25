@@ -49,15 +49,15 @@ class AlgorithmPingPong(Model):
 Once you define your class, you bind instances of it to the simulation nodes:
 
 ```python
+from risansym.plugins import ConsoleLoggerPlugin, JSONTracerPlugin
+
 # Create the simulation engine reading from our topology file
 experiment = Simulation.from_file(
     filename="graph.txt", 
     maxtime=15.0, 
-    algo_name="AlgorithmPingPong", 
-    trace_network=True, 
-    app_logs=True,
-    trace_enabled=True
 )  
+experiment.attach(ConsoleLoggerPlugin(trace_network=True, app_logs=True))
+experiment.attach(JSONTracerPlugin("AlgorithmPingPong"))
 
 # Bind a fresh instance of the model to every node in the graph
 for i in range(1, len(experiment.graph) + 1):

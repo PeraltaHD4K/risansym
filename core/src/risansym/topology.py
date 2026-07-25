@@ -338,69 +338,69 @@ class TopologyGenerator:
         graph = [sorted(neighbors) for neighbors in graph_sets]
         return normalize_topology(graph, directed=directed)
 
-    @staticmethod
-    def show(graph: Sequence[Sequence[int]]) -> None:
-        """Print a compact human-readable connectivity map."""
-        nodes = len(graph)
-        edges = sum(len(neighbors) for neighbors in graph)
-        print(f"Topology Info: {nodes} nodes, {edges} directed edges")
-        print("Connectivity Map:")
-        limit = min(nodes, 5 if nodes > 15 else nodes)
-        if nodes > 15:
-            print(" (Graph too large to display entirely, showing first 5 nodes)")
-        for index in range(limit):
-            print(f"Node {index + 1} -> {list(graph[index])}")
-        if nodes > 15:
-            print(" ...")
-
-    @staticmethod
-    def export_adjacency_list(
-        graph: Sequence[Sequence[int]],
-        filename: str | Path,
-        *,
-        directed: bool = False,
-    ) -> None:
-        """Validate and export a topology in adjacency-list format."""
-        normalized = normalize_topology(graph, directed=directed)
-        path = Path(filename)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("w", encoding="utf-8") as file:
-            for neighbors in normalized:
-                file.write(" ".join(str(neighbor) for neighbor in neighbors) + "\n")
-
-    @staticmethod
-    def export_dot(
-        graph: Sequence[Sequence[int]],
-        filename: str | Path,
-        *,
-        directed: bool = False,
-    ) -> None:
-        """Validate and export a topology in Graphviz DOT format."""
-        normalized = normalize_topology(graph, directed=directed)
-        path = Path(filename)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        graph_type = "digraph" if directed else "graph"
-        connector = "->" if directed else "--"
-        seen_edges: set[tuple[int, int]] = set()
-
-        with path.open("w", encoding="utf-8") as file:
-            file.write(f"{graph_type} G {{\n")
-            file.write("  node [shape=circle];\n")
-            for source, neighbors in enumerate(normalized, start=1):
-                if not neighbors:
-                    file.write(f"  {source};\n")
-                for target in neighbors:
-                    edge = (
-                        (source, target) if directed else (min(source, target), max(source, target))
-                    )
-                    if edge in seen_edges:
-                        continue
-                    seen_edges.add(edge)
-                    file.write(f"  {source} {connector} {target};\n")
-            file.write("}\n")
-
 
 def _empty_graph(nodes: int) -> AdjacencyList:
     if not isinstance(nodes, int) or isinstance(nodes, bool) or nodes < 1:
         raise ConfigurationError("nodes must be a positive integer.")
     return [[] for _ in range(nodes)]
+
+
+def describe_topology(graph: Sequence[Sequence[int]]) -> str:
+    """Return a compact human-readable connectivity map."""
+    nodes = len(graph)
+    edges = sum(len(neighbors) for neighbors in graph)
+    lines = [
+        f"Topology Info: {nodes} nodes, {edges} directed edges",
+        "Connectivity Map:",
+    ]
+    limit = min(nodes, 5 if nodes > 15 else nodes)
+    if nodes > 15:
+        lines.append(" (Graph too large to display entirely, showing first 5 nodes)")
+    lines.extend(f"Node {index + 1} -> {list(graph[index])}" for index in range(limit))
+    if nodes > 15:
+        lines.append(" ...")
+    return "\n".join(lines)
+
+
+def export_adjacency_list(
+    graph: Sequence[Sequence[int]],
+    filename: str | Path,
+    *,
+    directed: bool = False,
+) -> None:
+    """Validate and export a topology in adjacency-list format."""
+    normalized = normalize_topology(graph, directed=directed)
+    path = Path(filename)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as file:
+        for neighbors in normalized:
+            file.write(" ".join(str(neighbor) for neighbor in neighbors) + "\n")
+
+
+def export_dot(
+    graph: Sequence[Sequence[int]],
+    filename: str | Path,
+    *,
+    directed: bool = False,
+) -> None:
+    """Validate and export a topology in Graphviz DOT format."""
+    normalized = normalize_topology(graph, directed=directed)
+    path = Path(filename)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    graph_type = "digraph" if directed else "graph"
+    connector = "->" if directed else "--"
+    seen_edges: set[tuple[int, int]] = set()
+
+    with path.open("w", encoding="utf-8") as file:
+        file.write(f"{graph_type} G {{\n")
+        file.write("  node [shape=circle];\n")
+        for source, neighbors in enumerate(normalized, start=1):
+            if not neighbors:
+                file.write(f"  {source};\n")
+            for target in neighbors:
+                edge = (source, target) if directed else (min(source, target), max(source, target))
+                if edge in seen_edges:
+                    continue
+                seen_edges.add(edge)
+                file.write(f"  {source} {connector} {target};\n")
+        file.write("}\n")

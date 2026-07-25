@@ -36,7 +36,7 @@ class RecordingModel(PassiveModel):
 
 
 def prepared_simulation(*times: float, maxtime: float = 20.0) -> Simulation:
-    simulation = Simulation([[]], maxtime, app_logs=False)
+    simulation = Simulation([[]], maxtime)
     simulation.set_model(PassiveModel(), 1)
     simulation.initialize_all()
     for index, event_time in enumerate(times):

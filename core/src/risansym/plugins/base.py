@@ -24,7 +24,6 @@ class EngineContext:
 class SimulationContext:
     """Read-only simulation information exposed to lifecycle plugins."""
 
-    algorithm: str
     topology: str
     graph: tuple[tuple[int, ...], ...]
     model_types: tuple[str | None, ...]

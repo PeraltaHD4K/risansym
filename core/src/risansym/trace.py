@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import os
-import tempfile
 import warnings
-from typing import Iterator
 from collections import deque
+from typing import Iterator
 
-from pathlib import Path
 from risansym.exceptions import ConfigurationError
-from risansym.schemas import TraceEvent, TraceMetadata
+from risansym.schemas import TraceEvent
 
 
 _DEFAULT_MAX_EVENTS = 1_000_000
@@ -49,8 +46,8 @@ class TraceCollector:
             if not self._overflow_warned:
                 warnings.warn(
                     f"TraceCollector has reached its limit of {self._max_events:,} events. "
-                    f"Oldest events are being discarded. Increase 'max_events' or set "
-                    f"it to None to disable this limit (not recommended).",
+                    "Oldest events are being discarded. Increase 'max_events' "
+                    "to retain a larger window.",
                     ResourceWarning,
                     stacklevel=2,
                 )
@@ -86,36 +83,3 @@ class TraceCollector:
 
     def __iter__(self) -> Iterator[TraceEvent]:
         return iter(self._trace)
-
-    def dump(self, filepath: Path, metadata: TraceMetadata) -> None:
-        """Validate and persist the trace to a JSON file on disk.
-
-        Stream to a temporary file in the destination directory and replace
-        the target atomically only after serialization and ``fsync`` succeed.
-        """
-        filepath = filepath.resolve()
-        filepath.parent.mkdir(parents=True, exist_ok=True)
-        temporary_path: Path | None = None
-        try:
-            descriptor, temporary_name = tempfile.mkstemp(
-                dir=filepath.parent,
-                prefix=f".{filepath.name}.",
-                suffix=".tmp",
-            )
-            temporary_path = Path(temporary_name)
-            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-                stream.write('{"metadata":')
-                stream.write(metadata.model_dump_json())
-                stream.write(',"trace":[')
-                for index, event in enumerate(self._trace):
-                    if index:
-                        stream.write(",")
-                    stream.write(event.model_dump_json())
-                stream.write("]}")
-                stream.flush()
-                os.fsync(stream.fileno())
-            temporary_path.replace(filepath)
-        except Exception:
-            if temporary_path is not None:
-                temporary_path.unlink(missing_ok=True)
-            raise

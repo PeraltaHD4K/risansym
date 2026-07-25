@@ -1,5 +1,6 @@
 """Tests for the public API exposed via __init__.py."""
 
+import inspect
 import logging
 
 
@@ -10,6 +11,33 @@ class TestPublicAPI:
         from risansym import Simulation
 
         assert Simulation is not None
+
+    def test_simulation_constructor_contains_only_execution_configuration(self):
+        from risansym import Simulation
+
+        parameters = set(inspect.signature(Simulation).parameters)
+        assert parameters == {
+            "graph",
+            "maxtime",
+            "directed",
+            "max_events",
+            "max_agenda_size",
+        }
+        assert not hasattr(Simulation([[]], 1.0), "engine")
+
+    def test_from_file_contains_no_observability_configuration(self):
+        from risansym import Simulation
+
+        parameters = set(inspect.signature(Simulation.from_file).parameters)
+        assert parameters == {
+            "filename",
+            "maxtime",
+            "directed",
+            "format",
+            "node_count",
+            "max_events",
+            "max_agenda_size",
+        }
 
     def test_import_model(self):
         from risansym import Model
@@ -68,6 +96,9 @@ class TestPublicAPI:
             load_dense_matrix,
             load_edge_list,
             normalize_topology,
+            describe_topology,
+            export_adjacency_list,
+            export_dot,
         )
 
         assert AdjacencyList is not None
@@ -75,6 +106,9 @@ class TestPublicAPI:
         assert load_dense_matrix is not None
         assert load_edge_list is not None
         assert normalize_topology is not None
+        assert describe_topology is not None
+        assert export_adjacency_list is not None
+        assert export_dot is not None
 
     def test_version_is_defined(self):
         import risansym

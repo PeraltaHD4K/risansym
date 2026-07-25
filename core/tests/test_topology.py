@@ -70,3 +70,29 @@ class TestTopologyValidation:
         # T7: Directory path instead of file
         with pytest.raises(IsADirectoryError):
             Simulation.from_file(filename=tmp_path, maxtime=10.0, trace_network=False, app_logs=False)
+
+    def test_load_edge_list(self, make_topo):
+        topo = make_topo("1 2\n2 3\n3 1\n")
+        sim = Simulation.from_file(filename=topo, maxtime=10.0, format="edge_list", trace_network=False, app_logs=False)
+        assert len(sim.graph) == 3
+        assert sim.graph[0] == [2]
+        assert sim.graph[1] == [3]
+        assert sim.graph[2] == [1]
+
+    def test_load_dense_matrix(self, make_topo):
+        topo = make_topo("0 1 0\n0 0 1\n1 0 0\n")
+        sim = Simulation.from_file(filename=topo, maxtime=10.0, format="dense_matrix", trace_network=False, app_logs=False)
+        assert len(sim.graph) == 3
+        assert sim.graph[0] == [2]
+        assert sim.graph[1] == [3]
+        assert sim.graph[2] == [1]
+
+    def test_load_dense_matrix_invalid_value(self, make_topo):
+        topo = make_topo("0 2 0\n")
+        with pytest.raises(ValueError, match="Matrix cells must be 0 or 1"):
+            Simulation.from_file(filename=topo, maxtime=10.0, format="dense_matrix", trace_network=False, app_logs=False)
+
+    def test_load_edge_list_invalid_format(self, make_topo):
+        topo = make_topo("1 2 3\n")
+        with pytest.raises(ValueError, match="exactly 2 integers"):
+            Simulation.from_file(filename=topo, maxtime=10.0, format="edge_list", trace_network=False, app_logs=False)

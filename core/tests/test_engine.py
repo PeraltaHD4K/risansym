@@ -24,7 +24,7 @@ def test_event_loop_crash_resilience():
     p = Process(node_id=1, neighbors=[2], engine=sim)
     p.set_model(BadModel())
     
-    loop = EventLoop(simulator=sim, table=[None, p, None], collector=None)
+    loop = EventLoop(simulator=sim, table=[None, p, None])
     
     with pytest.raises(RuntimeError, match="Simulation crashed at Node 1 while processing 'A'"):
         loop.run()

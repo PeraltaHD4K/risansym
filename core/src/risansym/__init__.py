@@ -26,7 +26,7 @@ from risansym.schemas import (
     TraceMetadata,
     TraceOutput,
 )
-from risansym.topology import load_adjacency_matrix
+from risansym.topology import load_adjacency_matrix, TopologyGenerator
 
 from importlib.metadata import version, PackageNotFoundError
 
@@ -50,5 +50,6 @@ __all__ = [
     "TraceMetadata",
     "TraceOutput",
     "load_adjacency_matrix",
+    "TopologyGenerator",
     "__version__",
 ]

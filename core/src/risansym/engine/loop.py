@@ -5,9 +5,7 @@ import time
 from typing import Any
 
 from risansym.process import Process
-from risansym.schemas import ReceiveEvent
 from risansym.simulator import Simulator
-from risansym.trace import TraceCollector
 
 
 class EventLoop:
@@ -17,11 +15,9 @@ class EventLoop:
         self,
         simulator: Simulator,
         table: list[Process | None],
-        collector: TraceCollector | None,
     ) -> None:
         self.simulator = simulator
         self.table = table
-        self.collector = collector
         
     def run(self) -> dict[str, Any]:
         """Main loop: pop and route events until the agenda is empty.
@@ -30,6 +26,7 @@ class EventLoop:
             Dictionary containing execution metrics.
         """
         start_real_time = time.perf_counter()
+        processed_events = 0
 
         while self.simulator.is_on:
             event = self.simulator.pop_event()
@@ -55,21 +52,15 @@ class EventLoop:
                 raw_state = process.model.get_state() if process.model else {}
                 state = copy.deepcopy(raw_state)
 
-                if self.collector:
-                    self.collector.record(ReceiveEvent.model_construct(
-                        action="RECEIVE",
-                        clock=event.time,
-                        source=event.source,
-                        target=event.target,
-                        name=event.name,
-                        payload=event.payload,
-                        node_state=state
-                    ))
+                for plugin in self.simulator._plugins:
+                    plugin.on_event_processed(event, state, self.simulator)
+
+                processed_events += 1
 
         end_real_time = time.perf_counter()
 
         return {
             "simulated_time_elapsed": self.simulator.clock,
-            "total_messages": len(self.collector) if self.collector else 0,
+            "total_messages": processed_events,
             "execution_real_time_sec": round(end_real_time - start_real_time, 5)
         }

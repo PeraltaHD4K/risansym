@@ -44,21 +44,6 @@ def test_simulation_trace_warning(temp_topology):
     # T5: Deprecated trace argument
     with pytest.warns(DeprecationWarning, match="The 'trace' argument is deprecated"):
         sim = Simulation(temp_topology, maxtime=10.0, trace=True)
-    assert sim.trace_enabled is True
-
-def test_simulation_double_save(temp_topology, monkeypatch):
-    # T4: Prevent double trace save when using context manager
-    sim = Simulation.from_file(temp_topology, maxtime=10.0, trace_enabled=True)
     
-    save_calls = 0
-    def mock_save_trace():
-        nonlocal save_calls
-        save_calls += 1
-    
-    monkeypatch.setattr(sim, "_save_trace", mock_save_trace)
-    
-    sim.initialize_all()
-    with sim:
-        sim.run()
-        
-    assert save_calls == 1
+    tracer = next((p for p in sim.engine._plugins if type(p).__name__ == "JSONTracerPlugin"), None)
+    assert tracer is not None

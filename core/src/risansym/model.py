@@ -5,12 +5,13 @@ from typing import Any, Protocol
 import warnings
 
 from risansym.event import Event
+from risansym.results import ScheduleResult
 
 
 class MessageSink(Protocol):
     """Protocol defining what a Model needs from its host environment."""
 
-    def transmit(self, event: Event) -> None: ...
+    def transmit(self, event: Event) -> ScheduleResult: ...
     def log(self, message: str) -> None: ...
 
 
@@ -76,14 +77,14 @@ class Model(ABC):
     # Public API for user algorithms
     # ------------------------------------------------------------------
 
-    def transmit(self, event: Event) -> None:
+    def transmit(self, event: Event) -> ScheduleResult:
         """Schedule a message transmission to another node."""
         if self.sink is None:
             raise RuntimeError(
                 f"Model(node_id={self.node_id}) cannot transmit: not bound to a Process. "
                 "Ensure Simulation.initialize_all() has been called."
             )
-        self.sink.transmit(event)
+        return self.sink.transmit(event)
 
     def log(self, message: str) -> None:
         """Record an application-level log event in the trace.

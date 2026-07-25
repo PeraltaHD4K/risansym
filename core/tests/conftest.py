@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.fixture
 def temp_topology(tmp_path):
     """Creates a temporary 2-node topology file for tests."""

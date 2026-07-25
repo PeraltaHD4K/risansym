@@ -9,21 +9,35 @@ from risansym.simulator import Simulator
 class DummyModel(Model):
     def init(self) -> None:
         self.log("init")
-        
+
     def receive(self, event: Event) -> None:
         if event.name == "REENTRANT":
             # 7. Transmit re-entrante desde dentro de receive()
-            self.transmit(Event(time=self.clock + 1.0, source=self.node_id, target=self.node_id, name="NESTED", payload={}))
+            self.transmit(
+                Event(
+                    time=self.clock + 1.0,
+                    source=self.node_id,
+                    target=self.node_id,
+                    name="NESTED",
+                    payload={},
+                )
+            )
         self.log("received")
+
 
 class StateModel(Model):
     def init(self) -> None:
-        self.transmit(Event(time=1.0, source=self.node_id, target=self.node_id, name="TEST", payload={}))
+        self.transmit(
+            Event(time=1.0, source=self.node_id, target=self.node_id, name="TEST", payload={})
+        )
+
     def receive(self, event: Event) -> None:
         pass
+
     def get_state(self) -> dict[str, str]:
         # 9. Override de Model.get_state()
         return {"custom_key": "custom_value"}
+
 
 def test_simulation_no_models(temp_topology) -> None:
     # 1. Simulación sin modelos asignados
@@ -33,6 +47,7 @@ def test_simulation_no_models(temp_topology) -> None:
     sim.run()
     assert sim.engine.clock == 0.0  # Nothing happened
 
+
 def test_simulation_partial_models(temp_topology) -> None:
     # 2. Simulación con modelos parciales
     sim = Simulation.from_file(temp_topology, 10.0, "PartialAlgo", trace_enabled=False)
@@ -41,17 +56,20 @@ def test_simulation_partial_models(temp_topology) -> None:
     sim.run()
     # Should not crash, just ignore unassigned nodes
 
+
 def test_negative_time_event() -> None:
     # 3. Evento con tiempo negativo
     # Event now raises ValueError for negative time
     with pytest.raises(ValueError, match="Invalid event time"):
         Event(time=-1.0, source=1, target=2, name="NEG", payload={})
 
+
 def test_pop_empty_agenda() -> None:
     # 4. pop_event() con agenda vacía
     engine = Simulator(maxtime=10.0)
     with pytest.raises(RuntimeError, match="Cannot pop from an empty event agenda"):
         engine.pop_event()
+
 
 def test_process_transmit_no_model() -> None:
     # 5. Process.transmit() sin modelo asignado
@@ -61,6 +79,7 @@ def test_process_transmit_no_model() -> None:
     proc.transmit(Event(time=1.0, source=1, target=2, name="TEST", payload={}))
     assert engine.is_on
 
+
 def test_large_scale(temp_topology) -> None:
     # 6. Test de estrés a gran escala
     sim = Simulation.from_file(temp_topology, 10.0, "Stress", trace_enabled=False)
@@ -69,6 +88,7 @@ def test_large_scale(temp_topology) -> None:
     sim.initialize_all()
     sim.run()
     # Just checking it doesn't crash
+
 
 def test_reentrant_transmit(temp_topology) -> None:
     # 7. Transmit re-entrante
@@ -81,6 +101,7 @@ def test_reentrant_transmit(temp_topology) -> None:
     sim.initialize_all()
     sim.run()
     # Should have processed NESTED
+
 
 def test_app_log_e2e(temp_topology) -> None:
     # 8. Traza con eventos APP_LOG
@@ -95,6 +116,7 @@ def test_app_log_e2e(temp_topology) -> None:
     logs = [e for e in tracer.collector if getattr(e, "action", None) == "APP_LOG"]
     assert len(logs) > 0
 
+
 def test_get_state_override(temp_topology) -> None:
     # 9. Override get_state()
     sim = Simulation.from_file(temp_topology, 10.0, "StateAlgo", trace_enabled=True)
@@ -108,6 +130,7 @@ def test_get_state_override(temp_topology) -> None:
     transmits = [e for e in tracer.collector if getattr(e, "action", None) == "TRANSMIT"]
     assert len(transmits) > 0
     assert transmits[0].node_state == {"custom_key": "custom_value"}
+
 
 def test_simulation_repr(temp_topology) -> None:
     # 10. Simulation.__repr__

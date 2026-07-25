@@ -1,68 +1,72 @@
-import tempfile
+"""Tests for deterministic topology generation and export."""
+
+import random
 from pathlib import Path
+
+import pytest
+
+from risansym.exceptions import ConfigurationError
 from risansym.topology import TopologyGenerator
 
-def test_line_topology():
-    graph = TopologyGenerator.line(4, bidirectional=True)
-    assert len(graph) == 4
-    assert graph[0] == [2]
-    assert graph[1] == [1, 3]
-    assert graph[2] == [2, 4]
-    assert graph[3] == [3]
 
-def test_line_unidirectional():
-    graph = TopologyGenerator.line(3, bidirectional=False)
-    assert graph[0] == [2]
-    assert graph[1] == [3]
-    assert graph[2] == []
+def test_line_topology() -> None:
+    assert TopologyGenerator.line(4) == [[2], [1, 3], [2, 4], [3]]
+    assert TopologyGenerator.line(3, directed=True) == [[2], [3], []]
 
-def test_ring_topology():
-    graph = TopologyGenerator.ring(4, bidirectional=True)
-    assert len(graph) == 4
-    assert graph[0] == [2, 4]
-    assert graph[3] == [3, 1]
 
-def test_star_topology():
-    graph = TopologyGenerator.star(5)
-    assert len(graph) == 5
-    assert set(graph[0]) == {2, 3, 4, 5}
-    for i in range(1, 5):
-        assert graph[i] == [1]
+def test_ring_topology() -> None:
+    assert TopologyGenerator.ring(4) == [[2, 4], [1, 3], [2, 4], [1, 3]]
+    assert TopologyGenerator.ring(4, directed=True) == [[2], [3], [4], [1]]
 
-def test_mesh_topology():
+
+def test_star_topology() -> None:
+    assert TopologyGenerator.star(4) == [[2, 3, 4], [1], [1], [1]]
+    assert TopologyGenerator.star(4, directed=True) == [[2, 3, 4], [], [], []]
+
+
+def test_mesh_topology() -> None:
     graph = TopologyGenerator.mesh(4)
-    assert len(graph) == 4
-    for i in range(4):
-        assert len(graph[i]) == 3
-        assert (i + 1) not in graph[i]
+    assert all(len(neighbors) == 3 for neighbors in graph)
+    assert all(node_id not in graph[node_id - 1] for node_id in range(1, 5))
 
-def test_tree_topology():
+
+def test_tree_topology() -> None:
     graph = TopologyGenerator.tree(depth=2, branching_factor=2)
-    # Depth 2 binary tree: 1 + 2 + 4 = 7 nodes
     assert len(graph) == 7
-    # Root
     assert set(graph[0]) == {2, 3}
-    # Level 1
-    assert set(graph[1]) == {4, 5, 1}
-    assert set(graph[2]) == {6, 7, 1}
-    # Level 2 (Leaves)
-    assert graph[3] == [2]
-    assert graph[6] == [3]
+    assert set(graph[1]) == {1, 4, 5}
+    assert set(graph[2]) == {1, 6, 7}
 
-def test_random_topology():
-    graph = TopologyGenerator.random(10, probability=0.5)
-    assert len(graph) == 10
-    # Graph should be connected, so at least 9 edges (18 directed)
-    edges = sum(len(n) for n in graph)
-    assert edges >= 18
 
-def test_export_to_file():
-    graph = TopologyGenerator.ring(3)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        filepath = Path(tmpdir) / "topo.txt"
-        TopologyGenerator.export_to_file(graph, filepath)
-        content = filepath.read_text().splitlines()
-        assert len(content) == 3
-        assert content[0] == "2 3"
-        assert content[1] == "1 3"
-        assert content[2] == "2 1"
+def test_random_topology_is_reproducible_with_seed() -> None:
+    first = TopologyGenerator.random(20, probability=0.2, seed=42)
+    second = TopologyGenerator.random(20, probability=0.2, seed=42)
+    different = TopologyGenerator.random(20, probability=0.2, seed=43)
+
+    assert first == second
+    assert first != different
+
+
+def test_random_topology_accepts_explicit_rng() -> None:
+    assert TopologyGenerator.random(10, rng=random.Random(7)) == (
+        TopologyGenerator.random(10, rng=random.Random(7))
+    )
+
+
+def test_random_topology_rejects_seed_and_rng() -> None:
+    with pytest.raises(ConfigurationError, match="either seed or rng"):
+        TopologyGenerator.random(10, seed=1, rng=random.Random(1))
+
+
+def test_export_adjacency_list(tmp_path: Path) -> None:
+    path = tmp_path / "topology.txt"
+    TopologyGenerator.export_adjacency_list(TopologyGenerator.ring(3), path)
+    assert path.read_text(encoding="utf-8").splitlines() == ["2 3", "1 3", "1 2"]
+
+
+def test_export_dot_respects_direction(tmp_path: Path) -> None:
+    path = tmp_path / "topology.dot"
+    TopologyGenerator.export_dot([[2], []], path, directed=True)
+    content = path.read_text(encoding="utf-8")
+    assert content.startswith("digraph G")
+    assert "1 -> 2;" in content

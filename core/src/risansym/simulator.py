@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import heapq
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 from risansym.event import Event
-from risansym.schemas import TransmitEvent, AppLogEvent
 
 from risansym.plugins.base import SimulationPlugin
 

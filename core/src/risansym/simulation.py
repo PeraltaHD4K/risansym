@@ -49,7 +49,6 @@ class Simulation:
         trace_tag: str | None = None,
         trace: bool | None = None,
     ) -> None:
-        from risansym.trace import TraceCollector
 
         # Backwards compatibility: accept deprecated 'debug' kwarg
         if debug is not None:

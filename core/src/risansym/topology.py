@@ -104,7 +104,6 @@ def load_dense_matrix(filename: str | Path) -> list[list[int]]:
         ) from e
 
     # Validate square matrix
-    num_nodes = len(graph)
     for i, neighbors in enumerate(graph, start=1):
         # We can't strictly validate column count here because we just stored neighbors,
         # but if there were fewer elements in a row, any out of bounds would be caught

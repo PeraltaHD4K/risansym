@@ -1,6 +1,5 @@
 import tempfile
 from pathlib import Path
-import pytest
 from risansym.topology import TopologyGenerator
 
 def test_line_topology():

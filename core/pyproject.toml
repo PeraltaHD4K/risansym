@@ -31,6 +31,10 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/PeraltaHD4K/risansym"
 Repository = "https://github.com/PeraltaHD4K/risansym.git"
+Documentation = "https://peraltahd4k.github.io/risansym/docs/"
+Changelog = "https://github.com/PeraltaHD4K/risansym/blob/main/CHANGELOG.md"
+Issues = "https://github.com/PeraltaHD4K/risansym/issues"
+Security = "https://github.com/PeraltaHD4K/risansym/security/policy"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/risansym"]

@@ -31,7 +31,19 @@ from risansym.topology import (
 
 
 class Simulation:
-    """Compose topology, models, runtime extensions, and event-loop execution."""
+    """Compose topology, models, runtime extensions, and event-loop execution.
+
+    Args:
+        graph: Adjacency list whose one-based values identify direct neighbors.
+        maxtime: Inclusive simulated-time horizon.
+        directed: Whether asymmetric topology edges are allowed.
+        max_events: Default event budget for each ``run()`` call.
+        max_agenda_size: Optional maximum number of pending events.
+
+    Raises:
+        ConfigurationError: If an execution limit is invalid.
+        TopologyError: If the adjacency list violates the topology contract.
+    """
 
     def __init__(
         self,
@@ -123,7 +135,25 @@ class Simulation:
         max_events: int = 10_000_000,
         max_agenda_size: int | None = None,
     ) -> Simulation:
-        """Build a simulation from a validated topology file."""
+        """Build a simulation from a validated topology file.
+
+        Args:
+            filename: Input topology path.
+            maxtime: Inclusive simulated-time horizon.
+            directed: Whether asymmetric edges are allowed.
+            format: ``adjacency_list``, ``edge_list``, or ``dense_matrix``.
+            node_count: Total nodes for an edge list, including isolated nodes.
+            max_events: Default event budget for each ``run()`` call.
+            max_agenda_size: Optional maximum number of pending events.
+
+        Returns:
+            A simulation in the ``CREATED`` state.
+
+        Raises:
+            ConfigurationError: If the format or an option is invalid.
+            TopologyError: If the file contains an invalid topology.
+            FileNotFoundError: If the input path does not exist.
+        """
         if format == "adjacency_list":
             if node_count is not None:
                 raise ConfigurationError("node_count is only valid for edge-list topologies.")
@@ -162,7 +192,11 @@ class Simulation:
         process._bind_model(model)
 
     def initialize_all(self) -> None:
-        """Initialize all bound models as one lifecycle transition."""
+        """Initialize all bound models as one transactional lifecycle transition.
+
+        A model failure restores the scheduler checkpoint, moves the simulation
+        to ``FAILED``, and is chained inside ``SimulationError``.
+        """
         self._require_state(SimulationState.CREATED)
         checkpoint = self._runtime.checkpoint()
         self.state = SimulationState.INITIALIZING
@@ -180,7 +214,11 @@ class Simulation:
         self.state = SimulationState.READY
 
     def seed_event(self, event: Event) -> ScheduleResult:
-        """Insert an event before or between execution calls."""
+        """Insert an event before or between execution calls.
+
+        Returns:
+            The explicit scheduling outcome.
+        """
         self._require_state(SimulationState.READY, SimulationState.STOPPED)
         return self._runtime.insert_event(event)
 
@@ -246,7 +284,14 @@ class Simulation:
             raise
 
     def run(self, *, max_events: int | None = None) -> SimulationResult:
-        """Run until completion or an event budget is exhausted."""
+        """Run until completion or an event budget is exhausted.
+
+        Args:
+            max_events: Per-call budget overriding the constructor default.
+
+        Returns:
+            An immutable execution outcome.
+        """
         self._require_state(SimulationState.READY, SimulationState.STOPPED)
         budget = self.max_events if max_events is None else max_events
         self._validate_event_budget(budget, "max_events")
@@ -254,13 +299,21 @@ class Simulation:
         return self._execute(max_events=budget)
 
     def step(self) -> SimulationResult:
-        """Process at most one event."""
+        """Process at most one event and return its execution outcome."""
         self._require_state(SimulationState.READY, SimulationState.STOPPED)
         self._warn_unbound_models()
         return self._execute(max_events=1)
 
     def run_until(self, time: float, *, max_events: int | None = None) -> SimulationResult:
-        """Run without processing events scheduled after ``time``."""
+        """Run without processing events scheduled after ``time``.
+
+        Args:
+            time: Inclusive simulated-time boundary.
+            max_events: Optional per-call event budget.
+
+        Returns:
+            An immutable execution outcome.
+        """
         self._require_state(SimulationState.READY, SimulationState.STOPPED)
         if not isinstance(time, (int, float)) or isinstance(time, bool) or not math.isfinite(time):
             raise ConfigurationError("time must be a finite number.")

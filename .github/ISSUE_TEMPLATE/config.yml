@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://peraltahd4k.github.io/risansym/docs/
+    about: Read the user guides and API reference before opening an issue.
+  - name: Security vulnerability
+    url: https://github.com/PeraltaHD4K/risansym/security/policy
+    about: Read the coordinated reporting process before sharing any details.

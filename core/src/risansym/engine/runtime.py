@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from risansym.event import Event, JsonPayload
 from risansym.plugins.base import EngineContext, SimulationContext, SimulationPlugin
 from risansym.plugins.manager import PluginFailurePolicy, PluginManager
 from risansym.results import ScheduleResult
-from risansym.simulator import Simulator
+from risansym.simulator import SchedulerCheckpoint, Simulator
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeCheckpoint:
+    """Internal snapshot of scheduler and plugin-related runtime counters."""
+
+    scheduler: SchedulerCheckpoint
+    dropped_by_plugins: int
 
 
 class SimulationRuntime:
@@ -110,14 +120,12 @@ class SimulationRuntime:
     def notify_end(self, context: SimulationContext) -> None:
         self._plugins.notify_end(context)
 
-    def checkpoint(
-        self,
-    ) -> tuple[tuple[list[tuple[float, int, Event]], int, int, int], int]:
-        return self._simulator.checkpoint(), self.dropped_by_plugins
+    def checkpoint(self) -> RuntimeCheckpoint:
+        return RuntimeCheckpoint(
+            scheduler=self._simulator.checkpoint(),
+            dropped_by_plugins=self.dropped_by_plugins,
+        )
 
-    def restore(
-        self,
-        checkpoint: tuple[tuple[list[tuple[float, int, Event]], int, int, int], int],
-    ) -> None:
-        scheduler_checkpoint, self.dropped_by_plugins = checkpoint
-        self._simulator.restore(scheduler_checkpoint)
+    def restore(self, checkpoint: RuntimeCheckpoint) -> None:
+        self.dropped_by_plugins = checkpoint.dropped_by_plugins
+        self._simulator.restore(checkpoint.scheduler)

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import heapq
 import math
+from dataclasses import dataclass
+
 from risansym.event import Event
 from risansym.exceptions import (
     CausalityError,
@@ -11,6 +13,16 @@ from risansym.exceptions import (
     SimulationLimitReached,
 )
 from risansym.results import ScheduleResult
+
+
+@dataclass(frozen=True, slots=True)
+class SchedulerCheckpoint:
+    """Internal snapshot used to roll back transactional initialization."""
+
+    agenda: tuple[tuple[float, int, Event], ...]
+    sequence: int
+    scheduled_events: int
+    dropped_by_time_horizon: int
 
 
 class Simulator:
@@ -57,26 +69,21 @@ class Simulator:
         """Scheduled time of the next event, if one exists."""
         return self._agenda[0][0] if self._agenda else None
 
-    def checkpoint(self) -> tuple[list[tuple[float, int, Event]], int, int, int]:
+    def checkpoint(self) -> SchedulerCheckpoint:
         """Capture mutable scheduling state for transactional initialization."""
-        return (
-            list(self._agenda),
-            self._sequence,
-            self.scheduled_events,
-            self.dropped_by_time_horizon,
+        return SchedulerCheckpoint(
+            agenda=tuple(self._agenda),
+            sequence=self._sequence,
+            scheduled_events=self.scheduled_events,
+            dropped_by_time_horizon=self.dropped_by_time_horizon,
         )
 
-    def restore(
-        self,
-        checkpoint: tuple[list[tuple[float, int, Event]], int, int, int],
-    ) -> None:
+    def restore(self, checkpoint: SchedulerCheckpoint) -> None:
         """Restore a checkpoint created by :meth:`checkpoint`."""
-        (
-            self._agenda,
-            self._sequence,
-            self.scheduled_events,
-            self.dropped_by_time_horizon,
-        ) = checkpoint
+        self._agenda = list(checkpoint.agenda)
+        self._sequence = checkpoint.sequence
+        self.scheduled_events = checkpoint.scheduled_events
+        self.dropped_by_time_horizon = checkpoint.dropped_by_time_horizon
 
     def __repr__(self) -> str:
         return f"<Simulator(clock={self.clock}, agenda_size={len(self._agenda)})>"

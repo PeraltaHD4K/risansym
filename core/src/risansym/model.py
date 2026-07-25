@@ -49,7 +49,23 @@ class Model(ABC):
         self.node_id = node_id
 
     def transmit(self, event: Event) -> ScheduleResult:
-        """Schedule a message transmission to another node."""
+        """Schedule a message to this node or one of its direct neighbors.
+
+        The event source must match ``self.node_id``. To communicate with a
+        non-neighbor, the model must route the message through topology edges.
+
+        Returns:
+            The scheduling outcome. A rejected time horizon or plugin decision
+            is represented by :class:`~risansym.results.ScheduleResult`.
+
+        Raises:
+            InvalidEventError: If the source is spoofed or the target is
+                neither this node nor a direct neighbor.
+            RuntimeError: If the model is not bound to a simulation process.
+
+        During ``init()`` or ``receive()``, the simulation adds execution
+        context by chaining callback failures inside ``SimulationError``.
+        """
         if self.sink is None:
             raise RuntimeError(
                 f"Model(node_id={self.node_id}) cannot transmit: not bound to a Process. "

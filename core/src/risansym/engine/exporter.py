@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from risansym.process import Process
+from risansym.exceptions import TraceExportError
 from risansym.schemas import TraceMetadata
 from risansym.trace import TraceCollector
 
@@ -20,7 +20,7 @@ class TraceExporter:
         topology_name: str,
         graph: list[list[int]],
         directed: bool,
-        table: list[Process | None],
+        model_types: tuple[str | None, ...],
         maxtime: float,
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
@@ -30,13 +30,13 @@ class TraceExporter:
         self.topology_name = topology_name
         self.graph = graph
         self.directed = directed
-        self.table = table
+        self.model_types = model_types
         self.maxtime = maxtime
         self.trace_path = trace_path
         self.trace_dir = trace_dir
         self.trace_tag = trace_tag
 
-    def export(self, collector: TraceCollector, metrics: dict[str, Any]) -> None:
+    def export(self, collector: TraceCollector, metrics: dict[str, Any]) -> Path:
         """Serialize and persist the trace with metadata."""
 
         def sanitize(name: str | None) -> str:
@@ -66,7 +66,7 @@ class TraceExporter:
 
         adjacency_entries = sum(len(neighbors) for neighbors in self.graph)
         total_edges = adjacency_entries if self.directed else adjacency_entries // 2
-        total_nodes = len(self.table) - 1
+        total_nodes = len(self.model_types)
 
         metadata = TraceMetadata(
             schema_version="1.0",
@@ -83,4 +83,8 @@ class TraceExporter:
             metrics=metrics,
         )
 
-        collector.dump(trace_path, metadata)
+        try:
+            collector.dump(trace_path, metadata)
+        except Exception as error:
+            raise TraceExportError(f"Could not export trace to '{trace_path}': {error}") from error
+        return trace_path

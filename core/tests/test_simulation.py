@@ -1,6 +1,7 @@
 from risansym.simulation import Simulation
 from risansym.model import Model
 from risansym.event import Event
+from risansym.results import SimulationState
 
 
 class DummyModel(Model):
@@ -57,10 +58,10 @@ def test_basic_simulation(temp_topology):
     sim.initialize_all()
 
     # Run simulation
-    sim.run()
+    result = sim.run()
 
-    # Verify metrics
-    assert sim.execution_metrics["simulated_time_elapsed"] <= 10.0
+    assert result.simulated_time <= 10.0
+    assert result.state is SimulationState.COMPLETED
 
     # The clock should advance to at least 5.0 because of the condition in receive
     assert sim.engine.clock >= 5.0

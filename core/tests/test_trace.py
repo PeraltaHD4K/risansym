@@ -99,13 +99,12 @@ class TestTraceGeneration:
         ]
         assert len(events_with_state) > 0
 
-    def test_execution_metrics_populated(self, two_node_sim):
+    def test_execution_result_populated(self, two_node_sim):
         sim, _ = two_node_sim
-        sim.run()
-        assert "simulated_time_elapsed" in sim.execution_metrics
-        assert "total_messages" in sim.execution_metrics
-        assert "execution_real_time_sec" in sim.execution_metrics
-        assert sim.execution_metrics["total_messages"] > 0
+        result = sim.run()
+        assert result.simulated_time > 0
+        assert result.processed_events > 0
+        assert result.execution_real_time_seconds >= 0
 
     def test_trace_collector_cap(self):
         # T8: TraceCollector memory limit

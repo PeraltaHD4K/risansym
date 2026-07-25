@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-import warnings
-from pathlib import Path
 
 from risansym.process import Process
 from risansym.simulator import Simulator
-from risansym.topology import load_adjacency_matrix
 
 
 class SimulationBuilder:

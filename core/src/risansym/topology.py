@@ -213,9 +213,9 @@ class TopologyGenerator:
         if not (0.0 <= probability <= 1.0):
             raise ValueError("Probability must be between 0.0 and 1.0.")
             
-        graph: list[list[int]] = [[] for _ in range(nodes)]
+        graph_sets: list[set[int]] = [set() for _ in range(nodes)]
         if nodes == 1:
-            return graph
+            return [[]]
             
         # 1. Ensure connectivity by creating a random spanning tree
         unvisited = list(range(1, nodes))
@@ -223,20 +223,20 @@ class TopologyGenerator:
         visited = [0]
         for node in unvisited:
             parent = random.choice(visited)
-            graph[parent].append(node + 1)
-            graph[node].append(parent + 1)
+            graph_sets[parent].add(node + 1)
+            graph_sets[node].add(parent + 1)
             visited.append(node)
             
         # 2. Add random edges based on probability
         for i in range(nodes):
             for j in range(i + 1, nodes):
-                if (j + 1) not in graph[i]:
+                if (j + 1) not in graph_sets[i]:
                     if random.random() < probability:
-                        graph[i].append(j + 1)
-                        graph[j].append(i + 1)
+                        graph_sets[i].add(j + 1)
+                        graph_sets[j].add(i + 1)
                         
         # Sort neighbors for consistency
-        return [sorted(neighbors) for neighbors in graph]
+        return [sorted(list(neighbors)) for neighbors in graph_sets]
 
     @staticmethod
     def show(graph: list[list[int]]) -> None:

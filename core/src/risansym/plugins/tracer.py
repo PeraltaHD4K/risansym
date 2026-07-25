@@ -13,7 +13,15 @@ from risansym.trace import TraceCollector
 
 
 class JSONTracerPlugin(SimulationPlugin):
-    """Record simulation events and export them to a JSON trace file."""
+    """Record simulation events and export them to a JSON trace file.
+
+    Args:
+        algorithm: Non-empty observability label stored in trace metadata.
+        trace_path: Optional fixed output path.
+        trace_dir: Directory used for generated filenames.
+        trace_tag: Optional filename tag for generated paths.
+        max_events: Maximum retained trace entries.
+    """
 
     def __init__(
         self,

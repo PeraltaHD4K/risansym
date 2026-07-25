@@ -37,7 +37,19 @@ class TerminationReason(Enum):
 
 @dataclass(frozen=True, slots=True)
 class SimulationResult:
-    """Immutable snapshot of a simulation execution outcome."""
+    """Immutable snapshot of a simulation execution outcome.
+
+    Attributes:
+        state: Lifecycle state after the execution call.
+        reason: Why control returned to the caller.
+        simulated_time: Current simulation clock.
+        processed_events: Cumulative number of processed events.
+        pending_events: Events remaining in the agenda.
+        scheduled_events: Cumulative successfully scheduled events.
+        dropped_by_time_horizon: Events rejected beyond ``maxtime``.
+        dropped_by_plugins: Events deliberately discarded by plugins.
+        execution_real_time_seconds: Cumulative wall-clock execution time.
+    """
 
     state: SimulationState
     reason: TerminationReason

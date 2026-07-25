@@ -8,7 +8,7 @@ Currently, the visualizer is a Next.js application located in the `web/` folder 
 
 ```bash
 cd web
-npm install
+npm ci
 npm run dev
 ```
 

@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use Risansym in academic work, please cite the software."
+title: "Risansym"
+type: software
+authors:
+  - family-names: "Peralta Huerta"
+    given-names: "Diego"
+repository-code: "https://github.com/PeraltaHD4K/risansym"
+url: "https://peraltahd4k.github.io/risansym/docs/"
+license: MIT

@@ -8,6 +8,9 @@ import logging
 class EngineProtocol(Protocol):
     def insert_event(self, event: Event, node_state: dict[str, Any] | None = None) -> None: ...
     def log_app_event(self, source: int, message: str) -> None: ...
+    
+    @property
+    def requires_state_snapshot(self) -> bool: ...
 
 
 class Process:
@@ -38,13 +41,25 @@ class Process:
 
     def transmit(self, event: Event) -> None:
         """Delegate event insertion to the engine, attaching the node's current state."""
-        state = self.model.get_state() if self.model else None
-        if state is None:
-            import logging
-            logging.getLogger(__name__).warning(
-                "Process %d transmitted an event without a bound model.", self.node_id
-            )
+        if event.source != self.node_id:
+            raise ValueError(f"Process {self.node_id} cannot transmit an event with source {event.source}.")
+        if event.target not in self.neighbors and event.target != self.node_id:
+            raise ValueError(f"Process {self.node_id} cannot transmit to {event.target} (not a neighbor).")
+
+        if self.engine.requires_state_snapshot:
+            state = self.model.get_state() if self.model else None
+            if state is None:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Process %d transmitted an event without a bound model.", self.node_id
+                )
+                state = {}
+            else:
+                import copy
+                state = copy.deepcopy(state)
+        else:
             state = {}
+
         self.engine.insert_event(event, node_state=state)
 
     def receive(self, event: Event) -> None:

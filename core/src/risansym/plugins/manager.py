@@ -8,7 +8,7 @@ from enum import Enum
 from functools import partial
 from typing import Callable, TypeVar
 
-from risansym.event import Event
+from risansym.event import Event, JsonPayload
 from risansym.exceptions import PluginError
 from risansym.plugins.base import EngineContext, SimulationContext, SimulationPlugin
 
@@ -101,7 +101,7 @@ class PluginManager:
         self,
         event: Event,
         context: EngineContext,
-        node_state: dict[str, object] | None,
+        node_state: JsonPayload | None,
         validator: Callable[[object], Event],
     ) -> Event | None:
         transformed: Event | None = event
@@ -141,7 +141,7 @@ class PluginManager:
     def notify_event_processed(
         self,
         event: Event,
-        node_state: dict[str, object],
+        node_state: JsonPayload,
         context: EngineContext,
     ) -> None:
         for registration in self._registrations:

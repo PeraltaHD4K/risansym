@@ -1,0 +1,325 @@
+{
+  "$defs": {
+    "AppLogEvent": {
+      "additionalProperties": false,
+      "description": "Recorded when a node emits an application-level log message.",
+      "properties": {
+        "action": {
+          "const": "APP_LOG",
+          "default": "APP_LOG",
+          "title": "Action",
+          "type": "string"
+        },
+        "clock": {
+          "minimum": 0,
+          "title": "Clock",
+          "type": "number"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "source": {
+          "exclusiveMinimum": 0,
+          "title": "Source",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "clock",
+        "source",
+        "message"
+      ],
+      "title": "AppLogEvent",
+      "type": "object"
+    },
+    "JsonPayload": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ReceiveEvent": {
+      "additionalProperties": false,
+      "description": "Recorded when a node processes an incoming message.",
+      "properties": {
+        "action": {
+          "const": "RECEIVE",
+          "default": "RECEIVE",
+          "title": "Action",
+          "type": "string"
+        },
+        "clock": {
+          "description": "Time at which the node processes the event",
+          "minimum": 0,
+          "title": "Clock",
+          "type": "number"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "node_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonPayload"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "payload": {
+          "$ref": "#/$defs/JsonPayload"
+        },
+        "source": {
+          "exclusiveMinimum": 0,
+          "title": "Source",
+          "type": "integer"
+        },
+        "target": {
+          "exclusiveMinimum": 0,
+          "title": "Target",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "clock",
+        "source",
+        "target",
+        "name",
+        "payload"
+      ],
+      "title": "ReceiveEvent",
+      "type": "object"
+    },
+    "TraceCapture": {
+      "additionalProperties": false,
+      "description": "Describe trace retention and make truncation machine-readable.",
+      "properties": {
+        "dropped_events": {
+          "minimum": 0,
+          "title": "Dropped Events",
+          "type": "integer"
+        },
+        "max_events": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Max Events",
+          "type": "integer"
+        },
+        "recorded_events": {
+          "minimum": 0,
+          "title": "Recorded Events",
+          "type": "integer"
+        },
+        "truncated": {
+          "title": "Truncated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "max_events",
+        "recorded_events",
+        "dropped_events",
+        "truncated"
+      ],
+      "title": "TraceCapture",
+      "type": "object"
+    },
+    "TraceMetadata": {
+      "additionalProperties": false,
+      "description": "Metadata attached to a complete simulation trace.",
+      "properties": {
+        "algorithm": {
+          "minLength": 1,
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "capture": {
+          "$ref": "#/$defs/TraceCapture"
+        },
+        "execution_date": {
+          "format": "date-time",
+          "title": "Execution Date",
+          "type": "string"
+        },
+        "metrics": {
+          "$ref": "#/$defs/JsonPayload"
+        },
+        "parameters": {
+          "$ref": "#/$defs/JsonPayload"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "tag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tag"
+        },
+        "topology": {
+          "minLength": 1,
+          "title": "Topology",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "topology",
+        "execution_date",
+        "parameters",
+        "metrics",
+        "capture"
+      ],
+      "title": "TraceMetadata",
+      "type": "object"
+    },
+    "TransmitEvent": {
+      "additionalProperties": false,
+      "description": "Recorded when a node schedules a message for transmission.",
+      "properties": {
+        "action": {
+          "const": "TRANSMIT",
+          "default": "TRANSMIT",
+          "title": "Action",
+          "type": "string"
+        },
+        "clock": {
+          "description": "Time at which the sender dispatched the event",
+          "minimum": 0,
+          "title": "Clock",
+          "type": "number"
+        },
+        "event_time": {
+          "description": "Computed arrival time at the target node",
+          "minimum": 0,
+          "title": "Event Time",
+          "type": "number"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "node_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonPayload"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "payload": {
+          "$ref": "#/$defs/JsonPayload"
+        },
+        "source": {
+          "exclusiveMinimum": 0,
+          "title": "Source",
+          "type": "integer"
+        },
+        "target": {
+          "exclusiveMinimum": 0,
+          "title": "Target",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "clock",
+        "event_time",
+        "source",
+        "target",
+        "name",
+        "payload"
+      ],
+      "title": "TransmitEvent",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Top-level container for a simulation trace file.",
+  "properties": {
+    "metadata": {
+      "$ref": "#/$defs/TraceMetadata"
+    },
+    "trace": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "APP_LOG": "#/$defs/AppLogEvent",
+            "RECEIVE": "#/$defs/ReceiveEvent",
+            "TRANSMIT": "#/$defs/TransmitEvent"
+          },
+          "propertyName": "action"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/TransmitEvent"
+          },
+          {
+            "$ref": "#/$defs/ReceiveEvent"
+          },
+          {
+            "$ref": "#/$defs/AppLogEvent"
+          }
+        ]
+      },
+      "maxItems": 1000000,
+      "title": "Trace",
+      "type": "array"
+    }
+  },
+  "required": [
+    "metadata",
+    "trace"
+  ],
+  "title": "TraceOutput",
+  "type": "object"
+}

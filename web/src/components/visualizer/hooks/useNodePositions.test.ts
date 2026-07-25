@@ -16,13 +16,14 @@ describe('useNodePositions', () => {
         schema_version: '1.0',
         algorithm: 'Test',
         topology: 'Test',
-        execution_date: '2023-01-01',
+        execution_date: '2023-01-01T00:00:00Z',
         parameters: {},
-        metrics: {}
+        metrics: {},
+        capture: { max_events: 100, recorded_events: 3, dropped_events: 0, truncated: false }
       },
       trace: [
-        { action: 'TRANSMIT', source: 3, target: 1, clock: 0, event_time: 1, name: 'M1', payload: null },
-        { action: 'RECEIVE', source: 3, target: 1, clock: 1, name: 'M1', payload: null },
+        { action: 'TRANSMIT', source: 3, target: 1, clock: 0, event_time: 1, name: 'M1', payload: {} },
+        { action: 'RECEIVE', source: 3, target: 1, clock: 1, name: 'M1', payload: {} },
         { action: 'APP_LOG', source: 2, clock: 2, message: 'test' }
       ]
     };

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from risansym.engine.exporter import TraceExporter
-from risansym.event import Event
+from risansym.event import Event, JsonPayload
 from risansym.plugins.base import EngineContext, SimulationContext, SimulationPlugin
 from risansym.schemas import AppLogEvent, ReceiveEvent, TransmitEvent
 from risansym.trace import TraceCollector
@@ -19,8 +19,9 @@ class JSONTracerPlugin(SimulationPlugin):
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
+        max_events: int = 1_000_000,
     ) -> None:
-        self.collector = TraceCollector()
+        self.collector = TraceCollector(max_events=max_events)
         self.trace_path = trace_path
         self.trace_dir = trace_dir
         self.trace_tag = trace_tag
@@ -34,7 +35,7 @@ class JSONTracerPlugin(SimulationPlugin):
         self,
         event: Event,
         context: EngineContext,
-        node_state: dict[str, object] | None = None,
+        node_state: JsonPayload | None = None,
     ) -> Event:
         self.collector.record(
             TransmitEvent(
@@ -53,7 +54,7 @@ class JSONTracerPlugin(SimulationPlugin):
     def on_event_processed(
         self,
         event: Event,
-        node_state: dict[str, object],
+        node_state: JsonPayload,
         context: EngineContext,
     ) -> None:
         self.collector.record(

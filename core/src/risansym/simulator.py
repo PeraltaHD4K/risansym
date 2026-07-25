@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import heapq
 import math
-from typing import Any
-
-from risansym.event import Event
+from risansym.event import Event, JsonPayload
 from risansym.exceptions import (
     CausalityError,
     ConfigurationError,
@@ -122,7 +120,7 @@ class Simulator:
     def insert_event(
         self,
         event: Event,
-        node_state: dict[str, Any] | None = None,
+        node_state: JsonPayload | None = None,
     ) -> ScheduleResult:
         """Validate and push an event onto the agenda."""
         event = self._validate_event(event)

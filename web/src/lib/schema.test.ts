@@ -20,4 +20,14 @@ describe('Shared Contract Validation', () => {
       expect(result.data.trace.length).toBe(3);
     }
   });
+
+  it.each([
+    'trace_invalid_negative_time.json',
+    'trace_invalid_truncation.json'
+  ])('rejects invalid shared fixture %s', fixtureName => {
+    const fixturePath = resolve(__dirname, '../../../shared/fixtures', fixtureName);
+    const data = JSON.parse(readFileSync(fixturePath, 'utf-8'));
+
+    expect(TraceOutputSchema.safeParse(data).success).toBe(false);
+  });
 });

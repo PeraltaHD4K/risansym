@@ -3,7 +3,12 @@
 import pytest
 
 from risansym.event import Event
-from risansym.exceptions import ConfigurationError, SimulationLimitReached
+from risansym.exceptions import (
+    ConfigurationError,
+    InvalidEventError,
+    SimulationError,
+    SimulationLimitReached,
+)
 from risansym.model import Model
 from risansym.results import SimulationState, TerminationReason
 from risansym.simulation import Simulation
@@ -33,6 +38,18 @@ class RecordingModel(PassiveModel):
 
     def receive(self, event: Event) -> None:
         self.names.append(event.name)
+
+
+class InvalidRouteModel(PassiveModel):
+    def receive(self, event: Event) -> None:
+        self.transmit(
+            Event(
+                time=self.clock + 1.0,
+                source=self.node_id,
+                target=3,
+                name="INVALID_ROUTE",
+            )
+        )
 
 
 def prepared_simulation(*times: float, maxtime: float = 20.0) -> Simulation:
@@ -129,6 +146,21 @@ def test_time_horizon_is_reported() -> None:
     result = simulation.run()
     assert result.reason is TerminationReason.MAX_TIME
     assert result.dropped_by_time_horizon == 1
+
+
+def test_non_neighbor_transmission_exposes_documented_exception_chain() -> None:
+    simulation = Simulation([[2], [1], []], 10.0)
+    simulation.set_model(InvalidRouteModel(), 1)
+    simulation.set_model(PassiveModel(), 2)
+    simulation.set_model(PassiveModel(), 3)
+    simulation.initialize_all()
+    simulation.seed_event(Event(time=0.0, source=1, target=1, name="START"))
+
+    with pytest.raises(SimulationError, match="node 1") as captured:
+        simulation.run()
+
+    assert isinstance(captured.value.__cause__, InvalidEventError)
+    assert "not a neighbor" in str(captured.value.__cause__)
 
 
 @pytest.mark.parametrize("budget", [0, -1, True, 1.5])

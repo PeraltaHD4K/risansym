@@ -58,6 +58,25 @@ def test_event_tie_breaking():
     assert e3.name == "THIRD"
 
 
+def test_checkpoint_is_named_and_reusable() -> None:
+    engine = Simulator(maxtime=10.0)
+    first = Event(time=1.0, source=1, target=1, name="FIRST")
+    engine.insert_event(first)
+    checkpoint = engine.checkpoint()
+
+    assert checkpoint.scheduled_events == 1
+    assert checkpoint.agenda[0][2] is first
+
+    engine.insert_event(Event(time=2.0, source=1, target=1, name="SECOND"))
+    engine.restore(checkpoint)
+    assert engine.pending_events == 1
+    assert engine.pop_event() is first
+
+    engine.restore(checkpoint)
+    assert engine.pending_events == 1
+    assert engine.pop_event() is first
+
+
 def test_maxtime_limit():
     engine = Simulator(maxtime=5.0)
     engine.insert_event(Event(time=1.0, source=1, target=2, name="MSG_1", payload={}))

@@ -85,8 +85,9 @@ def test_app_log_e2e(temp_topology) -> None:
     sim.initialize_all()
     with sim:
         sim.run()
-    assert sim.collector is not None
-    logs = [e for e in sim.collector if getattr(e, "action", None) == "APP_LOG"]
+    tracer = next(p for p in sim.engine._plugins if type(p).__name__ == "JSONTracerPlugin")
+    assert tracer.collector is not None
+    logs = [e for e in tracer.collector if getattr(e, "action", None) == "APP_LOG"]
     assert len(logs) > 0
 
 def test_get_state_override(temp_topology) -> None:
@@ -96,8 +97,9 @@ def test_get_state_override(temp_topology) -> None:
     sim.initialize_all()
     with sim:
         sim.run()
-    assert sim.collector is not None
-    transmits = [e for e in sim.collector if getattr(e, "action", None) == "TRANSMIT"]
+    tracer = next(p for p in sim.engine._plugins if type(p).__name__ == "JSONTracerPlugin")
+    assert tracer.collector is not None
+    transmits = [e for e in tracer.collector if getattr(e, "action", None) == "TRANSMIT"]
     assert len(transmits) > 0
     assert transmits[0].node_state == {"custom_key": "custom_value"}
 

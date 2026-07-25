@@ -6,12 +6,12 @@ from types import TracebackType
 from typing import Any
 
 from risansym.engine.builder import SimulationBuilder
-from risansym.engine.exporter import TraceExporter
 from risansym.engine.loop import EventLoop
 from risansym.event import Event
 from risansym.model import Model
+from risansym.plugins.base import SimulationPlugin
 from risansym.simulator import Simulator
-from risansym.topology import load_adjacency_matrix
+from risansym.topology import load_adjacency_matrix, load_edge_list, load_dense_matrix
 
 
 class Simulation:
@@ -71,21 +71,28 @@ class Simulation:
             trace_enabled = trace
 
         self.algo_name = algo_name
-        self.trace_enabled = trace_enabled
-        self.trace_path = trace_path
-        self.trace_dir = trace_dir
-        self.trace_tag = trace_tag
         self._initialized = False
 
-        self.collector = TraceCollector() if trace_enabled else None
-        self.engine = Simulator(maxtime, trace_network=trace_network, app_logs=app_logs, collector=self.collector)
+        self.engine = Simulator(maxtime)
         
         # Build topology and processes using the new Builder
         self.graph, self._topology_name = SimulationBuilder.build_topology(graph)
         self.table = SimulationBuilder.build_processes(self.graph, self.engine)
 
         self.execution_metrics: dict[str, Any] = {}
-        self._trace_saved = False
+
+        # Backwards compatibility auto-attach
+        if trace_network or app_logs:
+            from risansym.plugins.logger import ConsoleLoggerPlugin
+            self.attach(ConsoleLoggerPlugin(trace_network=trace_network, app_logs=app_logs))
+            
+        if trace_enabled:
+            from risansym.plugins.tracer import JSONTracerPlugin
+            self.attach(JSONTracerPlugin(trace_path=trace_path, trace_dir=trace_dir, trace_tag=trace_tag))
+
+    def attach(self, plugin: SimulationPlugin) -> None:
+        """Attach a plugin (middleware) to the simulation."""
+        self.engine.attach(plugin)
 
     def __repr__(self) -> str:
         nodes = len(self.table) - 1
@@ -105,9 +112,18 @@ class Simulation:
         trace_dir: str = "traces",
         trace_tag: str | None = None,
         trace: bool | None = None,
+        format: str = "adjacency_list",
     ) -> Simulation:
         """Factory method to instantiate a Simulation from a topology file."""
-        graph = load_adjacency_matrix(filename)
+        if format == "adjacency_list":
+            graph = load_adjacency_matrix(filename)
+        elif format == "edge_list":
+            graph = load_edge_list(filename)
+        elif format == "dense_matrix":
+            graph = load_dense_matrix(filename)
+        else:
+            raise ValueError(f"Unknown topology format: {format}")
+            
         instance = cls(
             graph=graph,
             maxtime=maxtime,
@@ -164,25 +180,16 @@ class Simulation:
 
     def _execute(self) -> None:
         """Main loop: pop and route events until the agenda is empty."""
-        loop = EventLoop(self.engine, self.table, self.collector)
-        self.execution_metrics = loop.run()
-
-    def _save_trace(self) -> None:
-        """Serialize and persist the trace with metadata."""
-        if not self.collector:
-            return
+        for plugin in self.engine._plugins:
+            plugin.on_start(self)
             
-        exporter = TraceExporter(
-            algo_name=self.algo_name,
-            topology_name=self._topology_name,
-            graph=self.graph,
-            table=self.table,
-            maxtime=self.engine.maxtime,
-            trace_path=self.trace_path,
-            trace_dir=self.trace_dir,
-            trace_tag=self.trace_tag,
-        )
-        exporter.export(self.collector, self.execution_metrics)
+        loop = EventLoop(self.engine, self.table)
+        self.execution_metrics = loop.run()
+        
+        for plugin in self.engine._plugins:
+            plugin.on_end(self)
+
+
 
     def run(self) -> None:
         """Entry point: execute the simulation and optionally save the trace."""
@@ -209,12 +216,8 @@ class Simulation:
             )
 
         self._execute()
-        if self.trace_enabled:
-            self._save_trace()
-            self._trace_saved = True
 
     def __enter__(self) -> Simulation:
-        self._trace_saved = False
         return self
 
     def __exit__(
@@ -223,5 +226,4 @@ class Simulation:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        if self.trace_enabled and not self._trace_saved:
-            self._save_trace()
+        pass

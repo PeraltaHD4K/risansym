@@ -1,4 +1,3 @@
-import pytest
 from risansym.simulation import Simulation
 from risansym.model import Model
 from risansym.event import Event

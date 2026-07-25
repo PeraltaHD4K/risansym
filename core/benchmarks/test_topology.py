@@ -1,10 +1,12 @@
+from typing import Any
+
 import pytest
 
 from risansym.topology import TopologyGenerator
 
 
 @pytest.mark.benchmark(group="topology")
-def test_topology_random_1k(benchmark) -> None:
+def test_topology_random_1k(benchmark: Any) -> None:
     benchmark.pedantic(
         TopologyGenerator.random,
         args=(1_000, 0.01),
@@ -15,7 +17,7 @@ def test_topology_random_1k(benchmark) -> None:
 
 
 @pytest.mark.benchmark(group="topology")
-def test_topology_random_5k(benchmark) -> None:
+def test_topology_random_5k(benchmark: Any) -> None:
     benchmark.pedantic(
         TopologyGenerator.random,
         args=(5_000, 0.002),
@@ -26,7 +28,7 @@ def test_topology_random_5k(benchmark) -> None:
 
 
 @pytest.mark.benchmark(group="topology")
-def test_topology_random_10k(benchmark) -> None:
+def test_topology_random_10k(benchmark: Any) -> None:
     benchmark.pedantic(
         TopologyGenerator.random,
         args=(10_000, 0.001),

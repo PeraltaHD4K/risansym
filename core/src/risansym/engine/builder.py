@@ -12,22 +12,9 @@ class SimulationBuilder:
     """Handles the construction of the simulation graph and components."""
     
     @staticmethod
-    def build_topology(graph_input: list[list[int]] | str | Path) -> tuple[list[list[int]], str]:
-        """Load or pass through the topology graph and determine its name."""
-        if isinstance(graph_input, (str, Path)):
-            warnings.warn(
-                "Passing a filename directly to Simulation() is deprecated "
-                "and will be removed in v1.0. Use Simulation.from_file() instead.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-            graph = load_adjacency_matrix(graph_input)
-            topology_name = Path(graph_input).stem
-        else:
-            graph = graph_input
-            topology_name = "unknown_topology"
-            
-        return graph, topology_name
+    def build_topology(graph: list[list[int]]) -> tuple[list[list[int]], str]:
+        """Pass through the topology graph and assign a default name."""
+        return graph, "unknown_topology"
         
     @staticmethod
     def build_processes(graph: list[list[int]], engine: Simulator) -> list[Process | None]:

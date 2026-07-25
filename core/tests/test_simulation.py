@@ -33,17 +33,3 @@ def test_basic_simulation(temp_topology):
     
     # The clock should advance to at least 5.0 because of the condition in receive
     assert sim.engine.clock >= 5.0
-
-def test_simulation_deprecated_path_warning(temp_topology):
-    with pytest.warns(DeprecationWarning, match="Passing a filename directly to Simulation"):
-        sim = Simulation(temp_topology, maxtime=10.0)
-    
-    assert len(sim.graph) == 2
-
-def test_simulation_trace_warning(temp_topology):
-    # T5: Deprecated trace argument
-    with pytest.warns(DeprecationWarning, match="The 'trace' argument is deprecated"):
-        sim = Simulation(temp_topology, maxtime=10.0, trace=True)
-    
-    tracer = next((p for p in sim.engine._plugins if type(p).__name__ == "JSONTracerPlugin"), None)
-    assert tracer is not None

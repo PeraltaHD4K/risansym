@@ -11,23 +11,25 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("risansym")
 
+
 class ConsoleLoggerPlugin:
     """Logs simulation events to the standard output."""
 
     def __init__(self, trace_network: bool = False, app_logs: bool = True) -> None:
         self.trace_network = trace_network
         self.app_logs = app_logs
-        
+
         # Configure logger for Jupyter / Colab compatibility
         if self.trace_network or self.app_logs:
             import sys
+
             target_level = logging.DEBUG if self.trace_network else logging.INFO
             logger.setLevel(target_level)
 
             if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
                 ch = logging.StreamHandler(sys.stdout)
                 ch.setLevel(target_level)
-                ch.setFormatter(logging.Formatter('%(message)s'))
+                ch.setFormatter(logging.Formatter("%(message)s"))
                 logger.addHandler(ch)
                 logger.propagate = False
 
@@ -38,7 +40,9 @@ class ConsoleLoggerPlugin:
     def on_start(self, simulation: Simulation) -> None:
         pass
 
-    def on_event_schedule(self, event: Event, simulator: Simulator, node_state: dict[str, Any] | None = None) -> Event | None:
+    def on_event_schedule(
+        self, event: Event, simulator: Simulator, node_state: dict[str, Any] | None = None
+    ) -> Event | None:
         if self.trace_network:
             logger.debug(
                 "[t=%.1f] Node %d TRANSMITS '%s' -> Node %d (arrives at t=%.1f)",
@@ -50,7 +54,9 @@ class ConsoleLoggerPlugin:
             )
         return event
 
-    def on_event_processed(self, event: Event, node_state: dict[str, Any], simulator: Simulator) -> None:
+    def on_event_processed(
+        self, event: Event, node_state: dict[str, Any], simulator: Simulator
+    ) -> None:
         if self.trace_network:
             logger.debug(
                 "[t=%.1f] Node %d RECEIVES '%s' <- Node %d",

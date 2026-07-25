@@ -1,6 +1,11 @@
 """Tests for the Event dataclass."""
 
+import math
+
+import pytest
+
 from risansym.event import Event, JsonPayload
+from risansym.exceptions import InvalidEventError
 
 
 class TestEventOrdering:
@@ -59,12 +64,36 @@ class TestEventValidation:
         assert e.target == 2
 
     def test_event_invalid_time(self):
-        import pytest
-        import math
-        # T2: NaN and inf times raise ValueError
-        with pytest.raises(ValueError, match="Invalid event time"):
+        with pytest.raises(InvalidEventError, match="Invalid event time"):
             Event(time=math.nan, source=1, target=2, name="MSG")
-        with pytest.raises(ValueError, match="Invalid event time"):
+        with pytest.raises(InvalidEventError, match="Invalid event time"):
             Event(time=math.inf, source=1, target=2, name="MSG")
-        with pytest.raises(ValueError, match="Invalid event time"):
+        with pytest.raises(InvalidEventError, match="Invalid event time"):
             Event(time=-1.0, source=1, target=2, name="MSG")
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("source", 0),
+            ("source", -1),
+            ("source", True),
+            ("target", 0),
+            ("target", -1),
+            ("target", False),
+        ],
+    )
+    def test_event_requires_positive_integer_node_ids(self, field, value):
+        values = {"time": 1.0, "source": 1, "target": 2, "name": "MSG"}
+        values[field] = value
+
+        with pytest.raises(InvalidEventError, match="positive integer"):
+            Event(**values)
+
+    def test_event_requires_non_empty_name(self):
+        with pytest.raises(InvalidEventError, match="non-empty string"):
+            Event(time=1.0, source=1, target=2, name="")
+
+    @pytest.mark.parametrize("time", ["1.0", True, None])
+    def test_event_requires_numeric_time(self, time):
+        with pytest.raises(InvalidEventError, match="must be a number"):
+            Event(time=time, source=1, target=2, name="MSG")

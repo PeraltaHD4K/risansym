@@ -26,6 +26,7 @@ class JSONTracerPlugin:
         self.trace_path = trace_path
         self.trace_dir = trace_dir
         self.trace_tag = trace_tag
+
     @property
     def requires_state_snapshot(self) -> bool:
         return True
@@ -67,9 +68,7 @@ class JSONTracerPlugin:
 
     def on_app_log(self, source: int, message: str, clock: float, simulator: Simulator) -> None:
         self.collector.record(
-            AppLogEvent(
-                action="APP_LOG", clock=clock, source=source, message=message
-            )
+            AppLogEvent(action="APP_LOG", clock=clock, source=source, message=message)
         )
 
     def on_end(self, simulation: Simulation) -> None:
@@ -77,6 +76,7 @@ class JSONTracerPlugin:
             algo_name=simulation.algo_name,
             topology_name=simulation._topology_name,
             graph=simulation.graph,
+            directed=simulation.directed,
             table=simulation.table,
             maxtime=simulation.engine.maxtime,
             trace_path=self.trace_path,

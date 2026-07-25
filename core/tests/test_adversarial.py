@@ -1,93 +1,95 @@
-import tempfile
+"""Adversarial tests for resource limits, paths, and plugin failures."""
+
 from pathlib import Path
-from risansym.simulation import Simulation
+
 from risansym.event import Event
 from risansym.model import Model
+from risansym.plugins.tracer import JSONTracerPlugin
+from risansym.simulation import Simulation
+
 
 class InfinitePingModel(Model):
     def init(self) -> None:
         pass
+
     def receive(self, event: Event) -> None:
-        # Infinite ping-pong to cause event storm
-        self.transmit(Event(time=self.clock, name="PING", source=self.node_id, target=event.source, payload={"storm": True}))
+        self.transmit(
+            Event(
+                time=self.clock,
+                name="PING",
+                source=self.node_id,
+                target=event.source,
+                payload={"storm": True},
+            )
+        )
 
-def test_event_storm_budget():
-    """Test that max_events budget prevents infinite loops (PERF-01 check)."""
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tf:
-        tf.write("2\n1\n")
-        temp_path = tf.name
 
-    try:
-        # Budget of 50 events
-        sim = Simulation.from_file(temp_path, 100.0, max_events=50)
-        sim.set_model(InfinitePingModel(), 1)
-        sim.set_model(InfinitePingModel(), 2)
-        
-        sim.initialize_all()
-        sim.seed_event(Event(time=0.0, name="START", source=1, target=1, payload={}))
-        
-        # It should complete, but the loop metrics should show it hit the budget
-        sim.run()
-        assert sim.execution_metrics["total_messages"] == 50
-    finally:
-        Path(temp_path).unlink()
+def _two_node_topology(tmp_path: Path) -> Path:
+    path = tmp_path / "topology.txt"
+    path.write_text("2\n1\n", encoding="utf-8")
+    return path
 
-def test_trace_path_traversal():
-    """Test that trace paths cannot escape their designated directory (SEC-03)."""
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tf:
-        tf.write("2\n1\n")
-        temp_path = tf.name
 
-    try:
-        from risansym.plugins.tracer import JSONTracerPlugin
-        
-        # Attempt to write to parent directory
-        plugin = JSONTracerPlugin(trace_dir="traces", trace_tag="../malicious")
-        
-        sim = Simulation.from_file(temp_path, 10.0, trace_enabled=False)
-        sim.attach(plugin)
-        
-        # In python >=3.9, resolve() prevents traversal, but let's just make sure
-        # it doesn't crash in a way that allows writing. The fix in previous PR 
-        # used Path.name to force it.
-        # This will be tested if the simulation runs without creating files outside `traces`
-        sim.initialize_all()
-        sim.run()
-        
-        # The file name should just be the name part without `../`
-        # Because we used trace_tag="../malicious", the exporter might have sanitized it
-        # or the file was created in traces/.
-    finally:
-        Path(temp_path).unlink()
+def test_event_storm_budget(tmp_path: Path) -> None:
+    simulation = Simulation.from_file(
+        _two_node_topology(tmp_path),
+        100.0,
+        max_events=50,
+        app_logs=False,
+    )
+    simulation.set_model(InfinitePingModel(), 1)
+    simulation.set_model(InfinitePingModel(), 2)
+    simulation.initialize_all()
+    simulation.seed_event(Event(time=0.0, name="START", source=1, target=1, payload={}))
 
-class FailingPlugin:
-    def on_start(self, sim):
-        raise RuntimeError("Plugin failed on start")
-    def on_end(self, sim):
-        raise RuntimeError("Plugin failed on end")
+    simulation.run()
 
-def test_plugin_failure_isolation():
-    """Test that a failing plugin does not break the simulation end phase (REL-01)."""
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tf:
-        tf.write("2\n1\n")
-        temp_path = tf.name
+    assert simulation.execution_metrics["total_messages"] == 50
+    assert simulation.engine.is_on
 
-    try:
-        sim = Simulation.from_file(temp_path, 10.0)
-        
-        # This plugin raises an error on_start, but currently our implementation 
-        # allows on_start exceptions to bubble up. The audit only mentioned on_end.
-        # So we'll test on_end.
-        class EndFailingPlugin:
-            def on_start(self, s):
-                pass
-            def on_end(self, s):
-                raise ValueError("Boom")
-                
-        sim.attach(EndFailingPlugin())
-        sim.initialize_all()
-        
-        # Should not raise exception
-        sim.run()
-    finally:
-        Path(temp_path).unlink()
+
+def test_trace_path_components_are_confined_and_sanitized(tmp_path: Path) -> None:
+    trace_directory = tmp_path / "traces"
+    simulation = Simulation.from_file(
+        _two_node_topology(tmp_path),
+        10.0,
+        algo_name="../Algorithm",
+        app_logs=False,
+    )
+    simulation.attach(
+        JSONTracerPlugin(
+            trace_dir=str(trace_directory),
+            trace_tag="../malicious",
+        )
+    )
+    simulation.initialize_all()
+
+    simulation.run()
+
+    trace_files = list(trace_directory.rglob("*.json"))
+    assert len(trace_files) == 1
+    assert trace_files[0].resolve().is_relative_to(trace_directory.resolve())
+    assert ".." not in trace_files[0].relative_to(trace_directory).parts
+
+
+def test_non_critical_end_plugin_failure_is_isolated(tmp_path: Path) -> None:
+    class EndFailingPlugin:
+        requires_state_snapshot = False
+
+        def on_start(self, simulation) -> None:
+            pass
+
+        def on_end(self, simulation) -> None:
+            raise ValueError("Boom")
+
+    simulation = Simulation.from_file(
+        _two_node_topology(tmp_path),
+        10.0,
+        app_logs=False,
+    )
+    simulation.attach(EndFailingPlugin())
+    simulation.initialize_all()
+
+    simulation.run()
+
+    assert simulation.execution_metrics["total_messages"] == 0

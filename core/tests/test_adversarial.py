@@ -4,7 +4,10 @@ from pathlib import Path
 
 from risansym.event import Event
 from risansym.model import Model
+from risansym.plugins.base import SimulationPlugin
+from risansym.plugins.manager import PluginFailurePolicy
 from risansym.plugins.tracer import JSONTracerPlugin
+from risansym.results import SimulationState, TerminationReason
 from risansym.simulation import Simulation
 
 
@@ -42,9 +45,11 @@ def test_event_storm_budget(tmp_path: Path) -> None:
     simulation.initialize_all()
     simulation.seed_event(Event(time=0.0, name="START", source=1, target=1, payload={}))
 
-    simulation.run()
+    result = simulation.run()
 
-    assert simulation.execution_metrics["total_messages"] == 50
+    assert result.processed_events == 50
+    assert result.reason is TerminationReason.MAX_EVENTS
+    assert result.state is SimulationState.STOPPED
     assert simulation.engine.is_on
 
 
@@ -73,13 +78,8 @@ def test_trace_path_components_are_confined_and_sanitized(tmp_path: Path) -> Non
 
 
 def test_non_critical_end_plugin_failure_is_isolated(tmp_path: Path) -> None:
-    class EndFailingPlugin:
-        requires_state_snapshot = False
-
-        def on_start(self, simulation) -> None:
-            pass
-
-        def on_end(self, simulation) -> None:
+    class EndFailingPlugin(SimulationPlugin):
+        def on_end(self, context) -> None:
             raise ValueError("Boom")
 
     simulation = Simulation.from_file(
@@ -87,9 +87,13 @@ def test_non_critical_end_plugin_failure_is_isolated(tmp_path: Path) -> None:
         10.0,
         app_logs=False,
     )
-    simulation.attach(EndFailingPlugin())
+    simulation.attach(
+        EndFailingPlugin(),
+        failure_policy=PluginFailurePolicy.LOG,
+    )
     simulation.initialize_all()
 
-    simulation.run()
+    result = simulation.run()
 
-    assert simulation.execution_metrics["total_messages"] == 0
+    assert result.processed_events == 0
+    assert result.complete

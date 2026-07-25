@@ -143,9 +143,6 @@ def _validate_graph(graph: list[list[int]], path: Path) -> None:
                     stacklevel=2,
                 )
 
-    return graph
-
-
 class TopologyGenerator:
     """Generates standard network topologies in adjacency-list format."""
 

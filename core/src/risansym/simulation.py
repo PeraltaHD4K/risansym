@@ -38,38 +38,19 @@ class Simulation:
 
     def __init__(
         self,
-        graph: list[list[int]] | str | Path,
+        graph: list[list[int]],
         maxtime: float,
         algo_name: str = "UnknownAlgo",
-        debug: bool | None = None,
         trace_network: bool = False,
         app_logs: bool = True,
         trace_enabled: bool = False,
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
-        trace: bool | None = None,
         max_events: int = 10_000_000,
     ) -> None:
 
-        # Backwards compatibility: accept deprecated 'debug' kwarg
-        if debug is not None:
-            warnings.warn(
-                "The 'debug' argument is deprecated. Use 'trace_network' and 'app_logs' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            trace_network = debug
-            app_logs = debug
 
-        # Backwards compatibility: accept deprecated 'trace' kwarg
-        if trace is not None:
-            warnings.warn(
-                "The 'trace' argument is deprecated. Use 'trace_enabled' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            trace_enabled = trace
 
         self.algo_name = algo_name
         self._initialized = False
@@ -106,14 +87,12 @@ class Simulation:
         filename: str | Path,
         maxtime: float,
         algo_name: str = "UnknownAlgo",
-        debug: bool | None = None,
         trace_network: bool = False,
         app_logs: bool = True,
         trace_enabled: bool = False,
         trace_path: str | Path | None = None,
         trace_dir: str = "traces",
         trace_tag: str | None = None,
-        trace: bool | None = None,
         format: str = "adjacency_list",
         max_events: int = 10_000_000,
     ) -> Simulation:
@@ -131,14 +110,12 @@ class Simulation:
             graph=graph,
             maxtime=maxtime,
             algo_name=algo_name,
-            debug=debug,
             trace_network=trace_network,
             app_logs=app_logs,
             trace_enabled=trace_enabled,
             trace_path=trace_path,
             trace_dir=trace_dir,
             trace_tag=trace_tag,
-            trace=trace,
             max_events=max_events,
         )
         instance._topology_name = Path(filename).stem
@@ -173,14 +150,7 @@ class Simulation:
         """Manually insert a seed event into the simulation engine."""
         self.engine.insert_event(event)
 
-    def init(self, event: Event) -> None:
-        """Deprecated: Use seed_event() instead."""
-        warnings.warn(
-            "Simulation.init() is deprecated and will be removed in v1.0. Use seed_event() instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.seed_event(event)
+
 
     def _execute(self) -> None:
         """Main loop: pop and route events until the agenda is empty."""
@@ -205,13 +175,9 @@ class Simulation:
     def run(self) -> None:
         """Entry point: execute the simulation and optionally save the trace."""
         if not self._initialized:
-            warnings.warn(
-                "Calling run() without calling initialize_all() is deprecated. "
-                "Models were auto-initialized, but you must do this explicitly in v1.0.",
-                DeprecationWarning,
-                stacklevel=2,
+            raise RuntimeError(
+                "Models have not been initialized. Call initialize_all() before run()."
             )
-            self.initialize_all()
 
         # Warn about nodes without bound models
         unbound = [

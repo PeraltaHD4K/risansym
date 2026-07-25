@@ -27,15 +27,17 @@ class StateModel(Model):
 
 def test_simulation_no_models(temp_topology) -> None:
     # 1. Simulación sin modelos asignados
-    sim = Simulation(temp_topology, 10.0, "NoModelsAlgo", trace_enabled=False)
+    sim = Simulation.from_file(temp_topology, 10.0, "NoModelsAlgo", trace_enabled=False)
     # Simulator should just do nothing, wait, Simulator.__init__ maxtime > 0, we run maxtime=10
+    sim.initialize_all()
     sim.run()
     assert sim.engine.clock == 0.0  # Nothing happened
 
 def test_simulation_partial_models(temp_topology) -> None:
     # 2. Simulación con modelos parciales
-    sim = Simulation(temp_topology, 10.0, "PartialAlgo", trace_enabled=False)
+    sim = Simulation.from_file(temp_topology, 10.0, "PartialAlgo", trace_enabled=False)
     sim.set_model(DummyModel(), 1)
+    sim.initialize_all()
     sim.run()
     # Should not crash, just ignore unassigned nodes
 
@@ -61,30 +63,33 @@ def test_process_transmit_no_model() -> None:
 
 def test_large_scale(temp_topology) -> None:
     # 6. Test de estrés a gran escala
-    sim = Simulation(temp_topology, 10.0, "Stress", trace_enabled=False)
+    sim = Simulation.from_file(temp_topology, 10.0, "Stress", trace_enabled=False)
     for i in range(1, len(sim.table)):
         sim.set_model(DummyModel(), i)
+    sim.initialize_all()
     sim.run()
     # Just checking it doesn't crash
 
 def test_reentrant_transmit(temp_topology) -> None:
     # 7. Transmit re-entrante
-    sim = Simulation(temp_topology, 10.0, "Reentrant", trace_enabled=False)
+    sim = Simulation.from_file(temp_topology, 10.0, "Reentrant", trace_enabled=False)
     model = DummyModel()
     sim.set_model(model, 1)
     sim.initialize_all()
     # Insert an event manually
     sim.engine.insert_event(Event(time=1.0, source=1, target=1, name="REENTRANT", payload={}))
+    sim.initialize_all()
     sim.run()
     # Should have processed NESTED
 
 def test_app_log_e2e(temp_topology) -> None:
     # 8. Traza con eventos APP_LOG
-    sim = Simulation(temp_topology, 10.0, "AppLog", trace_enabled=True)
+    sim = Simulation.from_file(temp_topology, 10.0, "AppLog", trace_enabled=True)
     sim.set_model(DummyModel(), 1)
     sim.initialize_all()
     with sim:
-        sim.run()
+        sim.initialize_all()
+    sim.run()
     tracer = next(p for p in sim.engine._plugins if type(p).__name__ == "JSONTracerPlugin")
     assert tracer.collector is not None
     logs = [e for e in tracer.collector if getattr(e, "action", None) == "APP_LOG"]
@@ -92,11 +97,12 @@ def test_app_log_e2e(temp_topology) -> None:
 
 def test_get_state_override(temp_topology) -> None:
     # 9. Override get_state()
-    sim = Simulation(temp_topology, 10.0, "StateAlgo", trace_enabled=True)
+    sim = Simulation.from_file(temp_topology, 10.0, "StateAlgo", trace_enabled=True)
     sim.set_model(StateModel(), 1)
     sim.initialize_all()
     with sim:
-        sim.run()
+        sim.initialize_all()
+    sim.run()
     tracer = next(p for p in sim.engine._plugins if type(p).__name__ == "JSONTracerPlugin")
     assert tracer.collector is not None
     transmits = [e for e in tracer.collector if getattr(e, "action", None) == "TRANSMIT"]
@@ -105,7 +111,7 @@ def test_get_state_override(temp_topology) -> None:
 
 def test_simulation_repr(temp_topology) -> None:
     # 10. Simulation.__repr__
-    sim = Simulation(temp_topology, 10.0, "ReprAlgo", trace_enabled=False)
+    sim = Simulation.from_file(temp_topology, 10.0, "ReprAlgo", trace_enabled=False)
     rep = repr(sim)
     assert "Simulation" in rep
     assert "ReprAlgo" in rep

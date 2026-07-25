@@ -92,16 +92,35 @@ Topologies can be loaded with `load_adjacency_list`, `load_edge_list`, or
 `node_count`. Deterministic generators accept a `seed` or an explicit
 `random.Random` instance.
 
+`Model.transmit(event)` enforces these topology edges: `event.source` must be
+the sending model's `node_id`, and `event.target` must be either that same node
+or one of its direct neighbors. Algorithms must route messages to non-neighbor
+destinations through intermediate nodes. A spoofed source or non-neighbor
+target raises `InvalidEventError`.
+
 ## Errors and scheduling outcomes
 
 All domain errors derive from `RisansymError`. Consumers can catch narrower
 errors such as `ConfigurationError`, `TopologyError`, `CausalityError`,
 `InvalidEventError`, `PluginError`, and `TraceExportError`.
 
-Scheduling an event returns `ScheduleResult.SCHEDULED`,
-`ScheduleResult.DROPPED_TIME_HORIZON`, or
-`ScheduleResult.DROPPED_BY_PLUGIN`. The simulator also exposes counters for
-these outcomes, so rejected events are observable.
+Invalid configuration and topology are reported with `ConfigurationError` and
+`TopologyError`. Invalid event identity, routing, or shape raises
+`InvalidEventError`; scheduling in the simulated past raises
+`CausalityError`; and resource limits raise `SimulationLimitReached`. Plugin
+callback failures use `PluginError`. A tracer reports a persistence failure as
+its chained `TraceExportError` cause under the default `RAISE` policy. Failures
+raised by a model's `init()` or `receive()` are chained inside
+`SimulationError` with node and event context; the original exception remains
+available as `error.__cause__`.
+
+Expected scheduling decisions are values, not exceptions:
+
+- `ScheduleResult.SCHEDULED` means the event entered the agenda.
+- `ScheduleResult.DROPPED_TIME_HORIZON` means its time exceeded `maxtime`.
+- `ScheduleResult.DROPPED_BY_PLUGIN` means a plugin deliberately discarded it.
+
+`SimulationResult` reports the corresponding scheduled and dropped counters.
 
 ## Official Documentation
 

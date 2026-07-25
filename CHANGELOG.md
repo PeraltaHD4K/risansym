@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Documented the neighbor-only transmission contract, exception chaining, and
+  the distinction between scheduling outcomes and exceptional failures.
+- Replaced nested internal checkpoint tuples with named immutable checkpoint
+  records.
+
 ## [1.0.0rc1] - 2026-07-25
 
 ### Added

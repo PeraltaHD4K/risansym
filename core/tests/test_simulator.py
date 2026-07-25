@@ -23,6 +23,25 @@ def test_event_ordering():
     # Engine should be off when empty
     assert engine.is_on is False
 
+def test_event_tie_breaking():
+    """Test that events scheduled at the exact same time are popped in FIFO order (REL-02)."""
+    engine = Simulator(maxtime=10.0)
+    
+    # Insert multiple events at time 5.0
+    engine.insert_event(Event(time=5.0, source=1, target=2, name="FIRST", payload={}))
+    engine.insert_event(Event(time=5.0, source=1, target=2, name="SECOND", payload={}))
+    engine.insert_event(Event(time=5.0, source=1, target=2, name="THIRD", payload={}))
+    
+    # Pop should return them in insertion order
+    e1 = engine.pop_event()
+    assert e1.name == "FIRST"
+    
+    e2 = engine.pop_event()
+    assert e2.name == "SECOND"
+    
+    e3 = engine.pop_event()
+    assert e3.name == "THIRD"
+
 def test_maxtime_limit():
     engine = Simulator(maxtime=5.0)
     engine.insert_event(Event(time=1.0, source=1, target=2, name="MSG_1", payload={}))

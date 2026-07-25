@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.0rc1] - 2026-07-25
+
 ### Added
 - GitHub Actions CI matrix testing.
 - Web component refactoring into smaller hooks and components.
@@ -33,3 +35,11 @@ All notable changes to this project will be documented in this file.
   metadata, excluding tests, benchmarks, scripts, and lockfiles.
 - PyPI publication now promotes the exact artifact verified by the release
   workflow instead of rebuilding it in the protected publication job.
+
+### Breaking
+- Removed all 0.x compatibility aliases and deprecated entry points.
+- Replaced implicit simulation lifecycle behavior with explicit states and
+  structured `SimulationResult` termination data.
+- Made topology direction, event validation, plugin failure policy, and trace
+  schema contracts explicit.
+- Prevented completed simulations from being run again.

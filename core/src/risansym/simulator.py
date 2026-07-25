@@ -31,6 +31,19 @@ class Simulator:
         """Attach a plugin to the simulator."""
         self._plugins.append(plugin)
         
+    def notify_plugins_start(self, simulation: Any) -> None:
+        """Notify all attached plugins that the simulation is starting."""
+        for plugin in self._plugins:
+            plugin.on_start(simulation)
+
+    def notify_plugins_end(self, simulation: Any) -> None:
+        """Notify all attached plugins that the simulation has ended."""
+        for plugin in self._plugins:
+            try:
+                plugin.on_end(simulation)
+            except Exception as e:
+                logger.error("Plugin %s failed during on_end: %s", plugin.__class__.__name__, e)
+
     @property
     def requires_state_snapshot(self) -> bool:
         """Returns True if any attached plugin requires state snapshots."""

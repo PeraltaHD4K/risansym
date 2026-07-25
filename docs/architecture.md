@@ -16,9 +16,13 @@ An internal process wrapper represents each topology node. A `Model` is the
 user-defined algorithm behavior and is bound to a node through
 `Simulation.set_model()`.
 
+Models transmit only to themselves or direct topology neighbors. Multi-hop
+communication is part of the modeled distributed algorithm rather than an
+implicit service supplied by the simulator.
+
 `Simulation`, `Model`, `Event`, lifecycle results, plugin contracts, topology
 helpers, and domain exceptions form the stable 1.0 API. Agenda, process,
-builder, exporter, plugin-manager, and collector implementations are internal
+runtime, exporter, plugin-manager, and collector implementations are internal
 and may evolve without compatibility guarantees.
 
 ## The Web Visualizer (React)

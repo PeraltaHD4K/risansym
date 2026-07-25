@@ -9,6 +9,18 @@ Your custom algorithm must implement two core lifecycle methods:
 1. `init(self)`: Called exactly once when the simulation starts. Use this to initialize state variables or send the first messages.
 2. `receive(self, event: Event)`: Called every time the node receives a message from another node.
 
+## Routing Contract
+
+`Model.transmit(event)` sends across the declared topology, not through a
+global message bus. The event's `source` must be the model's own `node_id`, and
+its `target` must be either that node or one of `self.neighbors`. To reach a
+non-neighbor, include routing state in the payload and forward the message
+through intermediate nodes.
+
+A spoofed source or non-neighbor target is an `InvalidEventError`. When this
+happens inside `init()` or `receive()`, the simulation raises a
+`SimulationError` with the original error available through `__cause__`.
+
 ## Example: Ping-Pong Protocol
 
 Let's build a simple algorithm where Node 1 sends a "PING" to Node 2, and Node 2 replies with a "PONG".

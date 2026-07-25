@@ -29,6 +29,11 @@ class Simulator:
     def attach(self, plugin: SimulationPlugin) -> None:
         """Attach a plugin to the simulator."""
         self._plugins.append(plugin)
+        
+    @property
+    def requires_state_snapshot(self) -> bool:
+        """Returns True if any attached plugin requires state snapshots."""
+        return any(getattr(p, "requires_state_snapshot", False) for p in self._plugins)
 
     def __repr__(self) -> str:
         return f"<Simulator(clock={self.clock}, agenda_size={len(self._agenda)})>"

@@ -179,14 +179,21 @@ class Simulation:
 
     def _execute(self) -> None:
         """Main loop: pop and route events until the agenda is empty."""
-        for plugin in self.engine._plugins:
-            plugin.on_start(self)
-            
-        loop = EventLoop(self.engine, self.table)
-        self.execution_metrics = loop.run()
-        
-        for plugin in self.engine._plugins:
-            plugin.on_end(self)
+        try:
+            for plugin in self.engine._plugins:
+                plugin.on_start(self)
+                
+            loop = EventLoop(self.engine, self.table)
+            self.execution_metrics = loop.run()
+        finally:
+            for plugin in self.engine._plugins:
+                try:
+                    plugin.on_end(self)
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(
+                        "Plugin %s failed during on_end: %s", plugin.__class__.__name__, e
+                    )
 
 
 

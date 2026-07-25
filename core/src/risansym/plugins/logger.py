@@ -31,6 +31,10 @@ class ConsoleLoggerPlugin:
                 logger.addHandler(ch)
                 logger.propagate = False
 
+    @property
+    def requires_state_snapshot(self) -> bool:
+        return False
+
     def on_start(self, simulation: Simulation) -> None:
         pass
 

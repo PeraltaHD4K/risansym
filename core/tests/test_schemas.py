@@ -12,17 +12,29 @@ from risansym.schemas import (
 
 class TestTransmitEvent:
     def test_valid_transmit_event(self):
-        e = TransmitEvent(clock=1.0, event_time=2.0, source=1, target=2, name="MSG", payload={"data": 1})
+        e = TransmitEvent(
+            clock=1.0, event_time=2.0, source=1, target=2, name="MSG", payload={"data": 1}
+        )
         assert e.action == "TRANSMIT"
         assert e.clock == 1.0
         assert e.node_state is None
 
     def test_transmit_with_node_state(self):
-        e = TransmitEvent(clock=1.0, event_time=2.0, source=1, target=2, name="MSG", payload={}, node_state={"leader": True})
+        e = TransmitEvent(
+            clock=1.0,
+            event_time=2.0,
+            source=1,
+            target=2,
+            name="MSG",
+            payload={},
+            node_state={"leader": True},
+        )
         assert e.node_state == {"leader": True}
 
     def test_transmit_serialization_roundtrip(self):
-        e = TransmitEvent(clock=1.0, event_time=2.0, source=1, target=2, name="MSG", payload={"x": 42})
+        e = TransmitEvent(
+            clock=1.0, event_time=2.0, source=1, target=2, name="MSG", payload={"x": 42}
+        )
         data = json.loads(e.model_dump_json())
         assert data["action"] == "TRANSMIT"
         assert data["payload"] == {"x": 42}
@@ -34,7 +46,9 @@ class TestReceiveEvent:
         assert e.action == "RECEIVE"
 
     def test_receive_with_node_state(self):
-        e = ReceiveEvent(clock=2.0, source=1, target=2, name="MSG", payload={}, node_state={"term": 3})
+        e = ReceiveEvent(
+            clock=2.0, source=1, target=2, name="MSG", payload={}, node_state={"term": 3}
+        )
         assert e.node_state["term"] == 3
 
 

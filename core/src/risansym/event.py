@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TypeAlias, Union
 import math
+from typing import TypeAlias, Union
+
+from risansym.exceptions import InvalidEventError
 
 # Type alias for JSON-serializable payloads exchanged between processes.
-JsonValue: TypeAlias = Union[str, int, float, bool, None, dict[str, 'JsonValue'], list['JsonValue']]
+JsonValue: TypeAlias = Union[str, int, float, bool, None, dict[str, "JsonValue"], list["JsonValue"]]
 JsonPayload: TypeAlias = dict[str, JsonValue]
 
 
@@ -25,11 +27,6 @@ class Event:
     Note on event ordering:
         Events scheduled for the exact same time are processed in FIFO order
         (the order in which they were inserted into the simulator).
-
-    .. deprecated:: 0.5.2
-        The old positional field order was ``(time, name, target, source)``.
-        It has been corrected to ``(time, name, source, target)``.
-        Code using keyword arguments is unaffected.
     """
 
     time: float
@@ -40,8 +37,18 @@ class Event:
     payload: JsonPayload = field(default_factory=dict, compare=False)
 
     def __post_init__(self) -> None:
-        if math.isnan(self.time) or math.isinf(self.time) or self.time < 0:
-            raise ValueError(f"Invalid event time: {self.time}. Time must be a finite, non-negative number.")
+        if not isinstance(self.time, (int, float)) or isinstance(self.time, bool):
+            raise InvalidEventError("Event time must be a number.")
+        if not math.isfinite(self.time) or self.time < 0:
+            raise InvalidEventError(
+                f"Invalid event time: {self.time}. Time must be finite and non-negative."
+            )
+        if not isinstance(self.source, int) or isinstance(self.source, bool) or self.source < 1:
+            raise InvalidEventError("Event source must be a positive integer.")
+        if not isinstance(self.target, int) or isinstance(self.target, bool) or self.target < 1:
+            raise InvalidEventError("Event target must be a positive integer.")
+        if not isinstance(self.name, str) or not self.name:
+            raise InvalidEventError("Event name must be a non-empty string.")
 
     def __repr__(self) -> str:
         return f"Event(t={self.time}, '{self.name}' {self.source}→{self.target})"

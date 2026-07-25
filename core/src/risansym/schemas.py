@@ -2,8 +2,10 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import Any, Literal, Annotated
 import datetime
 
+
 class TransmitEvent(BaseModel):
     """Recorded when a node schedules a message for transmission."""
+
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     action: Literal["TRANSMIT"] = "TRANSMIT"
@@ -18,6 +20,7 @@ class TransmitEvent(BaseModel):
 
 class ReceiveEvent(BaseModel):
     """Recorded when a node processes an incoming message."""
+
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     action: Literal["RECEIVE"] = "RECEIVE"
@@ -31,6 +34,7 @@ class ReceiveEvent(BaseModel):
 
 class AppLogEvent(BaseModel):
     """Recorded when a node emits an application-level log message."""
+
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     action: Literal["APP_LOG"] = "APP_LOG"
@@ -40,14 +44,12 @@ class AppLogEvent(BaseModel):
 
 
 # Union of all valid trace event types
-TraceEvent = Annotated[
-    TransmitEvent | ReceiveEvent | AppLogEvent,
-    Field(discriminator="action")
-]
+TraceEvent = Annotated[TransmitEvent | ReceiveEvent | AppLogEvent, Field(discriminator="action")]
 
 
 class TraceMetadata(BaseModel):
     """Metadata attached to a complete simulation trace."""
+
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     schema_version: Literal["1.0"] = "1.0"
@@ -61,6 +63,7 @@ class TraceMetadata(BaseModel):
 
 class TraceOutput(BaseModel):
     """Top-level container for a simulation trace file."""
+
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     metadata: TraceMetadata

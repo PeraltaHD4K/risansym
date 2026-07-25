@@ -12,24 +12,28 @@ class EchoModel(Model):
     """Simple model that echoes one message back and forth."""
 
     def init(self):
-        self.transmit(Event(
-            time=self.clock + 1.0,
-            source=self.node_id,
-            target=self.neighbors[0],
-            name="ECHO",
-            payload={"step": 0}
-        ))
+        self.transmit(
+            Event(
+                time=self.clock + 1.0,
+                source=self.node_id,
+                target=self.neighbors[0],
+                name="ECHO",
+                payload={"step": 0},
+            )
+        )
 
     def receive(self, event):
         step = event.payload.get("step", 0)
         if step < 2:
-            self.transmit(Event(
-                time=self.clock + 1.0,
-                source=self.node_id,
-                target=event.source,
-                name="ECHO",
-                payload={"step": step + 1}
-            ))
+            self.transmit(
+                Event(
+                    time=self.clock + 1.0,
+                    source=self.node_id,
+                    target=event.source,
+                    name="ECHO",
+                    payload={"step": step + 1},
+                )
+            )
 
     def get_state(self):
         return {"clock": self.clock}
@@ -46,7 +50,8 @@ def two_node_sim(tmp_path):
         filename=topo,
         maxtime=20.0,
         algo_name="EchoTest",
-        trace_network=False, app_logs=False,
+        trace_network=False,
+        app_logs=False,
         trace_enabled=True,
         trace_path=str(trace_path),
     )
@@ -89,7 +94,9 @@ class TestTraceGeneration:
         sim.run()
         output = TraceOutput.model_validate_json(trace_path.read_text())
         # At least some events should have node_state captured
-        events_with_state = [e for e in output.trace if hasattr(e, "node_state") and e.node_state is not None]
+        events_with_state = [
+            e for e in output.trace if hasattr(e, "node_state") and e.node_state is not None
+        ]
         assert len(events_with_state) > 0
 
     def test_execution_metrics_populated(self, two_node_sim):
@@ -105,19 +112,19 @@ class TestTraceGeneration:
         from risansym.trace import TraceCollector
         from risansym.schemas import AppLogEvent
         import pytest
-        
+
         collector = TraceCollector(max_events=5)
-        
+
         # Insert 5 events, no warning
         for i in range(5):
             collector.record(AppLogEvent(clock=float(i), source=1, message="test"))
-        
+
         assert len(collector) == 5
-        
+
         # 6th event should trigger warning and pop first
         with pytest.warns(ResourceWarning, match="has reached its limit of 5 events"):
             collector.record(AppLogEvent(clock=5.0, source=1, message="test"))
-            
+
         assert len(collector) == 5
         # First event was at clock=0.0, now it's gone
         assert collector._trace[0].clock == 1.0

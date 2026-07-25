@@ -42,7 +42,7 @@ class EventLoop:
             )
 
         if process := self.table[event.target]:
-            process.set_time(event.time)
+            process._set_time(event.time)
             try:
                 process.receive(event)
             except Exception as error:

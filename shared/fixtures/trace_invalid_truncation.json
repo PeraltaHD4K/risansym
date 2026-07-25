@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "algorithm": "Invalid",
+    "topology": "line",
+    "tag": null,
+    "execution_date": "2026-07-25T00:00:00Z",
+    "parameters": {},
+    "metrics": {},
+    "capture": {
+      "max_events": 1,
+      "recorded_events": 1,
+      "dropped_events": 2,
+      "truncated": false
+    }
+  },
+  "trace": [
+    {
+      "action": "APP_LOG",
+      "clock": 0.0,
+      "source": 1,
+      "message": "invalid"
+    }
+  ]
+}

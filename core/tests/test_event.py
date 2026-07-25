@@ -51,6 +51,28 @@ class TestEventPayload:
         e1.payload["x"] = 1
         assert "x" not in e2.payload
 
+    def test_payload_is_copied_on_construction(self):
+        payload: JsonPayload = {"nested": {"value": 1}}
+        event = Event(time=0.0, source=1, target=2, name="TEST", payload=payload)
+
+        nested = payload["nested"]
+        assert isinstance(nested, dict)
+        nested["value"] = 2
+
+        assert event.payload == {"nested": {"value": 1}}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"bad": object()},
+            {"bad": float("nan")},
+            {1: "non-string key"},
+        ],
+    )
+    def test_non_json_payload_is_rejected(self, payload):
+        with pytest.raises(InvalidEventError):
+            Event(time=0.0, source=1, target=2, name="TEST", payload=payload)
+
 
 class TestEventValidation:
     """Verify Event construction validation and argument order."""

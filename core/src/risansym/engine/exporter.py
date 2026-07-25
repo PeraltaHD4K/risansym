@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from risansym.exceptions import TraceExportError
-from risansym.schemas import TraceMetadata
+from risansym.schemas import TraceCapture, TraceMetadata
 from risansym.trace import TraceCollector
 
 
@@ -81,6 +81,12 @@ class TraceExporter:
                 "directed": self.directed,
             },
             metrics=metrics,
+            capture=TraceCapture(
+                max_events=collector.max_events,
+                recorded_events=len(collector),
+                dropped_events=collector.dropped_events,
+                truncated=collector.dropped_events > 0,
+            ),
         )
 
         try:

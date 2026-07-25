@@ -5,6 +5,7 @@ from risansym.schemas import (
     TransmitEvent,
     ReceiveEvent,
     AppLogEvent,
+    TraceCapture,
     TraceMetadata,
     TraceOutput,
 )
@@ -67,6 +68,12 @@ class TestTraceOutput:
             execution_date="20260704",
             parameters={"max_time": 10.0, "total_nodes": 3, "total_edges": 6},
             metrics={"total_messages": 5},
+            capture=TraceCapture(
+                max_events=100,
+                recorded_events=3,
+                dropped_events=0,
+                truncated=False,
+            ),
         )
         trace = [
             TransmitEvent(clock=0.0, event_time=1.0, source=1, target=2, name="PING", payload={}),

@@ -39,14 +39,11 @@ def test_model_repr_bound():
             pass
 
     model = DummyModel()
-    model.set_sink(MockSink(), [2, 3], 1)
+    model._bind(MockSink(), [2, 3], 1)
     assert repr(model) == "<DummyModel(node_id=1, clock=0.0)>"
 
 
-def test_model_id_deprecation():
-    # T3: Property Model.id is deprecated
+def test_model_id_alias_is_removed():
     model = DummyModel()
-    with pytest.warns(DeprecationWarning, match="Accessing 'Model.id' is deprecated"):
+    with pytest.raises(AttributeError):
         _ = model.id
-    with pytest.warns(DeprecationWarning, match="Setting 'Model.id' is deprecated"):
-        model.id = 5

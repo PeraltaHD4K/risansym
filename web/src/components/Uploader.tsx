@@ -20,6 +20,12 @@ export default function Uploader() {
     setError(null);
     setSuccess(false);
 
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`El archivo excede el tamaño máximo permitido de 50MB.`);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {

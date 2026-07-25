@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export const TransmitEventSchema = z.strictObject({
   action: z.literal('TRANSMIT'),
-  clock: z.number(),
-  event_time: z.number(),
+  clock: z.number().finite().nonnegative(),
+  event_time: z.number().finite().nonnegative(),
   source: z.number(),
   target: z.number(),
   name: z.string(),
@@ -13,8 +13,8 @@ export const TransmitEventSchema = z.strictObject({
 
 export const ReceiveEventSchema = z.strictObject({
   action: z.literal('RECEIVE'),
-  clock: z.number(),
-  event_time: z.number().optional(),
+  clock: z.number().finite().nonnegative(),
+  event_time: z.number().finite().nonnegative().optional(),
   source: z.number(),
   target: z.number(),
   name: z.string(),
@@ -24,7 +24,7 @@ export const ReceiveEventSchema = z.strictObject({
 
 export const AppLogEventSchema = z.strictObject({
   action: z.literal('APP_LOG'),
-  clock: z.number(),
+  clock: z.number().finite().nonnegative(),
   source: z.number(),
   message: z.string()
 });
@@ -47,7 +47,7 @@ export const TraceMetadataSchema = z.strictObject({
 
 export const TraceOutputSchema = z.strictObject({
   metadata: TraceMetadataSchema,
-  trace: z.array(TraceEventSchema)
+  trace: z.array(TraceEventSchema).max(1000000)
 });
 
 // Inferir tipos de TypeScript a partir de Zod

@@ -68,12 +68,27 @@ export function useEventGroups(
         });
       });
     });
+    result.sort((a, b) => a.clock - b.clock);
 
     return result;
   }, [traceData, nodes, zoomScale]);
 
-  // 2. Dynamic filtering: filter groups by currentClock. Linear scan over grouped events.
+  // 2. Dynamic filtering: filter groups by currentClock using binary search.
   return useMemo(() => {
-    return allGroups.filter(g => g.clock <= currentClock);
+    let low = 0;
+    let high = allGroups.length - 1;
+    let idx = allGroups.length;
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      if (allGroups[mid].clock > currentClock) {
+        idx = mid;
+        high = mid - 1;
+      } else {
+        low = mid + 1;
+      }
+    }
+
+    return allGroups.slice(0, idx);
   }, [allGroups, currentClock]);
 }

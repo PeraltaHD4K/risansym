@@ -33,6 +33,7 @@ class Simulation:
         trace_path: Optional explicit output path for the trace file.
         trace_dir: Base directory for auto-generated trace files.
         trace_tag: Optional tag appended to the auto-generated filename.
+        max_events: Hard limit on the number of events to process in the event loop.
     """
 
     def __init__(
@@ -48,6 +49,7 @@ class Simulation:
         trace_dir: str = "traces",
         trace_tag: str | None = None,
         trace: bool | None = None,
+        max_events: int = 10_000_000,
     ) -> None:
 
         # Backwards compatibility: accept deprecated 'debug' kwarg
@@ -71,6 +73,7 @@ class Simulation:
 
         self.algo_name = algo_name
         self._initialized = False
+        self.max_events = max_events
 
         self.engine = Simulator(maxtime)
         
@@ -112,6 +115,7 @@ class Simulation:
         trace_tag: str | None = None,
         trace: bool | None = None,
         format: str = "adjacency_list",
+        max_events: int = 10_000_000,
     ) -> Simulation:
         """Factory method to instantiate a Simulation from a topology file."""
         if format == "adjacency_list":
@@ -135,6 +139,7 @@ class Simulation:
             trace_dir=trace_dir,
             trace_tag=trace_tag,
             trace=trace,
+            max_events=max_events,
         )
         instance._topology_name = Path(filename).stem
         return instance
@@ -183,7 +188,7 @@ class Simulation:
             for plugin in self.engine._plugins:
                 plugin.on_start(self)
                 
-            loop = EventLoop(self.engine, self.table)
+            loop = EventLoop(self.engine, self.table, max_events=self.max_events)
             self.execution_metrics = loop.run()
         finally:
             for plugin in self.engine._plugins:

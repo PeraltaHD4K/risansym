@@ -35,12 +35,29 @@ Repository = "https://github.com/PeraltaHD4K/risansym.git"
 [tool.hatch.build.targets.wheel]
 packages = ["src/risansym"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/risansym",
+    "README.md",
+    "pyproject.toml",
+]
+exclude = [
+    "/.gitignore",
+    "/benchmarks",
+    "/scripts",
+    "/tests",
+    "/uv.lock",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
     "pytest-benchmark>=4.0.0",
     "ruff>=0.4.0",
     "mypy>=1.10.0"
+]
+audit = [
+    "pip-audit>=2.7.0",
 ]
 docs = [
     "mkdocs-material>=9.7.6",

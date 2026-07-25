@@ -2,74 +2,205 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
 
 jobs:
-  build-core:
-    name: Verificar Python Core
+  core-quality:
+    name: Core quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Verify lockfile
+        working-directory: core
+        run: uv lock --check
+      - name: Install development dependencies
+        working-directory: core
+        run: uv sync --locked --all-groups
+      - name: Lint
+        working-directory: core
+        run: uv run ruff check .
+      - name: Check formatting
+        working-directory: core
+        run: uv run ruff format --check .
+      - name: Type check package
+        working-directory: core
+        run: uv run mypy src
+      - name: Type check repository
+        working-directory: core
+        run: uv run mypy .
+
+  core-tests:
+    name: Core tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
-      - name: Descargar repositorio
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # actions/checkout@v4
-      
-      - name: Setup Python
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # actions/checkout@v5
+      - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Instalar 'uv' (Gestor de Python)
+      - name: Set up uv
         uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # astral-sh/setup-uv@v5
-        
-      - name: Instalar dependencias del core
-        run: uv sync
-        working-directory: ./core
-        
-      - name: Formato y Linting (Ruff)
-        run: uv run ruff check .
-        working-directory: ./core
-
-      - name: Type Checking (Mypy)
-        run: uv run mypy .
-        working-directory: ./core
-
-      - name: Ejecutar tests
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        working-directory: core
+        run: uv sync --locked
+      - name: Run functional tests
+        working-directory: core
         run: uv run pytest
-        working-directory: ./core
 
-  build-web:
-    name: Compilar Dashboard (Next.js)
+  contracts-and-docs:
+    name: Contracts and documentation
     runs-on: ubuntu-latest
     steps:
-      - name: Descargar repositorio
+      - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # actions/checkout@v5
-      
-      - name: Configurar Node.js
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install documentation dependencies
+        working-directory: core
+        run: uv sync --locked --group docs
+      - name: Verify generated trace schema
+        run: |
+          uv run --project core python core/scripts/generate_trace_schema.py
+          git diff --exit-code -- shared/schema/trace.schema.json
+      - name: Run Python contract tests
+        working-directory: core
+        run: uv run pytest tests/test_contract.py tests/test_schemas.py
+      - name: Build documentation strictly
+        run: uv run --project core mkdocs build --strict
+
+  web:
+    name: Web quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # actions/checkout@v5
+      - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # actions/setup-node@v5
         with:
-          node-version: 24
-          cache: 'npm'
-          cache-dependency-path: ./web/package-lock.json
-          
-      - name: Instalar dependencias web
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        working-directory: web
         run: npm ci
-        working-directory: ./web
-        
-      - name: Linting (ESLint)
+      - name: Lint
+        working-directory: web
         run: npm run lint
-        working-directory: ./web
-
-      - name: Compilar la web (Build)
-        run: npm run build
-        working-directory: ./web
-
-      - name: Ejecutar tests web (Vitest)
+      - name: Run tests
+        working-directory: web
         run: npm test
-        working-directory: ./web
+      - name: Build
+        working-directory: web
+        run: npm run build
+
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Audit Python runtime dependencies
+        working-directory: core
+        run: |
+          uv sync --locked --only-group audit
+          uv export --locked --no-dev --no-hashes --output-file /tmp/runtime-requirements.txt
+          uv run --no-default-groups --group audit pip-audit --requirement /tmp/runtime-requirements.txt
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Audit web dependencies
+        working-directory: web
+        run: npm audit --audit-level=high
+
+  benchmarks:
+    name: Deterministic benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        working-directory: core
+        run: uv sync --locked
+      - name: Run benchmarks separately
+        working-directory: core
+        run: uv run pytest benchmarks -m benchmark
+
+  package:
+    name: Build and smoke-test distribution
+    runs-on: ubuntu-latest
+    needs: [core-quality, core-tests, contracts-and-docs]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Build wheel and source distribution
+        working-directory: core
+        run: uv build
+      - name: Verify distribution contents and metadata
+        working-directory: core
+        run: python scripts/verify_distribution.py dist
+      - name: Install wheel in an isolated environment
+        working-directory: core
+        run: |
+          uv venv --python 3.12 .smoke-venv
+          uv pip install --python .smoke-venv/bin/python dist/*.whl
+          .smoke-venv/bin/python scripts/smoke_test_install.py
+      - name: Upload verified distributions
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: core/dist/
+          if-no-files-found: error

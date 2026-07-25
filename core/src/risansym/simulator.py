@@ -15,7 +15,9 @@ class Simulator:
     """Min-heap driven discrete event simulation engine.
 
     Maintains a priority queue (agenda) of :class:`Event` objects ordered
-    by time.  Events beyond ``maxtime`` are silently discarded.
+    by time. Events scheduled for the exact same time are processed in 
+    strict FIFO (first-in, first-out) order using a monotonic sequence number.
+    Events beyond ``maxtime`` are silently discarded.
     """
 
     def __init__(self, maxtime: float) -> None:

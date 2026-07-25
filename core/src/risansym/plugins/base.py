@@ -15,6 +15,11 @@ class SimulationPlugin(Protocol):
     to implement tracing, logging, network chaos, metrics, etc.
     """
 
+    @property
+    def requires_state_snapshot(self) -> bool:
+        """If True, the engine will deepcopy the node state for this plugin."""
+        return False
+
     def on_start(self, simulation: Simulation) -> None:
         """Called just before the simulation event loop begins."""
         ...

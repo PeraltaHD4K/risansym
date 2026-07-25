@@ -46,3 +46,8 @@ htmlcov/
 .pytest_cache/
 .ruff_cache/
 temp.txt
+.agents/
+.codex/
+graphify-out/
+AGENTS.md
+auditoria_codex.md

@@ -44,10 +44,6 @@ def test_basic_simulation(temp_topology):
     sim = Simulation.from_file(
         filename=temp_topology,
         maxtime=10.0,
-        algo_name="PingPong",
-        trace_network=False,
-        app_logs=False,
-        trace_enabled=False,
     )
 
     # Assign models
@@ -64,4 +60,4 @@ def test_basic_simulation(temp_topology):
     assert result.state is SimulationState.COMPLETED
 
     # The clock should advance to at least 5.0 because of the condition in receive
-    assert sim.engine.clock >= 5.0
+    assert result.simulated_time >= 5.0

@@ -6,11 +6,25 @@ import copy
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Protocol
 
+from risansym.event import Event, JsonPayload
 from risansym.exceptions import InvalidEventError, SimulationError
 from risansym.process import Process
 from risansym.results import TerminationReason
-from risansym.simulator import Simulator
+
+
+class RuntimeProtocol(Protocol):
+    @property
+    def requires_state_snapshot(self) -> bool: ...
+    @property
+    def is_on(self) -> bool: ...
+    @property
+    def next_event_time(self) -> float | None: ...
+    @property
+    def dropped_by_time_horizon(self) -> int: ...
+    def pop_event(self) -> Event: ...
+    def notify_event_processed(self, event: Event, node_state: JsonPayload) -> None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,14 +41,14 @@ class EventLoop:
 
     def __init__(
         self,
-        simulator: Simulator,
+        runtime: RuntimeProtocol,
         table: list[Process | None],
     ) -> None:
-        self.simulator = simulator
+        self.runtime = runtime
         self.table = table
 
     def _process_next(self) -> None:
-        event = self.simulator.pop_event()
+        event = self.runtime.pop_event()
         if event.target >= len(self.table):
             raise InvalidEventError(
                 f"Event targets node {event.target}, but only nodes "
@@ -51,16 +65,12 @@ class EventLoop:
                     f"'{event.name}': {error}"
                 ) from error
 
-            if self.simulator.requires_state_snapshot:
+            if self.runtime.requires_state_snapshot:
                 raw_state = process.model.get_state() if process.model else {}
                 state = copy.deepcopy(raw_state)
             else:
                 state = {}
-            self.simulator.plugin_manager.notify_event_processed(
-                event,
-                state,
-                self.simulator.context(),
-            )
+            self.runtime.notify_event_processed(event, state)
 
     def run(
         self,
@@ -73,15 +83,15 @@ class EventLoop:
         start = time.perf_counter()
         processed = 0
 
-        while self.simulator.is_on:
+        while self.runtime.is_on:
             if stop_requested is not None and stop_requested():
                 reason = TerminationReason.STOP_REQUESTED
                 break
             if processed >= max_events:
                 reason = TerminationReason.MAX_EVENTS
                 break
-            if until is not None and self.simulator.next_event_time is not None:
-                if self.simulator.next_event_time > until:
+            if until is not None and self.runtime.next_event_time is not None:
+                if self.runtime.next_event_time > until:
                     reason = TerminationReason.TIME_LIMIT
                     break
 
@@ -90,7 +100,7 @@ class EventLoop:
         else:
             reason = (
                 TerminationReason.MAX_TIME
-                if self.simulator.dropped_by_time_horizon
+                if self.runtime.dropped_by_time_horizon
                 else TerminationReason.AGENDA_EMPTY
             )
 

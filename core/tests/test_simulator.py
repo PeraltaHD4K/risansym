@@ -1,10 +1,18 @@
 import pytest
+import inspect
 
 from risansym.event import Event
 from risansym.exceptions import CausalityError, InvalidEventError
 from risansym.plugins.base import SimulationPlugin
+from risansym.engine.runtime import SimulationRuntime
 from risansym.results import ScheduleResult
 from risansym.simulator import Simulator
+
+
+def test_scheduler_has_no_plugin_responsibilities() -> None:
+    source = inspect.getsource(Simulator).lower()
+    assert "plugin" not in source
+    assert not hasattr(Simulator(1.0), "plugin_manager")
 
 
 def test_event_ordering():
@@ -74,21 +82,17 @@ class TransformingPlugin(SimulationPlugin):
 
 
 def test_plugin_cannot_move_event_into_the_past() -> None:
-    engine = Simulator(maxtime=10.0)
+    engine = SimulationRuntime(Simulator(maxtime=10.0))
     engine.clock = 5.0
-    engine.plugin_manager.attach(
-        TransformingPlugin(Event(time=1.0, source=1, target=1, name="PAST"))
-    )
+    engine.attach(TransformingPlugin(Event(time=1.0, source=1, target=1, name="PAST")))
 
     with pytest.raises(CausalityError, match="clock is at"):
         engine.insert_event(Event(time=5.0, source=1, target=1, name="VALID"))
 
 
 def test_plugin_cannot_bypass_time_horizon() -> None:
-    engine = Simulator(maxtime=10.0)
-    engine.plugin_manager.attach(
-        TransformingPlugin(Event(time=20.0, source=1, target=1, name="FUTURE"))
-    )
+    engine = SimulationRuntime(Simulator(maxtime=10.0))
+    engine.attach(TransformingPlugin(Event(time=20.0, source=1, target=1, name="FUTURE")))
 
     result = engine.insert_event(Event(time=1.0, source=1, target=1, name="VALID"))
 
@@ -98,8 +102,8 @@ def test_plugin_cannot_bypass_time_horizon() -> None:
 
 
 def test_plugin_can_explicitly_drop_an_event() -> None:
-    engine = Simulator(maxtime=10.0)
-    engine.plugin_manager.attach(TransformingPlugin(None))
+    engine = SimulationRuntime(Simulator(maxtime=10.0))
+    engine.attach(TransformingPlugin(None))
 
     result = engine.insert_event(Event(time=1.0, source=1, target=1, name="VALID"))
 
@@ -109,8 +113,8 @@ def test_plugin_can_explicitly_drop_an_event() -> None:
 
 
 def test_plugin_must_return_event_or_none() -> None:
-    engine = Simulator(maxtime=10.0)
-    engine.plugin_manager.attach(TransformingPlugin("not-an-event"))
+    engine = SimulationRuntime(Simulator(maxtime=10.0))
+    engine.attach(TransformingPlugin("not-an-event"))
 
-    with pytest.raises(InvalidEventError, match="Event or None"):
+    with pytest.raises(InvalidEventError, match="Event instances"):
         engine.insert_event(Event(time=1.0, source=1, target=1, name="VALID"))

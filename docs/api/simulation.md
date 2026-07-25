@@ -10,6 +10,23 @@ Limited execution returns to `STOPPED` and may continue. Any initialization,
 model, plugin, or trace failure moves the simulation to `FAILED`. Configuration
 methods such as `set_model()` and `attach()` are only valid in `CREATED`.
 
+## Composition
+
+`Simulation` contains only topology and execution configuration. Logging,
+tracing, and future integrations are opt-in plugins:
+
+```python
+from risansym import Simulation
+from risansym.plugins import ConsoleLoggerPlugin, JSONTracerPlugin
+
+simulation = Simulation([[2], [1]], maxtime=10.0)
+simulation.attach(ConsoleLoggerPlugin(app_logs=True))
+simulation.attach(JSONTracerPlugin("MyAlgorithm", trace_dir="traces"))
+```
+
+Each plugin owns its own configuration. This keeps the simulation constructor
+stable as new observability or integration features are added.
+
 ## Execution results
 
 `run()`, `step()`, and `run_until()` return a `SimulationResult`. It records

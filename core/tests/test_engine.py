@@ -3,6 +3,7 @@ from risansym.event import Event
 from risansym.exceptions import CausalityError, SimulationError
 from risansym.simulator import Simulator
 from risansym.engine.loop import EventLoop
+from risansym.engine.runtime import SimulationRuntime
 from risansym.process import Process
 from risansym.model import Model
 
@@ -23,13 +24,13 @@ def test_causality_violation():
 
 
 def test_event_loop_crash_resilience():
-    sim = Simulator(maxtime=10.0)
-    sim.insert_event(Event(time=1.0, source=1, target=1, name="A", payload={}))
+    runtime = SimulationRuntime(Simulator(maxtime=10.0))
+    runtime.insert_event(Event(time=1.0, source=1, target=1, name="A", payload={}))
 
-    p = Process(node_id=1, neighbors=[2], engine=sim)
+    p = Process(node_id=1, neighbors=[2], engine=runtime)
     p._bind_model(BadModel())
 
-    loop = EventLoop(simulator=sim, table=[None, p, None])
+    loop = EventLoop(runtime=runtime, table=[None, p, None])
 
     with pytest.raises(
         SimulationError,

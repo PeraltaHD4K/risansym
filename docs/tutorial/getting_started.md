@@ -34,15 +34,14 @@ You can instantiate the simulator by passing your topology file.
 
 ```python
 from risansym import Simulation
+from risansym.plugins import JSONTracerPlugin
 
 # Create the simulation engine
 engine = Simulation.from_file(
     filename="graph.txt",
     maxtime=100.0,
-    algo_name="MyFirstAlgorithm",
-    trace_enabled=True,
-    trace_dir="traces"
 )
+engine.attach(JSONTracerPlugin("MyFirstAlgorithm", trace_dir="traces"))
 
 # Initialize all models (we haven't attached any yet!)
 engine.initialize_all()
@@ -52,7 +51,8 @@ result = engine.run()
 assert result.complete
 ```
 
-- **`trace_enabled`**: When set to `True`, the simulation engine will record every event (transmissions, receptions, app logs, and node states) and save it as a JSON file when the simulation finishes.
-- **`trace_path`**: You can explicitly set the output file by passing a path string or `pathlib.Path` instead of using the auto-generated name.
+`Simulation` only receives execution concerns. Observability is explicit:
+attach `JSONTracerPlugin` to record events and node states, and pass
+`trace_path` to that plugin when you need a fixed output file.
 
 Proceed to [Writing Algorithms](writing_algorithms.md) to learn how to inject behavior into your nodes.

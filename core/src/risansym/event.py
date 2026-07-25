@@ -22,6 +22,10 @@ class Event:
                  Note: Although the Event class is frozen, the payload dict is
                  mutable. Callers should avoid mutating it after creation.
 
+    Note on event ordering:
+        Events scheduled for the exact same time are processed in FIFO order
+        (the order in which they were inserted into the simulator).
+
     .. deprecated:: 0.5.2
         The old positional field order was ``(time, name, target, source)``.
         It has been corrected to ``(time, name, source, target)``.

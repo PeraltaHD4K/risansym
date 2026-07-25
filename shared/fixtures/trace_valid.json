@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "algorithm": "PingPong",
+    "topology": "line",
+    "tag": "fixture-test",
+    "execution_date": "2026-07-24T00:00:00Z",
+    "parameters": {
+      "nodes": 2
+    },
+    "metrics": {
+      "simulated_time_elapsed": 10.0
+    }
+  },
+  "trace": [
+    {
+      "action": "APP_LOG",
+      "clock": 0.0,
+      "source": 1,
+      "message": "Starting simulation"
+    },
+    {
+      "action": "TRANSMIT",
+      "clock": 1.0,
+      "event_time": 2.0,
+      "source": 1,
+      "target": 2,
+      "name": "PING",
+      "payload": {
+        "seq": 1
+      },
+      "node_state": {
+        "status": "waiting"
+      }
+    },
+    {
+      "action": "RECEIVE",
+      "clock": 2.0,
+      "source": 1,
+      "target": 2,
+      "name": "PING",
+      "payload": {
+        "seq": 1
+      },
+      "node_state": {
+        "status": "received"
+      }
+    }
+  ]
+}

@@ -25,6 +25,13 @@ helpers, and domain exceptions form the stable 1.0 API. Agenda, process,
 runtime, exporter, plugin-manager, and collector implementations are internal
 and may evolve without compatibility guarantees.
 
+### Plugin boundary
+
+`SimulationRuntime` adapts the scheduler to the plugin manager. Plugins receive
+immutable context objects and lifecycle callbacks without direct access to the
+agenda or process table. Built-in logging and JSON tracing use the same public
+plugin contract available to users.
+
 ## The Web Visualizer (React)
 
 The visualizer is built using React and Next.js. It loads the JSON trace file into a statically typed format using `Zod`.

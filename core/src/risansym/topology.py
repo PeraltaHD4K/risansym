@@ -222,10 +222,14 @@ def load_dense_matrix(
 
 
 class TopologyGenerator:
-    """Generate validated topologies in adjacency-list format."""
+    """Generate validated topologies in adjacency-list format.
+
+    Every generator returns a new graph with one-based neighbor identifiers.
+    """
 
     @staticmethod
     def line(nodes: int, *, directed: bool = False) -> AdjacencyList:
+        """Generate a path containing ``nodes`` nodes."""
         graph = _empty_graph(nodes)
         for source in range(nodes - 1):
             graph[source].append(source + 2)
@@ -235,6 +239,7 @@ class TopologyGenerator:
 
     @staticmethod
     def ring(nodes: int, *, directed: bool = False) -> AdjacencyList:
+        """Generate a cycle, or a line when fewer than three nodes exist."""
         graph = TopologyGenerator.line(nodes, directed=directed)
         if nodes > 2:
             graph[-1].append(1)
@@ -245,6 +250,7 @@ class TopologyGenerator:
 
     @staticmethod
     def star(nodes: int, *, directed: bool = False) -> AdjacencyList:
+        """Generate a star whose center is node 1."""
         graph = _empty_graph(nodes)
         for target in range(2, nodes + 1):
             graph[0].append(target)
@@ -254,6 +260,7 @@ class TopologyGenerator:
 
     @staticmethod
     def mesh(nodes: int, *, directed: bool = False) -> AdjacencyList:
+        """Generate a complete graph without self-loops."""
         graph = _empty_graph(nodes)
         for source in range(1, nodes + 1):
             graph[source - 1] = [target for target in range(1, nodes + 1) if target != source]
@@ -266,6 +273,13 @@ class TopologyGenerator:
         *,
         directed: bool = False,
     ) -> AdjacencyList:
+        """Generate a rooted breadth-first tree.
+
+        Args:
+            depth: Number of edge levels below the root.
+            branching_factor: Maximum children per non-leaf node.
+            directed: When true, orient every edge from parent to child.
+        """
         if not isinstance(depth, int) or isinstance(depth, bool) or depth < 0:
             raise ConfigurationError("depth must be a non-negative integer.")
         if (
@@ -296,7 +310,16 @@ class TopologyGenerator:
         seed: int | None = None,
         rng: random.Random | None = None,
     ) -> AdjacencyList:
-        """Generate a reproducible weakly connected random topology."""
+        """Generate a reproducible weakly connected random topology.
+
+        Args:
+            nodes: Number of nodes.
+            probability: Probability of each optional edge.
+            directed: Whether optional and connectivity edges are directed.
+            seed: Seed used to construct a private random generator.
+            rng: Caller-owned random generator, mutually exclusive with
+                ``seed``.
+        """
         graph = _empty_graph(nodes)
         if not isinstance(probability, (int, float)) or isinstance(probability, bool):
             raise ConfigurationError("probability must be a number.")
@@ -346,7 +369,11 @@ def _empty_graph(nodes: int) -> AdjacencyList:
 
 
 def describe_topology(graph: Sequence[Sequence[int]]) -> str:
-    """Return a compact human-readable connectivity map."""
+    """Return a compact human-readable connectivity map.
+
+    This helper describes the supplied rows without changing or normalizing
+    them.
+    """
     nodes = len(graph)
     edges = sum(len(neighbors) for neighbors in graph)
     lines = [

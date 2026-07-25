@@ -93,15 +93,22 @@ For advanced use cases (and better visualizer data), you can implement `get_stat
 
 ```python
 class AdvancedModel(Model):
-    def __init__(self):
+    def __init__(self) -> None:
+        super().__init__()
         self.messages_processed = 0
 
-    def receive(self, event: Event):
+    def init(self) -> None:
+        pass
+
+    def receive(self, event: Event) -> None:
         self.messages_processed += 1
 
-    def get_state(self) -> dict:
+    def get_state(self) -> dict[str, int]:
         return {
             "processed": self.messages_processed
         }
 ```
-This state will be stored inside the generated trace file and displayed in the Web Visualizer when clicking on events.
+
+When a subclass defines `__init__()`, it must call `super().__init__()`.
+Snapshot values must be finite JSON data. With a tracer attached, this state is
+stored in the generated trace and displayed by the visualizer.

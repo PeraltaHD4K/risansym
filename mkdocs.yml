@@ -48,12 +48,18 @@ nav:
   - Home: index.md
   - Tutorial:
       - Getting Started: tutorial/getting_started.md
+      - Creating Topologies: tutorial/topologies.md
       - Writing Algorithms: tutorial/writing_algorithms.md
+      - Plugins: tutorial/plugins.md
       - Using the Visualizer: tutorial/using_visualizer.md
   - API Reference:
       - Simulation: api/simulation.md
       - Model: api/model.md
       - Event: api/event.md
+      - Topology: api/topology.md
+      - Plugins: api/plugins.md
+      - Results and Exceptions: api/results.md
       - Trace schema: api/schemas.md
   - Architecture: architecture.md
+  - Reproducibility: reproducibility.md
   - Releasing: releasing.md

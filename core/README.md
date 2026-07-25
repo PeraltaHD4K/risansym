@@ -1,6 +1,8 @@
-# Risansym (Core Engine)
+# Risansym
 
-Risansym is a powerful, Python-based discrete event simulator for distributed systems. It was designed to run complex network algorithms (such as Chandy-Lamport, logical clocks, token rings, etc.) and generate trace files that can be rendered using the Risansym Web Visualizer.
+Risansym is a typed Python discrete-event simulation library for distributed
+algorithms. It can optionally generate JSON traces for the Risansym web
+visualizer, but the simulation engine works independently.
 
 ## Installation
 
@@ -11,35 +13,63 @@ pip install risansym
 ## Quick Start
 
 ```python
-from risansym import Event, Model, ScheduleResult, Simulation
-from risansym.plugins import JSONTracerPlugin
+from risansym import Event, Model, Simulation, TopologyGenerator
 
 
-class Ping(Model):
+class Receiver(Model):
     def init(self) -> None:
         pass
 
     def receive(self, event: Event) -> None:
-        self.log(f"received {event.name}")
+        print(f"node {self.node_id} received {event.name} at t={self.clock}")
 
 
-# Every row is a one-based node and contains its neighbors.
-sim = Simulation(
-    [[2], [1]],
-    maxtime=10.0,
-    directed=False,
-)
-sim.attach(JSONTracerPlugin("Ping", trace_dir="traces"))
-
-sim.set_model(Ping(), 1)
-sim.set_model(Ping(), 2)
+sim = Simulation(TopologyGenerator.line(2), maxtime=10.0)
+sim.set_model(Receiver(), 1)
+sim.set_model(Receiver(), 2)
 sim.initialize_all()
-result = sim.seed_event(
-    Event(time=0.0, name="PING", source=1, target=2),
+sim.seed_event(Event(time=1.0, name="HELLO", source=1, target=2))
+
+result = sim.run()
+assert result.complete
+```
+
+## Topologies
+
+Use a validated adjacency list, generate a standard topology, or load a file:
+
+```python
+from risansym import (
+    Simulation,
+    TopologyGenerator,
+    export_adjacency_list,
+    load_edge_list,
 )
-assert result is ScheduleResult.SCHEDULED
-simulation_result = sim.run()
-assert simulation_result.complete
+
+ring = TopologyGenerator.ring(10)
+reproducible_random = TopologyGenerator.random(
+    100,
+    probability=0.05,
+    seed=42,
+)
+export_adjacency_list(ring, "ring.txt")
+loaded = load_edge_list("network.edges", node_count=100)
+simulation = Simulation(reproducible_random, maxtime=1_000.0)
+```
+
+Generators include `line`, `ring`, `star`, `mesh`, `tree`, and `random`.
+Topologies use one-based node identifiers.
+
+## Observability plugins
+
+Attach logging and tracing explicitly before initialization:
+
+```python
+from risansym.plugins import ConsoleLoggerPlugin, JSONTracerPlugin
+
+# Insert these lines after constructing the simulation and before initialize_all().
+sim.attach(ConsoleLoggerPlugin(trace_network=True, app_logs=True))
+sim.attach(JSONTracerPlugin("Receiver", trace_dir="traces"))
 ```
 
 ## Lifecycle and incremental execution
@@ -87,10 +117,11 @@ An empty row represents an isolated node. Duplicate neighbors and self-loops
 are rejected. Undirected topologies must contain every edge in both
 directions; asymmetric adjacency is accepted only with `directed=True`.
 
-Topologies can be loaded with `load_adjacency_list`, `load_edge_list`, or
-`load_dense_matrix`. An edge-list file can preserve isolated nodes by passing
-`node_count`. Deterministic generators accept a `seed` or an explicit
-`random.Random` instance.
+Topologies can be generated with `TopologyGenerator`, loaded with
+`load_adjacency_list`, `load_edge_list`, or `load_dense_matrix`, and exported
+with `export_adjacency_list` or `export_dot`. An edge-list file can preserve
+isolated nodes by passing `node_count`. Random generators accept a `seed` or
+an explicit `random.Random` instance for reproducibility.
 
 `Model.transmit(event)` enforces these topology edges: `event.source` must be
 the sending model's `node_id`, and `event.target` must be either that same node
@@ -124,5 +155,6 @@ Expected scheduling decisions are values, not exceptions:
 
 ## Official Documentation
 
-For complete API reference, examples, and instructions on how to use the web visualizer, visit:
-**[https://peraltahd4k.github.io/risansym/docs](https://peraltahd4k.github.io/risansym/docs)**
+For complete API reference, examples, topology formats, plugin development, and
+visualizer instructions, visit
+**[https://peraltahd4k.github.io/risansym/docs/](https://peraltahd4k.github.io/risansym/docs/)**.

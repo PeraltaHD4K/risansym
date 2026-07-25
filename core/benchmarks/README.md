@@ -12,10 +12,7 @@ uv run pytest benchmarks -m benchmark
 Every benchmark must use deterministic input and record the Python version,
 platform, commit, parameters, and result when establishing a release baseline.
 
-The first persisted baseline for the 1.0 work will be recorded after the
-correctness changes in phases 1 and 2 have stabilized.
-
-## Entrega A baseline
+## 0.9.0 baseline
 
 The `baseline-0.9.0-*.json` files were measured with deterministic seed 42 on
 Python 3.12.13. They are split by workload so long-running cases cannot prevent

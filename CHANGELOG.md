@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Documentation
+- Expanded the repository and packaged READMEs with executable library-first
+  examples and topology generation.
+- Added complete topology, plugin, result, exception, reproducibility, support,
+  contribution, security, citation, and coding-agent documentation.
+- Improved GitHub contribution templates and PyPI project links.
+
 ## [1.0.0rc2] - 2026-07-25
 
 ### Added

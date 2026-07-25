@@ -11,7 +11,12 @@ logger = logging.getLogger("risansym")
 
 
 class ConsoleLoggerPlugin(SimulationPlugin):
-    """Log selected simulation events through the ``risansym`` logger."""
+    """Log selected simulation events through the ``risansym`` logger.
+
+    Args:
+        trace_network: Display event scheduling and processing.
+        app_logs: Display messages emitted through ``Model.log()``.
+    """
 
     def __init__(self, trace_network: bool = False, app_logs: bool = False) -> None:
         self.trace_network = trace_network

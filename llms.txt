@@ -1,0 +1,43 @@
+# Risansym documentation map
+
+Risansym is a typed Python discrete-event simulation library for distributed
+algorithms. The web application is an optional JSON trace visualizer.
+
+## Start here
+
+- Project overview and executable quick start: README.md
+- Installation and first simulation: docs/tutorial/getting_started.md
+- Topology generation, loading, validation, and export:
+  docs/tutorial/topologies.md
+- Defining Model subclasses and routing messages:
+  docs/tutorial/writing_algorithms.md
+- Plugins and trace generation: docs/tutorial/plugins.md
+
+## Public API
+
+- Simulation lifecycle: docs/api/simulation.md
+- Event: docs/api/event.md
+- Model: docs/api/model.md
+- Topology API: docs/api/topology.md
+- Plugins and plugin contexts: docs/api/plugins.md
+- Results and exceptions: docs/api/results.md
+- Advanced trace schema: docs/api/schemas.md
+
+## Contracts and maintenance
+
+- Supported and internal boundaries: docs/architecture.md
+- Reproducibility and performance: docs/reproducibility.md
+- Contribution workflow: CONTRIBUTING.md
+- Security reporting: SECURITY.md
+- Release process: docs/releasing.md
+
+## Important constraints
+
+- Node identifiers are one-based.
+- Model.transmit() permits only self-delivery or direct-neighbor delivery.
+- Attach plugins before Simulation.initialize_all().
+- Treat Event payloads as immutable JSON values.
+- The stable API is exported from risansym and risansym.plugins.
+- risansym.schemas is an advanced public contract for trace consumers.
+- Do not rely on engine, process, runtime, exporter, manager, or collector
+  implementation modules.

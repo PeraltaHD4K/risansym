@@ -15,6 +15,26 @@ function MessageArrowsInner({ messages, currentClock, onSelectEvent }: MessageAr
   // Collect unique colors for SVG marker definitions
   const uniqueColors = useMemo(() => Array.from(new Set(messages.map(m => m.color))), [messages]);
 
+  // Use binary search to find the first message that hasn't been emitted yet (msg.clock > currentClock)
+  const firstFutureIndex = useMemo(() => {
+    let low = 0;
+    let high = messages.length - 1;
+    let idx = messages.length;
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      if (messages[mid].clock > currentClock) {
+        idx = mid;
+        high = mid - 1;
+      } else {
+        low = mid + 1;
+      }
+    }
+    return idx;
+  }, [messages, currentClock]);
+
+  // Only iterate over messages that have been emitted up to currentClock
+  const activeMessages = messages.slice(0, firstFutureIndex);
+
   return (
     <>
       <defs>
@@ -36,12 +56,9 @@ function MessageArrowsInner({ messages, currentClock, onSelectEvent }: MessageAr
       </defs>
 
       {/* Message Arrows (Drawn with Bezier Curves to avoid overlapping) */}
-      {messages.map(msg => {
-        const isFuture = msg.clock > currentClock;
+      {activeMessages.map(msg => {
         const isPending = msg.clock <= currentClock && msg.eventTime > currentClock;
         const isPast = msg.eventTime <= currentClock;
-
-        if (isFuture) return null;
 
         let pathD = '';
         let endX = msg.endX;

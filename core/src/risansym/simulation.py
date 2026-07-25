@@ -7,13 +7,14 @@ import warnings
 from collections.abc import Sequence
 from pathlib import Path
 
-from risansym.engine.builder import SimulationBuilder
 from risansym.engine.loop import EventLoop
+from risansym.engine.runtime import SimulationRuntime
 from risansym.event import Event
 from risansym.exceptions import ConfigurationError, SimulationError
 from risansym.model import Model
 from risansym.plugins.base import SimulationContext, SimulationPlugin
-from risansym.plugins.manager import PluginFailurePolicy, PluginManager
+from risansym.plugins.manager import PluginFailurePolicy
+from risansym.process import Process
 from risansym.results import (
     ScheduleResult,
     SimulationResult,
@@ -21,31 +22,26 @@ from risansym.results import (
     TerminationReason,
 )
 from risansym.simulator import Simulator
-from risansym.topology import load_adjacency_list, load_dense_matrix, load_edge_list
+from risansym.topology import (
+    load_adjacency_list,
+    load_dense_matrix,
+    load_edge_list,
+    normalize_topology,
+)
 
 
 class Simulation:
-    """Orchestrate models, plugins, topology, and event-loop execution."""
+    """Compose topology, models, runtime extensions, and event-loop execution."""
 
     def __init__(
         self,
         graph: Sequence[Sequence[int]],
         maxtime: float,
-        algo_name: str = "UnknownAlgo",
         directed: bool = False,
-        trace_network: bool = False,
-        app_logs: bool = False,
-        trace_enabled: bool = False,
-        trace_path: str | Path | None = None,
-        trace_dir: str = "traces",
-        trace_tag: str | None = None,
-        trace_max_events: int = 1_000_000,
         max_events: int = 10_000_000,
         max_agenda_size: int | None = None,
-        plugin_failure_policy: PluginFailurePolicy = PluginFailurePolicy.RAISE,
     ) -> None:
         self._validate_event_budget(max_events, "max_events")
-        self.algo_name = algo_name
         self.directed = directed
         self.max_events = max_events
         self.state = SimulationState.CREATED
@@ -56,33 +52,17 @@ class Simulation:
         self._plugins_ended = False
         self._stop_requested = False
 
-        self.plugin_manager = PluginManager(plugin_failure_policy)
-        self.engine = Simulator(
-            maxtime,
-            plugin_manager=self.plugin_manager,
-            max_agenda_size=max_agenda_size,
-        )
-        self.graph, self._topology_name = SimulationBuilder.build_topology(
-            graph,
-            directed=directed,
-        )
-        self.table = SimulationBuilder.build_processes(self.graph, self.engine)
-
-        if trace_network or app_logs:
-            from risansym.plugins.logger import ConsoleLoggerPlugin
-
-            self.attach(ConsoleLoggerPlugin(trace_network=trace_network, app_logs=app_logs))
-        if trace_enabled:
-            from risansym.plugins.tracer import JSONTracerPlugin
-
-            self.attach(
-                JSONTracerPlugin(
-                    trace_path=trace_path,
-                    trace_dir=trace_dir,
-                    trace_tag=trace_tag,
-                    max_events=trace_max_events,
-                )
+        self._runtime = SimulationRuntime(
+            Simulator(
+                maxtime,
+                max_agenda_size=max_agenda_size,
             )
+        )
+        self.graph = normalize_topology(graph, directed=directed)
+        self._topology_name = "generated"
+        self.table: list[Process | None] = [None] + [
+            Process(row, self._runtime, node_id) for node_id, row in enumerate(self.graph, start=1)
+        ]
 
     @staticmethod
     def _validate_event_budget(value: int, name: str) -> None:
@@ -99,7 +79,6 @@ class Simulation:
 
     def _context(self) -> SimulationContext:
         return SimulationContext(
-            algorithm=self.algo_name,
             topology=self._topology_name,
             graph=tuple(tuple(neighbors) for neighbors in self.graph),
             model_types=tuple(
@@ -107,7 +86,7 @@ class Simulation:
                 for process in self.table[1:]
             ),
             directed=self.directed,
-            maxtime=self.engine.maxtime,
+            maxtime=self._runtime.maxtime,
             state=self.state,
             result=self.result,
         )
@@ -120,17 +99,17 @@ class Simulation:
     ) -> None:
         """Attach a plugin before initialization begins."""
         self._require_state(SimulationState.CREATED)
-        self.plugin_manager.attach(plugin, policy=failure_policy)
+        self._runtime.attach(plugin, policy=failure_policy)
 
     @property
     def plugins(self) -> tuple[SimulationPlugin, ...]:
         """Registered plugins as a read-only tuple."""
-        return self.plugin_manager.plugins
+        return self._runtime.plugins
 
     def __repr__(self) -> str:
         return (
-            f"<Simulation(algo='{self.algo_name}', topology='{self._topology_name}', "
-            f"nodes={len(self.graph)}, state='{self.state.value}')>"
+            f"<Simulation(topology='{self._topology_name}', nodes={len(self.graph)}, "
+            f"state='{self.state.value}')>"
         )
 
     @classmethod
@@ -138,20 +117,11 @@ class Simulation:
         cls,
         filename: str | Path,
         maxtime: float,
-        algo_name: str = "UnknownAlgo",
         directed: bool = False,
-        trace_network: bool = False,
-        app_logs: bool = False,
-        trace_enabled: bool = False,
-        trace_path: str | Path | None = None,
-        trace_dir: str = "traces",
-        trace_tag: str | None = None,
-        trace_max_events: int = 1_000_000,
         format: str = "adjacency_list",
         node_count: int | None = None,
         max_events: int = 10_000_000,
         max_agenda_size: int | None = None,
-        plugin_failure_policy: PluginFailurePolicy = PluginFailurePolicy.RAISE,
     ) -> Simulation:
         """Build a simulation from a validated topology file."""
         if format == "adjacency_list":
@@ -170,18 +140,9 @@ class Simulation:
         instance = cls(
             graph=graph,
             maxtime=maxtime,
-            algo_name=algo_name,
             directed=directed,
-            trace_network=trace_network,
-            app_logs=app_logs,
-            trace_enabled=trace_enabled,
-            trace_path=trace_path,
-            trace_dir=trace_dir,
-            trace_tag=trace_tag,
-            trace_max_events=trace_max_events,
             max_events=max_events,
             max_agenda_size=max_agenda_size,
-            plugin_failure_policy=plugin_failure_policy,
         )
         instance._topology_name = Path(filename).stem
         return instance
@@ -203,7 +164,7 @@ class Simulation:
     def initialize_all(self) -> None:
         """Initialize all bound models as one lifecycle transition."""
         self._require_state(SimulationState.CREATED)
-        checkpoint = self.engine.checkpoint()
+        checkpoint = self._runtime.checkpoint()
         self.state = SimulationState.INITIALIZING
         for node_id, process in enumerate(self.table[1:], start=1):
             if process is None or process.model is None:
@@ -211,7 +172,7 @@ class Simulation:
             try:
                 process.model.init()
             except Exception as error:
-                self.engine.restore(checkpoint)
+                self._runtime.restore(checkpoint)
                 self.state = SimulationState.FAILED
                 raise SimulationError(
                     f"Model initialization failed at node {node_id}: {error}"
@@ -221,7 +182,7 @@ class Simulation:
     def seed_event(self, event: Event) -> ScheduleResult:
         """Insert an event before or between execution calls."""
         self._require_state(SimulationState.READY, SimulationState.STOPPED)
-        return self.engine.insert_event(event)
+        return self._runtime.insert_event(event)
 
     def request_stop(self) -> None:
         """Request cooperative termination at the next event boundary."""
@@ -232,19 +193,19 @@ class Simulation:
         return SimulationResult(
             state=self.state,
             reason=reason,
-            simulated_time=self.engine.clock,
+            simulated_time=self._runtime.clock,
             processed_events=self._processed_events,
-            pending_events=self.engine.pending_events,
-            scheduled_events=self.engine.scheduled_events,
-            dropped_by_time_horizon=self.engine.dropped_by_time_horizon,
-            dropped_by_plugins=self.engine.dropped_by_plugins,
+            pending_events=self._runtime.pending_events,
+            scheduled_events=self._runtime.scheduled_events,
+            dropped_by_time_horizon=self._runtime.dropped_by_time_horizon,
+            dropped_by_plugins=self._runtime.dropped_by_plugins,
             execution_real_time_seconds=self._execution_real_time_seconds,
         )
 
     def _notify_end(self) -> None:
         if self._plugins_started and not self._plugins_ended:
             self._plugins_ended = True
-            self.plugin_manager.notify_end(self._context())
+            self._runtime.notify_end(self._context())
 
     def _execute(
         self,
@@ -258,9 +219,9 @@ class Simulation:
 
         try:
             if not self._plugins_started:
-                self.plugin_manager.notify_start(self._context())
+                self._runtime.notify_start(self._context())
                 self._plugins_started = True
-            loop_result = EventLoop(self.engine, self.table).run(
+            loop_result = EventLoop(self._runtime, self.table).run(
                 max_events=max_events,
                 until=until,
                 stop_requested=lambda: self._stop_requested,
@@ -303,9 +264,9 @@ class Simulation:
         self._require_state(SimulationState.READY, SimulationState.STOPPED)
         if not isinstance(time, (int, float)) or isinstance(time, bool) or not math.isfinite(time):
             raise ConfigurationError("time must be a finite number.")
-        if time < self.engine.clock:
+        if time < self._runtime.clock:
             raise ConfigurationError("time cannot be earlier than the current simulation clock.")
-        if time > self.engine.maxtime:
+        if time > self._runtime.maxtime:
             raise ConfigurationError("time cannot exceed the simulation maxtime.")
         budget = self.max_events if max_events is None else max_events
         self._validate_event_budget(budget, "max_events")

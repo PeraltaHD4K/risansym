@@ -6,6 +6,8 @@ from risansym.simulation import Simulation
 from risansym.model import Model
 from risansym.event import Event
 from risansym.exceptions import ConfigurationError
+from risansym.engine.trace_writer import AtomicJSONTraceWriter
+from risansym.plugins.tracer import JSONTracerPlugin
 from risansym.schemas import AppLogEvent, TraceCapture, TraceMetadata, TraceOutput
 from risansym.trace import TraceCollector
 
@@ -51,12 +53,8 @@ def two_node_sim(tmp_path):
     sim = Simulation.from_file(
         filename=topo,
         maxtime=20.0,
-        algo_name="EchoTest",
-        trace_network=False,
-        app_logs=False,
-        trace_enabled=True,
-        trace_path=str(trace_path),
     )
+    sim.attach(JSONTracerPlugin("EchoTest", trace_path=trace_path))
     sim.set_model(EchoModel(), node_id=1)
     sim.set_model(EchoModel(), node_id=2)
     sim.initialize_all()
@@ -138,10 +136,8 @@ class TestTraceGeneration:
         sim = Simulation(
             [[]],
             10.0,
-            trace_enabled=True,
-            trace_path=trace_path,
-            trace_max_events=1,
         )
+        sim.attach(JSONTracerPlugin("TruncatedTest", trace_path=trace_path, max_events=1))
         sim.initialize_all()
         sim.seed_event(Event(time=0.0, source=1, target=1, name="ONE"))
         with pytest.warns(ResourceWarning):
@@ -181,7 +177,7 @@ class TestTraceGeneration:
         monkeypatch.setattr(type(target), "replace", fail_replace)
 
         with pytest.raises(OSError, match="replacement failure"):
-            collector.dump(target, metadata)
+            AtomicJSONTraceWriter().write(target, metadata, collector)
 
         assert target.read_text(encoding="utf-8") == "existing"
         assert list(tmp_path.glob("*.tmp")) == []

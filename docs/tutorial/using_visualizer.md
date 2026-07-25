@@ -16,7 +16,8 @@ Navigate to `http://localhost:3000` in your browser.
 
 ## Uploading Traces
 
-When you run a simulation in Python with `trace_enabled=True`, a JSON file is saved in the `traces/` folder.
+When you attach `JSONTracerPlugin("AlgorithmName")`, a JSON file is saved in
+the `traces/` folder after the simulation completes.
 Simply drag and drop this JSON file into the Web Visualizer's drop zone.
 
 Trace files use schema version `1.0`. The visualizer rejects malformed node

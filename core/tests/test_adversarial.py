@@ -40,7 +40,6 @@ def test_event_storm_budget(tmp_path: Path) -> None:
         _two_node_topology(tmp_path),
         100.0,
         max_events=50,
-        app_logs=False,
     )
     simulation.set_model(InfinitePingModel(), 1)
     simulation.set_model(InfinitePingModel(), 2)
@@ -52,7 +51,7 @@ def test_event_storm_budget(tmp_path: Path) -> None:
     assert result.processed_events == 50
     assert result.reason is TerminationReason.MAX_EVENTS
     assert result.state is SimulationState.STOPPED
-    assert simulation.engine.is_on
+    assert result.pending_events > 0
 
 
 def test_trace_path_components_are_confined_and_sanitized(tmp_path: Path) -> None:
@@ -60,11 +59,10 @@ def test_trace_path_components_are_confined_and_sanitized(tmp_path: Path) -> Non
     simulation = Simulation.from_file(
         _two_node_topology(tmp_path),
         10.0,
-        algo_name="../Algorithm",
-        app_logs=False,
     )
     simulation.attach(
         JSONTracerPlugin(
+            "../Algorithm",
             trace_dir=str(trace_directory),
             trace_tag="../malicious",
         )
@@ -82,8 +80,8 @@ def test_trace_path_components_are_confined_and_sanitized(tmp_path: Path) -> Non
 def test_generated_trace_names_do_not_collide(tmp_path: Path) -> None:
     trace_directory = tmp_path / "traces"
     for _ in range(2):
-        simulation = Simulation([[]], 10.0, algo_name="SameAlgorithm")
-        simulation.attach(JSONTracerPlugin(trace_dir=str(trace_directory)))
+        simulation = Simulation([[]], 10.0)
+        simulation.attach(JSONTracerPlugin("SameAlgorithm", trace_dir=str(trace_directory)))
         simulation.initialize_all()
         with pytest.warns(UserWarning, match="no model bound"):
             simulation.run()
@@ -101,7 +99,6 @@ def test_non_critical_end_plugin_failure_is_isolated(tmp_path: Path) -> None:
     simulation = Simulation.from_file(
         _two_node_topology(tmp_path),
         10.0,
-        app_logs=False,
     )
     simulation.attach(
         EndFailingPlugin(),

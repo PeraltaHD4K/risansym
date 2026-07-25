@@ -47,6 +47,27 @@ class TestPublicAPI:
         assert TopologyError is not None
         assert ScheduleResult.SCHEDULED.value == "scheduled"
 
+    def test_import_lifecycle_and_plugin_api(self):
+        from risansym import (
+            EngineContext,
+            PluginFailurePolicy,
+            PluginManager,
+            SimulationContext,
+            SimulationPlugin,
+            SimulationResult,
+            SimulationState,
+            TerminationReason,
+        )
+
+        assert SimulationResult is not None
+        assert SimulationState.CREATED.value == "created"
+        assert TerminationReason.MAX_EVENTS.value == "max_events"
+        assert SimulationPlugin is not None
+        assert SimulationContext is not None
+        assert EngineContext is not None
+        assert PluginFailurePolicy.RAISE.value == "raise"
+        assert PluginManager is not None
+
     def test_import_topology_api(self):
         from risansym import (
             AdjacencyList,

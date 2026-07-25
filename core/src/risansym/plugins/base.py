@@ -1,61 +1,72 @@
+"""Public plugin contracts and immutable callback contexts."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from dataclasses import dataclass
 
-if TYPE_CHECKING:
-    from risansym.event import Event
-    from risansym.simulation import Simulation
-    from risansym.simulator import Simulator
+from risansym.event import Event
+from risansym.results import SimulationResult, SimulationState
 
 
-@runtime_checkable
-class SimulationPlugin(Protocol):
-    """Base protocol for Risansym simulation plugins (middlewares).
+@dataclass(frozen=True, slots=True)
+class EngineContext:
+    """Read-only engine information exposed to plugins."""
 
-    Plugins can hook into various lifecycle events of the simulation engine
-    to implement tracing, logging, network chaos, metrics, etc.
+    clock: float
+    maxtime: float
+    pending_events: int
+    scheduled_events: int
+    dropped_by_time_horizon: int
+    dropped_by_plugins: int
+
+
+@dataclass(frozen=True, slots=True)
+class SimulationContext:
+    """Read-only simulation information exposed to lifecycle plugins."""
+
+    algorithm: str
+    topology: str
+    graph: tuple[tuple[int, ...], ...]
+    model_types: tuple[str | None, ...]
+    directed: bool
+    maxtime: float
+    state: SimulationState
+    result: SimulationResult | None
+
+
+class SimulationPlugin:
+    """Base class for simulation plugins.
+
+    Subclasses override only the callbacks they need. All callbacks execute in
+    registration order.
     """
 
     @property
     def requires_state_snapshot(self) -> bool:
-        """If True, the engine will deepcopy the node state for this plugin."""
         return False
 
-    def on_start(self, simulation: Simulation) -> None:
-        """Called just before the simulation event loop begins."""
-        ...
+    def on_start(self, context: SimulationContext) -> None:
+        """Called once, immediately before the first execution."""
 
     def on_event_schedule(
-        self, event: Event, simulator: Simulator, node_state: dict[str, Any] | None = None
+        self,
+        event: Event,
+        context: EngineContext,
+        node_state: dict[str, object] | None = None,
     ) -> Event | None:
-        """Called when an event is about to be inserted into the agenda.
-
-        Args:
-            event: The event attempting to be scheduled.
-            simulator: The Simulator instance.
-            node_state: Snapshot of the node's state at the moment of transmission.
-
-        Returns:
-            The event to be scheduled, or `None` if the event should be dropped (e.g., packet loss).
-        """
+        """Transform, accept, or drop an event before agenda insertion."""
         return event
 
     def on_event_processed(
-        self, event: Event, node_state: dict[str, Any], simulator: Simulator
+        self,
+        event: Event,
+        node_state: dict[str, object],
+        context: EngineContext,
     ) -> None:
-        """Called after an event has been successfully processed by a node.
+        """Called after a model processes an event."""
 
-        Args:
-            event: The processed event.
-            node_state: Deep copy snapshot of the node's state AFTER processing.
-            simulator: The Simulator instance.
-        """
-        ...
+    def on_app_log(self, source: int, message: str, context: EngineContext) -> None:
+        """Called when a model emits an application log."""
 
-    def on_app_log(self, source: int, message: str, clock: float, simulator: Simulator) -> None:
-        """Called when a node emits an application-level log."""
-        ...
-
-    def on_end(self, simulation: Simulation) -> None:
-        """Called when the simulation loop has finished."""
-        ...
+    def on_end(self, context: SimulationContext) -> None:
+        """Called once after completion or failure."""

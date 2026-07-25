@@ -22,10 +22,10 @@ pip install risansym
 Risansym represents network topologies using standard adjacency-list text files. Create a file named `graph.txt`:
 
 ```text
-# node: neighbors
-1: 2
-2: 1 3
-3: 2
+# Each row represents one node and lists its one-based neighbors.
+2
+1 3
+2
 ```
 
 ## Running the Simulation
@@ -40,7 +40,6 @@ engine = Simulation.from_file(
     filename="graph.txt",
     maxtime=100.0,
     algo_name="MyFirstAlgorithm",
-    debug=True,
     trace_enabled=True,
     trace_dir="traces"
 )
@@ -49,7 +48,8 @@ engine = Simulation.from_file(
 engine.initialize_all()
 
 # Run the simulation loop
-engine.run()
+result = engine.run()
+assert result.complete
 ```
 
 - **`trace_enabled`**: When set to `True`, the simulation engine will record every event (transmissions, receptions, app logs, and node states) and save it as a JSON file when the simulation finishes.

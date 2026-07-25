@@ -23,7 +23,8 @@ class Simulator:
             raise ValueError("maxtime must be greater than 0")
         self.clock: float = 0.0
         self.maxtime: float = maxtime
-        self._agenda: list[Event] = []
+        self._agenda: list[tuple[float, int, Event]] = []
+        self._sequence: int = 0
         self._plugins: list[SimulationPlugin] = []
 
     def attach(self, plugin: SimulationPlugin) -> None:
@@ -49,7 +50,8 @@ class Simulator:
                     return
                 event = event_or_none
 
-            heapq.heappush(self._agenda, event)
+            heapq.heappush(self._agenda, (event.time, self._sequence, event))
+            self._sequence += 1
 
     def pop_event(self) -> Event:
         """Pop the nearest event and advance the global clock.
@@ -59,7 +61,7 @@ class Simulator:
         """
         if not self._agenda:
             raise RuntimeError("Cannot pop from an empty event agenda.")
-        event = heapq.heappop(self._agenda)
+        _, _, event = heapq.heappop(self._agenda)
         self.clock = event.time
 
         # Note: ReceiveEvent recording is done in Simulation._execute()

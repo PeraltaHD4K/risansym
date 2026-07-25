@@ -3,15 +3,13 @@
 ## Supported versions
 
 Security fixes are provided for the latest stable release published on PyPI.
-Release candidates are supported while they are the active candidate for the
-next stable release. The `main` branch receives fixes but is development code,
-not a published support target.
+The `main` branch receives fixes but is development code, not a published
+support target.
 
 | Version | Supported |
 | --- | --- |
 | Latest stable 1.x | Yes |
-| Active 1.0 release candidate | Until 1.0.0 is released |
-| Older prereleases and 0.x | No |
+| Prereleases and 0.x | No |
 
 ## Reporting a vulnerability
 
